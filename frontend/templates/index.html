@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <script>
+        const savedTheme = localStorage.getItem("app-theme") || "light";
+        document.documentElement.setAttribute("data-theme", savedTheme);
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CardsApp - ホーム</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <header class="navbar">
+        <h1 class="logo">CardsApp</h1>
+        <div class="nav-actions">
+
+            <div class="language-menu">
+                <button onclick="toggleLangMenu()" class="lang-btn shadow-btn" id="lang-btn">
+                    <i data-lucide="globe"></i>
+                    <span id="current-lang-text">JA</span>
+                </button>
+ 
+                <div id="lang-dropdown" class="lang-dropdown hidden">
+                    <button onclick="selectLanguage('ja', event)" class="menu-btn">🇯🇵 日本語</button>
+                    <button onclick="selectLanguage('en', event)" class="menu-btn">🇺🇸 English</button>
+                </div>
+            </div>
+
+            <!-- ★ data-i18n追加 -->
+            <button id="add-folder-btn" class="primary-btn shadow-btn hidden" onclick="createNewFolderUI()" data-i18n="btn_create_folder">
+                <i data-lucide="folder-plus"></i> 新規作成
+            </button>
+            
+            <div class="account-menu">
+                <button onclick="toggleAuthMenu()" class="icon-btn shadow-btn" id="account-icon-btn">
+                    <i data-lucide="user"></i>
+                </button>
+                <div id="auth-dropdown" class="dropdown hidden">
+                    <div id="menu-guest">
+                        <!-- ★ data-i18n追加 -->
+                        <button onclick="showLogin()" class="menu-btn" data-i18n="btn_login">ログイン/登録</button>
+                    </div>
+                    <div id="menu-user" class="hidden">
+                        <div class="menu-header" style="padding: 10px; border-bottom: 1px solid #eee;">
+                            <span id="menu-username" style="font-weight:bold;"></span>
+                        </div>
+                        <button onclick="handleLogout()" class="menu-btn" data-i18n="btn_logout">ログアウト</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="page-container">
+        <div class="tabs-container">
+            <!-- ★ data-i18n追加 -->
+            <button class="tab-btn active" id="tab-my" onclick="switchTab('my-folders')" data-i18n="tab_my_folders">マイドライブ</button>
+            <button class="tab-btn" id="tab-global" onclick="switchTab('global-folders')" data-i18n="tab_global_folders">公開カード</button>
+        </div>
+        <div class="search-and-pagination-container" style="margin: 20px 0; text-align: center;">
+            <div class="search-bar-wrapper" style="margin-bottom: 15px;">
+                <!-- ★ data-i18n追加（inputはplaceholderに反映される） -->
+                <input type="text" id="search-input" data-i18n="search_placeholder" placeholder="フォルダーを検索..." 
+                    style="padding: 10px; width: 60%; max-width: 400px; border: 1px solid #ccc; border-radius: 20px;">
+                <button onclick="handleSearch()" class="shadow-btn" style="padding: 10px 20px; border-radius: 20px; cursor: pointer;">
+                    🔍 検索
+                </button>
+            </div>
+            <div id="pagination-controls" class="pagination-controls" style="display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;">
+            </div>
+        </div>
+        <div id="my-folders-area">
+            <div id="guest-message" class="empty-state">
+                <!-- ★ data-i18n追加 -->
+                <p data-i18n="guest_message">ログインするとフォルダを作成できます。</p>
+                <button class="primary-btn" onclick="showLogin()" data-i18n="btn_login">ログインする</button>
+            </div>
+            
+            <div class="folder-grid hidden" id="my-folders-grid">
+            </div>
+        </div>
+
+        <div id="global-folders-area" class="hidden">
+            <div id="global-guest-message" class="empty-state">
+                <!-- ★ data-i18n追加 -->
+                <p data-i18n="global_guest_message">ログインすると全世界の公開カードを閲覧できます。</p>
+                <button class="primary-btn" onclick="showLogin()" data-i18n="btn_login">ログインする</button>
+            </div>
+            
+            <div class="folder-grid hidden" id="global-folders-grid"></div>
+        </div>
+    </main>
+
+    <div id="folder-settings-modal" class="modal hidden">
+        <div class="modal-content auth-box shadow-btn">
+            <button class="close-btn" onclick="closeSettingsModal()"><i data-lucide="x"></i></button>
+            <!-- ★ data-i18n追加 -->
+            <h2 class="auth-title" data-i18n="folder_settings_title">フォルダ設定</h2>
+            
+            <div class="mb-1" style="text-align: left;">
+                <label style="font-size: 14px; font-weight: bold;" data-i18n="label_folder_name">フォルダ名</label>
+                <input type="text" id="edit-folder-title" class="input-field mt-1" data-i18n="placeholder_folder_name" placeholder="フォルダ名">
+            </div>
+            
+            <div class="mb-1" style="text-align: left;">
+                <label style="font-size: 14px; font-weight: bold;" data-i18n="label_visibility">公開設定</label>
+                <select id="edit-folder-visibility" class="input-field mt-1" style="width: 100%; height: 42px;">
+                    <option value="private" data-i18n="visibility_private">プライベート (自分のみ)</option>
+                    <option value="public" data-i18n="visibility_public">パブリック (全体公開)</option>
+                    <option value="shared" disabled data-i18n="visibility_shared">特定の人のみ (準備中)</option>
+                </select>
+            </div>
+            
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="primary-btn" style="flex: 2;" onclick="saveFolderSettings()" data-i18n="btn_save">保存</button>
+                <button class="secondary-btn" style="flex: 1; background-color: #fee2e2; color: #dc2626; border: none;" onclick="confirmDeleteFolder()" data-i18n="btn_delete">削除</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="auth-modal" class="modal hidden">
+        <div class="modal-content auth-box">
+            <button class="close-btn" onclick="closeAuthModal()"><i data-lucide="x"></i></button>
+            
+            <form id="login-view" onsubmit="handleLogin(event)">
+                <!-- ★ data-i18n追加 -->
+                <h2 class="auth-title" data-i18n="login_title">ログイン</h2>
+                <input type="text" id="login-id" class="input-field mb-1" data-i18n="placeholder_login_id" placeholder="メール または ユーザー名" required>
+                <input type="password" id="login-password" class="input-field mb-1" data-i18n="placeholder_password" placeholder="パスワード" required>
+                <button type="submit" class="primary-btn w-full" data-i18n="btn_login">ログイン</button>
+                <p>
+                    <span data-i18n="switch_to_signup_text">アカウントがない？</span>
+                    <span onclick="switchAuthView('signup')" class="text-link" data-i18n="switch_to_signup_link">新規登録</span>
+                </p>
+            </form>
+
+            <form id="signup-view" class="hidden" onsubmit="handleSignup(event)">
+                <!-- ★ data-i18n追加 -->
+                <h2 class="auth-title" data-i18n="signup_title">新規登録</h2>
+                <input type="text" id="signup-username" class="input-field mb-1" data-i18n="placeholder_username" placeholder="ユーザー名" required>
+                <div class="input-with-btn mb-1">
+                    <input type="email" id="signup-email" class="input-field" data-i18n="placeholder_email" placeholder="メールアドレス" required>
+                    <button type="button" class="secondary-btn shadow-btn" id="send-code-btn" onclick="sendVerificationCode()" data-i18n="btn_send_code">送信</button>
+                </div>
+                <input type="text" id="signup-code" class="input-field mb-1" data-i18n="placeholder_verify_code" placeholder="認証コード" required>
+                <input type="password" id="signup-password" class="input-field mb-1" data-i18n="placeholder_password" placeholder="パスワード" required>
+                <button type="submit" class="primary-btn w-full" data-i18n="btn_signup">登録</button>
+                <p class="switch-auth-text">
+                    <span data-i18n="switch_to_login_text">作成済み？</span>
+                    <span onclick="switchAuthView('login')" class="text-link" data-i18n="switch_to_login_link">ログイン</span>
+                </p>
+            </form>
+        </div>
+    </div>
+    <script src="/static/i18n.js"></script>
+    <script src="/static/auth.js"></script>
+    <script src="/static/index.js"></script>
+    
+    <script>lucide.createIcons();</script>
+</body>
+</html>
