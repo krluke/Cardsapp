@@ -19,3 +19,5 @@ Thumbs.db
 
 # ログファイル
 *.log
+
+backup_all.sql
