@@ -14,60 +14,93 @@
 </head>
 <body class="editor-body">
     <div class="editor-toolbar">
-        <button onclick="goToHome()" class="icon-btn shadow-btn mr-2" data-i18n="btn_home" title="ホームに戻る">
+
+        <!-- ★ アイコンのみ → data-i18n-title でtooltipを翻訳 -->
+        <button onclick="goToHome()" class="icon-btn shadow-btn mr-2"
+                data-i18n-title="btn_home" title="ホームに戻る">
             <i data-lucide="home"></i>
         </button>
+
+        <!-- テキスト追加ボタン：spanにdata-i18nを付けてアイコンを保護 -->
         <button onclick="activateTextMode()" class="tool-btn" id="text-tool-btn">
-            <i data-lucide="type"></i> <span data-i18n="btn_add_text">テキスト追加</span>
+            <i data-lucide="type"></i>
+            <span data-i18n="btn_add_text">テキスト追加</span>
         </button>
-        <button class="toolbar-btn" onclick="formatText('bold')" data-i18n="btn_bold" title="太字"><i data-lucide="bold"></i></button>
-        <button class="toolbar-btn" onclick="formatText('underline')" data-i18n="btn_underline" title="下線"><i data-lucide="underline"></i></button>
-        <button class="toolbar-btn" onclick="formatText('italic')" data-i18n="btn_italic" title="斜体"><i data-lucide="italic"></i></button>
-        
+
+        <!-- ★ アイコンのみの書式ボタン → data-i18n-title -->
+        <button class="toolbar-btn" onclick="formatText('bold')"
+                data-i18n-title="btn_bold" title="太字">
+            <i data-lucide="bold"></i>
+        </button>
+        <button class="toolbar-btn" onclick="formatText('underline')"
+                data-i18n-title="btn_underline" title="下線">
+            <i data-lucide="underline"></i>
+        </button>
+        <button class="toolbar-btn" onclick="formatText('italic')"
+                data-i18n-title="btn_italic" title="斜体">
+            <i data-lucide="italic"></i>
+        </button>
+
+        <!-- フォントサイズ選択 -->
         <select class="toolbar-select" onchange="formatText('fontSize', this.value)">
-            <option value="5" data-i18n="font_size">サイズ</option>
-            <option value="7" data-i18n="font_standard">標準</option>
+            <option value="5"  data-i18n="font_size_label">サイズ</option>
+            <option value="7"  data-i18n="font_standard">標準</option>
             <option value="10" data-i18n="font_large">やや大</option>
             <option value="15" data-i18n="font_xlarge">特大</option>
         </select>
-        <input type="number" id="font-size-picker" onchange="changeFontSize(event)" value="16" min="10" max="500" class="tool-input" data-i18n="font_size" title="サイズ変更">
 
+        <!-- ★ 数値inputはplaceholderではなくtitleを翻訳 -->
+        <input type="number" id="font-size-picker" onchange="changeFontSize(event)"
+               value="16" min="10" max="500" class="tool-input"
+               data-i18n-title="font_size_input" title="サイズ変更">
+
+        <!-- 背景色 -->
         <div class="color-picker-group">
             <label for="card-bg-picker" data-i18n="label_bg_color">背景色:</label>
             <input type="color" id="card-bg-picker" class="custom-color-picker" value="#ffffff">
         </div>
-        
+
+        <!-- テキスト色 -->
         <div class="color-picker-group">
             <label for="text-color-picker" data-i18n="label_text_color">テキスト色:</label>
             <input type="color" id="text-color-picker" class="custom-color-picker" value="#000000">
         </div>
 
+        <!-- 画像追加 -->
         <div class="color-picker-group" style="margin-left: 10px;">
             <label for="image-url-input" data-i18n="label_add_image">画像追加:</label>
-            <input type="text" id="image-url-input" class="image-url-input" data-i18n="placeholder_image_url" placeholder="URLをペーストしてEnter" title="画像のリンクをペーストしてEnterキーを押してください">
+            <input type="text" id="image-url-input" class="image-url-input"
+                   data-i18n="placeholder_image_url"
+                   placeholder="URLをペーストしてEnter"
+                   title="画像のリンクをペーストしてEnterキーを押してください">
         </div>
-        
+
+        <!-- 一覧表示ボタン -->
         <button type="button" class="toolbar-btn" onclick="toggleTextListPanel()">
             <i data-lucide="list"></i>
             <span data-i18n="btn_list_view">一覧表示</span>
         </button>
 
+        <!-- テキスト一覧パネル -->
         <div id="text-list-panel" class="text-list-panel">
             <div class="panel-header">
                 <h3 data-i18n="text_list_title">テキスト一覧</h3>
-                <button onclick="toggleTextListPanel()" class="close-btn" data-i18n="btn_close">✖</button>
+                <button onclick="toggleTextListPanel()" class="close-btn">✖</button>
             </div>
-            <div id="text-list-content" class="panel-content">
-            </div>
+            <div id="text-list-content" class="panel-content"></div>
         </div>
 
+        <!-- テンプレートメニュー -->
         <div class="template-dropdown">
             <button class="toolbar-btn template-btn" onclick="toggleTemplateMenu(event)">
-                <i data-lucide="layout-template"></i> <span data-i18n="btn_template">テンプレート</span> <i data-lucide="chevron-down" style="width: 12px; height: 12px;"></i>
+                <i data-lucide="layout-template"></i>
+                <span data-i18n="btn_template">テンプレート</span>
+                <i data-lucide="chevron-down" style="width:12px; height:12px;"></i>
             </button>
             <div class="template-menu" id="template-menu-dropdown">
                 <div class="template-menu-item" onclick="saveTemplate()">
-                    <i data-lucide="save"></i> <span data-i18n="btn_save_template">現在の状態を保存</span>
+                    <i data-lucide="save"></i>
+                    <span data-i18n="btn_save_template">現在の状態を保存</span>
                 </div>
                 <div class="template-divider"></div>
                 <div id="saved-templates-list"></div>
@@ -75,33 +108,49 @@
         </div>
 
         <div class="spacer"></div>
-        <button onclick="saveCardSet()" class="save-btn shadow-btn" data-i18n="btn_save">セーブ</button>
-        <button onclick="saveAndExit()" class="exit-btn shadow-btn" data-i18n="btn_save_exit">セーブして終了</button>
+
+        <!-- セーブ・終了ボタン -->
+        <button onclick="saveCardSet()"  class="save-btn shadow-btn" data-i18n="btn_save">セーブ</button>
+        <button onclick="saveAndExit()"  class="exit-btn shadow-btn" data-i18n="btn_save_exit">セーブして終了</button>
     </div>
 
-    <div class="card-action-buttons" style="position: absolute; top: 80px; right: 20px; z-index: 100;">
+    <!-- カード削除ボタン：アイコン＋テキストなのでdata-i18nでOK -->
+    <div class="card-action-buttons" style="position:absolute; top:80px; right:20px; z-index:100;">
         <button onclick="deleteCurrentCard()" class="delete-card-btn shadow-btn" data-i18n="btn_delete_card">
             <i data-lucide="trash-2"></i> 削除
         </button>
     </div>
 
     <div class="card-container">
-        <button onclick="prevCard()" class="nav-btn shadow-btn" data-i18n="btn_prev_card"><i data-lucide="chevron-left"></i></button>
-        
+
+        <!-- ★ ナビボタン：アイコンのみ → data-i18n-title -->
+        <button onclick="prevCard()" class="nav-btn shadow-btn"
+                data-i18n-title="btn_prev_card" title="前のカード">
+            <i data-lucide="chevron-left"></i>
+        </button>
+
         <div class="flashcard-scene" onclick="flipCard(event)">
             <div class="flashcard" id="current-card">
                 <div class="card-face card-front" id="card-front"></div>
-                <div class="card-face card-back" id="card-back"></div>
+                <div class="card-face card-back"  id="card-back"></div>
             </div>
         </div>
+
         <div class="card-counter" id="card-counter">1 / 1</div>
+
         <div class="nav-right-group">
-            <button onclick="nextCard()" class="nav-btn shadow-btn" data-i18n="btn_next_card"><i data-lucide="chevron-right"></i></button>
-            <button onclick="addNewCard()" class="nav-btn add-card-btn shadow-btn"><i data-lucide="plus"></i></button>
+            <button onclick="nextCard()" class="nav-btn shadow-btn"
+                    data-i18n-title="btn_next_card" title="次のカード">
+                <i data-lucide="chevron-right"></i>
+            </button>
+            <!-- カード追加ボタンはアイコンのみ・固定UIなので翻訳不要 -->
+            <button onclick="addNewCard()" class="nav-btn add-card-btn shadow-btn">
+                <i data-lucide="plus"></i>
+            </button>
         </div>
+
         <div class="thumbnail-bar-container">
-            <div class="thumbnail-list" id="thumbnail-list">
-            </div>
+            <div class="thumbnail-list" id="thumbnail-list"></div>
         </div>
     </div>
 
@@ -109,5 +158,7 @@
         window.CURRENT_FOLDER_ID = "{{ folder_id }}";
     </script>
     <script src="/static/editor.js"></script>
+    <!-- ★ アイコン描画（最後に呼ぶ） -->
+    <script>lucide.createIcons();</script>
 </body>
 </html>

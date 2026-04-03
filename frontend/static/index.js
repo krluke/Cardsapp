@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (window.lucide) lucide.createIcons();
 });
 
-// --- ログイン状態のチェックと表示更新 ---
+// --- ログイン状态的チェックと表示更新 ---
 function checkLoginState() {
     const sessionStr = localStorage.getItem('user_session');
     
@@ -100,7 +100,7 @@ function switchTab(tabName) {
 
 // --- フォルダ新規作成 ---
 async function createNewFolderUI() {
-    const title = prompt(I18n.t('prompt_folder_name'), I18n.t('prompt_default_folder'));
+    const title = prompt('フォルダ名を入力', '無題のフォルダ');
     if (!title) return; 
 
     const session = JSON.parse(localStorage.getItem('user_session'));
@@ -114,9 +114,9 @@ async function createNewFolderUI() {
         if (res.ok) {
             loadFolders(); 
         } else {
-            alert(I18n.t('alert_folder_create_failed'));
+            alert('フォルダの作成に失敗しました');
         }
-    } catch (e) { alert(I18n.t('alert_network')); }
+    } catch (e) { alert('通信エラー'); }
 }
 
 // --- フォルダ設定（編集・削除）機能 ---
@@ -150,13 +150,13 @@ async function saveFolderSettings() {
             loadFolders();
         } else {
             const data = await res.json();
-            alert(I18n.t('alert_save_failed') + (data.message ? ': ' + data.message : ''));
+            alert('保存に失敗しました' + (data.message ? ': ' + data.message : ''));
         }
-    } catch (e) { alert(I18n.t('alert_network')); }
+    } catch (e) { alert('通信エラー'); }
 }
 
 async function confirmDeleteFolder() {
-    if (!confirm(I18n.t('alert_confirm_delete'))) return;
+    if (!confirm('本当に削除しますか？')) return;
     const sessionStr = localStorage.getItem('user_session');
     if (!sessionStr) return;
     const session = JSON.parse(sessionStr);
@@ -172,38 +172,22 @@ async function confirmDeleteFolder() {
             loadFolders();
         } else {
             const data = await res.json();
-            alert(I18n.t('alert_delete_failed') + (data.message ? ': ' + data.message : ''));
+            alert('削除に失敗しました' + (data.message ? ': ' + data.message : ''));
         }
-    } catch (e) { alert(I18n.t('alert_network')); }
+    } catch (e) { alert('通信エラー'); }
 }
 
 // --- UI操作系 ---
 function toggleAuthMenu() {
     const authDropdown = document.getElementById('auth-dropdown');
-    // 言語メニューが開いていたら閉じる
-    const langDropdown = document.getElementById('lang-dropdown');
-    if (langDropdown) langDropdown.classList.add('hidden');
-
     authDropdown.classList.toggle('hidden');
 }
 
-// ★ 修正：window.onclick（代入）→ addEventListener に変更
-//    言語メニュー・アカウントメニュー両方を正しくハンドリングする
 window.addEventListener('click', function(event) {
-    // --- アカウントメニューを閉じる ---
     const accountMenu = document.querySelector('.account-menu');
     const authDropdown = document.getElementById('auth-dropdown');
     if (authDropdown && accountMenu && !accountMenu.contains(event.target)) {
         authDropdown.classList.add('hidden');
-    }
-
-    // --- 言語メニューを閉じる ---
-    // ※ i18n.js 側でも同様の処理をしているが、
-    //    window.onclick の上書き問題を解消したことで i18n.js 側が正常動作するようになる
-    const langMenu = document.querySelector('.language-menu');
-    const langDropdown = document.getElementById('lang-dropdown');
-    if (langDropdown && langMenu && !langMenu.contains(event.target)) {
-        langDropdown.classList.add('hidden');
     }
 });
 
@@ -358,7 +342,7 @@ async function toggleAction(event, folderId, actionType) {
     event.stopPropagation();
     const sessionStr = localStorage.getItem('user_session');
     if (!sessionStr) {
-        alert(I18n.t('alert_login_required'));
+        alert('ログインしてください');
         return;
     }
     const session = JSON.parse(sessionStr);

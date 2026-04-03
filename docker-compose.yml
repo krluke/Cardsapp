@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   # --- MySQL データベース ---
@@ -7,10 +7,10 @@ services:
     container_name: my-mysql-db
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: krluke292438
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: flashcards_db
       MYSQL_USER: flashcard_user
-      MYSQL_PASSWORD: flashcard_pass
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     ports:
       - "3306:3306"
     volumes:
@@ -25,8 +25,10 @@ services:
     # 他のデバイスからアクセスする場合、127.0.0.1: は外すのがéma.gener一般です
     ports:
       - "5000:5000"
+    env_file:
+      - .env
     environment:
-      - DB_HOST=db  # service名「db」で通信可能
+      - DB_HOST=db # service名「db」で通信可能
       - DB_USER=flashcard_user
       - DB_PASSWORD=flashcard_pass
       - DB_NAME=flashcards_db

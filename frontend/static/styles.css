@@ -97,61 +97,10 @@ button { font-family: inherit; transition: var(--transition); }
 .lucide { width: 20px; height: 20px; stroke-width: 2; vertical-align: middle; }
 
 
-/* ==========================================
-   🌐 5. 言語切り替えメニュー
-   ========================================== */
-.language-menu {
-    position: relative;
-    display: inline-block;
-}
-
-.lang-btn {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    padding: 5px 12px;
-    border-radius: 20px;
-    font-weight: bold;
-    background: var(--bg-surface);
-    border: 1px solid var(--border-color);
-    color: var(--text-main);
-    cursor: pointer;
-    font-size: 14px;
-    transition: var(--transition);
-}
-.lang-btn:hover {
-    border-color: var(--accent-color);
-    color: var(--accent-color);
-}
-.lang-btn i {
-    width: 16px;
-    height: 16px;
-}
-
-/* 言語ドロップダウン専用 --- .dropdownを上書きしないよう別クラスで定義 */
-.lang-dropdown {
-    position: absolute;
-    top: calc(100% + 8px); /* ★ ボタンの真下に8px余白をあけて表示 */
-    right: 0;
-    background: var(--bg-surface);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-md);
-    width: 120px;
-    z-index: 9999;
-    border: 1px solid var(--border-color);
-    overflow: hidden;
-    padding: 4px 0;
-}
-.lang-dropdown .menu-btn {
-    border-bottom: 1px solid var(--border-color);
-}
-.lang-dropdown .menu-btn:last-child {
-    border-bottom: none;
-}
 
 
 /* ==========================================
-   📁 6. タブとフォルダタイル
+   📁 5. タブとフォルダタイル
    ========================================== */
 .tabs-container { display: flex; gap: 1rem; border-bottom: 1px solid var(--border-color); margin-bottom: 2rem; }
 .tab-btn {
@@ -223,9 +172,6 @@ button { font-family: inherit; transition: var(--transition); }
 .text-link { color: var(--accent-color); cursor: pointer; font-weight: bold; }
 .text-link:hover { text-decoration: underline; }
 
-/* メニューヘッダー */
-.menu-header { padding: 10px 16px; border-bottom: 1px solid var(--border-color); }
-
 /* ==========================================
    🔽 8. ドロップダウンメニュー（アカウント用）
    ========================================== */
@@ -233,25 +179,104 @@ button { font-family: inherit; transition: var(--transition); }
 
 .dropdown {
     position: absolute;
-    top: calc(100% + 8px); /* ★ ボタンの真下に8px余白をあけて表示 */
+    top: calc(100% + 12px);
     right: 0;
     background: var(--bg-surface);
     border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-md);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
     z-index: 1000;
-    min-width: 180px;
+    min-width: 220px;
     padding: 8px 0;
     overflow: hidden;
+    animation: dropdownFadeIn 0.15s ease-out;
 }
-.menu-btn {
-    width: 100%; display: flex; align-items: center; gap: 12px;
-    padding: 10px 16px; background: none; border: none; cursor: pointer;
-    font-size: 14px; color: var(--text-main); transition: var(--transition);
-}
-.menu-btn:hover { background-color: var(--accent-light); color: var(--accent-color); }
-.menu-btn i { width: 16px; height: 16px; flex-shrink: 0; }
 
+@keyframes dropdownFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.menu-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-canvas);
+}
+
+.menu-btn {
+    width: 100%; display: flex; align-items: center; gap: 14px;
+    padding: 12px 18px; background: none; border: none; cursor: pointer;
+    font-size: 15px; color: var(--text-main); transition: var(--transition);
+    text-align: left;
+}
+.menu-btn:hover { 
+    background-color: var(--accent-light); 
+    color: var(--accent-color);
+}
+.menu-btn i { 
+    width: 18px; 
+    height: 18px; 
+    flex-shrink: 0;
+    opacity: 0.7;
+}
+.menu-btn:hover i {
+    opacity: 1;
+}
+
+.dropdown-divider {
+    height: 1px;
+    background: var(--border-color);
+    margin: 6px 0;
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 18px;
+    color: var(--accent-color);
+    text-decoration: none;
+    font-size: 15px;
+    transition: var(--transition);
+}
+.dropdown-item:hover {
+    background-color: var(--accent-light);
+    color: var(--accent-color);
+}
+.dropdown-item i {
+    width: 18px;
+    height: 18px;
+    opacity: 0.7;
+}
+
+.logout-btn {
+    width: 100%;
+    background: none;
+    border: none;
+    color: var(--text-main);
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 15px;
+    text-align: left;
+}
+.logout-btn:hover {
+    background-color: var(--accent-light);
+    color: var(--accent-color);
+}
+
+button.dropdown-item {
+    width: 100%;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+}
 /* ==========================================
    🔍 9. 検索バー・ページネーション
    ========================================== */
@@ -298,3 +323,86 @@ button { font-family: inherit; transition: var(--transition); }
     color: var(--text-muted);
 }
 .empty-state p { margin-bottom: 1.5rem; font-size: 1rem; }
+
+
+
+/* =============================================
+   🌐 言語切り替えメニュー（styles.cssに追記）
+   ============================================= */
+
+/* ボタン本体 */
+.lang-menu {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.lang-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 0.5rem 0.8rem;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 13px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    cursor: pointer;
+    transition: var(--transition);
+    box-shadow: var(--shadow-sm);
+}
+.lang-btn:hover {
+    border-color: var(--accent-color);
+    color: var(--accent-color);
+    box-shadow: var(--shadow-md);
+}
+.lang-btn i {
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+}
+
+/* ドロップダウン本体
+   ※ .dropdown とは別クラスにして位置指定の干渉を防ぐ */
+.lang-dropdown {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    z-index: 2000;          /* アカウントドロップダウンより手前 */
+    min-width: 130px;
+    padding: 6px 0;
+    overflow: hidden;
+    animation: dropdownFadeIn 0.15s ease-out;
+}
+
+/* 各言語ボタン */
+.lang-dropdown .lang-option {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--text-main);
+    transition: var(--transition);
+    text-align: left;
+    font-family: inherit;
+}
+.lang-dropdown .lang-option:hover {
+    background-color: var(--accent-light);
+    color: var(--accent-color);
+}
+
+/* 現在選択中の言語を強調 */
+.lang-dropdown .lang-option.active {
+    color: var(--accent-color);
+    font-weight: bold;
+}
