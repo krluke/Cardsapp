@@ -1,1 +1,21 @@
+# Python 関連 (自動生成される不要なファイル)
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# Docker / データベース関連 (重要！)
+# ローカルのDBデータは共有せず、各々のPCで作成させるのが鉄則です
 db_data/
+backups/
+
+# 環境変数 / 秘密情報
+# GMAILのパスワードなどを守るために必須です
+.env
+
+# OS 固有のゴミファイル
+.DS_Store
+Thumbs.db
+
+# ログファイル
+*.log

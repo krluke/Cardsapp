@@ -15,6 +15,7 @@ from flask_cors import CORS
 import math
 from werkzeug.security import generate_password_hash, check_password_hash
 import bleach
+from bleach.css_sanitizer import CSSSanitizer
 
 # パス設定
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -27,8 +28,8 @@ app = Flask(__name__,
 CORS(app)
 
 # --- 設定 ---
-GMAIL_USER = os.environ.get('GMAIL_USER', 'fromserver.noreply@gmail.com')
-GMAIL_PASS = os.environ.get('GMAIL_PASS', 'bfufwrumphufkajc')
+GMAIL_USER = os.environ.get('GMAIL_USER')
+GMAIL_PASS = os.environ.get('GMAIL_PASS')
 
 # ==========================================
 # Rate Limiter (Thread-Safe)
@@ -398,7 +399,7 @@ def create_folder():
 
 # --- カード保存 API (修正版) ---
 @app.route('/api/cards/save', methods=['POST'])
-
+@csrf_protected # もしCSRF保護をつけている場合はそのまま
 def save_cards():
     try:
         data = request.json
@@ -409,8 +410,19 @@ def save_cards():
         if not login_id or not folder_id:
             return jsonify({"message": "ユーザー情報が必要です"}), 400
         
-        allowed_tags = ['span', 'div', 'br', 'p', 'b', 'i', 'strong', 'em', 'u', 'font']
-        allowed_attrs = {'*': ['class', 'style'], 'font': ['color', 'size', 'face']}
+        allowed_tags = ['span', 'div', 'br', 'p', 'b', 'i', 'strong', 'em', 'u', 'font', 'img']
+        allowed_attrs = {
+            '*':    ['class', 'style', 'data-name', 'data-aspect'],
+            'font': ['color', 'size', 'face'],
+            'img':  ['src', 'alt', 'draggable'],
+        }
+
+        # ✨ 追加：どのCSS（スタイル）を許可するかを指定する
+        css_sanitizer = CSSSanitizer(allowed_css_properties=[
+            'color', 'font-size', 'font-weight', 'font-style', 'text-decoration', 
+            'left', 'top', 'width', 'height', 'max-width', 'max-height', 'background-color',
+            'position', 'z-index'
+        ])
 
         conn = get_db()
         with conn.cursor() as c:
@@ -427,8 +439,9 @@ def save_cards():
             c.execute('DELETE FROM cards WHERE folder_id = %s', (folder_id,))
             
             for idx, card in enumerate(cards_data):
-                front_html = bleach.clean(card.get('front', ''), tags=allowed_tags, attributes=allowed_attrs)
-                back_html = bleach.clean(card.get('back', ''), tags=allowed_tags, attributes=allowed_attrs)
+                # ✨ 修正： css_sanitizer=css_sanitizer を引数に追加する！
+                front_html = bleach.clean(card.get('front', ''), tags=allowed_tags, attributes=allowed_attrs, css_sanitizer=css_sanitizer, strip=True)
+                back_html = bleach.clean(card.get('back', ''), tags=allowed_tags, attributes=allowed_attrs, css_sanitizer=css_sanitizer, strip=True)
                 
                 front_bg = card.get('frontBg', '') 
                 back_bg = card.get('backBg', '')  
@@ -440,8 +453,8 @@ def save_cards():
         conn.close()
         return jsonify({"message": "セーブ完了！"}), 200
     except Exception as e:
+        print(f"Save Error: {e}") # ターミナルでエラー原因を見やすくするため追加
         return jsonify({"message": "カードの保存に失敗しました"}), 500
-
 
 # --- ユーザーごとのフォルダ一覧取得 API ---
 @app.route('/api/folders/list', methods=['GET'])
@@ -512,7 +525,6 @@ def load_cards(folder_id):
         return jsonify(cards), 200
     except Exception as e:
         return jsonify({"message": "データの読み込みに失敗しました"}), 500
-
 
 
 @app.route('/api/folders/update', methods=['POST'])

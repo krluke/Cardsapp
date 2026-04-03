@@ -108,7 +108,7 @@ async function loadSavedCards(folderId) {
         const url = `/api/cards/load/${folderId}${session ? `?userEmail=${encodeURIComponent(session.id)}` : ''}`;
         const response = await fetch(url);
         if (!response.ok) {
-            alert(I18n.t('alert_data_load_failed'));
+            alert('データの読み込みに失敗しました');
             return;
         }
 

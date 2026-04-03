@@ -7,34 +7,46 @@
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- ★ data-i18n で動的にタイトルを切り替え -->
     <title data-i18n="viewer_title">カードビューワー</title>
     <link rel="stylesheet" href="/static/style.css">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- ★ i18n.jsを最初に読む（DOMContentLoaded内で翻訳適用） -->
     <script src="/static/i18n.js"></script>
 </head>
-<body class="viewer-body"> 
+<body class="viewer-body">
     <div class="editor-toolbar" style="justify-content: flex-start;">
-        <button onclick="goToHome()" class="icon-btn shadow-btn mr-2" data-i18n="btn_home" title="ホームに戻る">
+        <!-- ★ ツールチップはdata-i18n-title、アイコンのみボタンなのでtitleを翻訳 -->
+        <button onclick="goToHome()" class="icon-btn shadow-btn mr-2"
+                data-i18n-title="btn_home"
+                title="ホームに戻る">
             <i data-lucide="home"></i>
         </button>
+        <!-- ★ ヘッダーテキストはdata-i18nで翻訳 -->
         <span class="viewer-header-text" data-i18n="viewing_mode">閲覧モード</span>
     </div>
 
     <div class="card-container">
-        <button onclick="prevCard()" class="nav-btn shadow-btn" data-i18n="btn_prev_card" title="前のカード (←キー)">
+        <!-- ★ 前へボタン：アイコンのみ表示なのでtooltipを翻訳 -->
+        <button onclick="prevCard()" class="nav-btn shadow-btn"
+                data-i18n-title="btn_prev_card"
+                title="前のカード (←キー)">
             <i data-lucide="chevron-left"></i>
         </button>
-        
+
         <div class="flashcard-scene" onclick="flipCard(event)">
             <div class="flashcard" id="current-card">
                 <div class="card-face card-front" id="card-front"></div>
-                <div class="card-face card-back" id="card-back"></div>
+                <div class="card-face card-back"  id="card-back"></div>
             </div>
         </div>
-        
+
         <div class="nav-right-group">
             <div class="card-counter" id="card-counter" style="margin-right: 15px;">1 / 1</div>
-            <button onclick="nextCard()" class="nav-btn shadow-btn" data-i18n="btn_next_card" title="次のカード (→キー)">
+            <!-- ★ 次へボタン：同様にtooltipを翻訳 -->
+            <button onclick="nextCard()" class="nav-btn shadow-btn"
+                    data-i18n-title="btn_next_card"
+                    title="次のカード (→キー)">
                 <i data-lucide="chevron-right"></i>
             </button>
         </div>
@@ -44,5 +56,7 @@
         window.CURRENT_FOLDER_ID = "{{ folder_id }}";
     </script>
     <script src="/static/viewer.js"></script>
+    <!-- ★ アイコン描画 -->
+    <script>lucide.createIcons();</script>
 </body>
 </html>

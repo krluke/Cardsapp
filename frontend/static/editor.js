@@ -89,7 +89,7 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 function goToHome() { 
-    if(confirm(I18n.t('alert_confirm_discard_home'))) {
+    if(confirm('編集内容を破棄してホームに戻りますか？')) {
         window.location.href = '/';
     }
 }
@@ -108,6 +108,8 @@ function renderCard() {
     frontEl.style.backgroundColor = cards[currentCardIndex].frontBg || "";
     backEl.style.backgroundColor = cards[currentCardIndex].backBg || "";
     
+    restoreUIElements(frontEl);
+    restoreUIElements(backEl);
     rebindEvents(frontEl);
     rebindEvents(backEl);
     updateNavButtons();
@@ -118,11 +120,9 @@ function saveCurrentCardState() {
     const frontEl = document.getElementById('card-front');
     const backEl = document.getElementById('card-back');
     if (frontEl && backEl) {
-        deselectText(); // 選択枠を消してから保存
+        deselectText();
         cards[currentCardIndex].front = frontEl.innerHTML;
         cards[currentCardIndex].back = backEl.innerHTML;
-        
-        // 【追加】背景色も保存（これでDBへ送るJSONにも自動で含まれます）
         cards[currentCardIndex].frontBg = frontEl.style.backgroundColor;
         cards[currentCardIndex].backBg = backEl.style.backgroundColor;
     }
@@ -269,7 +269,7 @@ async function deleteCurrentCard() {
 
     // データベース保存前の新規カード
     if (!currentCardData.id) {
-        if (confirm(I18n.t('alert_confirm_discard_card'))) {
+        if (confirm('このカードを破棄しますか？')) {
             cards.splice(currentCardIndex, 1);
             if (cards.length === 0) {
                 cards = [{ front: "", back: "" }];
@@ -284,7 +284,7 @@ async function deleteCurrentCard() {
     }
 
     // 保存済みカードの削除
-    if (!confirm(I18n.t('alert_confirm_delete'))) return;
+    if (!confirm('本当に削除しますか？')) return;
 
     const sessionStr = localStorage.getItem('user_session');
     if (!sessionStr) return;
@@ -304,14 +304,14 @@ async function deleteCurrentCard() {
             } else if (currentCardIndex >= cards.length) {
                 currentCardIndex--;
             }
-            alert(I18n.t('alert_card_deleted'));
+            alert('カードを削除しました');
             renderCard();
         } else {
-            alert(I18n.t('alert_card_delete_failed'));
+            alert('カードの削除に失敗しました');
         }
     } catch (e) {
         console.error("Delete Error:", e);
-        alert(I18n.t('alert_network'));
+        alert('通信エラー');
     }
 }
 
@@ -588,7 +588,7 @@ function saveTemplate() {
     resetTextContent(frontClone);
     resetTextContent(backClone);
 
-    const templateName = prompt(I18n.t('alert_save_template_name'), I18n.t('alert_default_template'));
+    const templateName = prompt('テンプレート名を入力', '新しいテンプレート');
     if (!templateName) return;
 
     let templates = JSON.parse(localStorage.getItem('card_templates') || '[]');
@@ -602,7 +602,7 @@ function saveTemplate() {
     });
     localStorage.setItem('card_templates', JSON.stringify(templates));
     renderTemplateList();
-    alert(I18n.t('alert_template_saved'));
+    alert('テンプレートを保存しました');
 }
 
 // ==========================================
@@ -671,7 +671,7 @@ function renameTemplate(templateId) {
     
     if (!target) return;
 
-    const newName = prompt(I18n.t('alert_template_rename'), target.name);
+    const newName = prompt('新しい名前を入力', target.name);
     
     if (newName !== null && newName.trim() !== "") {
         target.name = newName.trim();
@@ -682,7 +682,7 @@ function renameTemplate(templateId) {
 
 // テンプレート削除用関数
 function deleteTemplate(templateId) {
-    if (!confirm(I18n.t('alert_confirm_delete_template'))) return;
+    if (!confirm('このテンプレートを削除しますか？')) return;
 
     let templates = JSON.parse(localStorage.getItem('card_templates') || '[]');
     // 指定したID以外のテンプレートを残す（＝削除）
@@ -699,7 +699,7 @@ function loadTemplate(templateId) {
     const target = templates.find(t => t.id === templateId);
     
     if (target) {
-        if (!confirm(I18n.t('alert_confirm_apply_template', { name: target.name }))) return;
+        if (!confirm('テンプレート「' + target.name + '」を適用しますか？')) return;
         
         const frontEl = document.getElementById('card-front');
         const backEl = document.getElementById('card-back');
@@ -769,7 +769,7 @@ async function saveCardSet() {
     saveCurrentCardState(); 
     const sessionStr = localStorage.getItem('user_session');
     if (!sessionStr) {
-        alert(I18n.t('alert_login_required_save'));
+        alert('保存するにはログインしてください');
         return false;
     }
     const session = JSON.parse(sessionStr);
@@ -780,28 +780,33 @@ async function saveCardSet() {
             body: JSON.stringify({
                 folderId: parseInt(window.CURRENT_FOLDER_ID, 10), 
                 userEmail: session.id, 
-                cards: cards
+                cards: cards.map(card => ({
+                    front:   getServerHTML(card.front   || ''),
+                    back:    getServerHTML(card.back    || ''),
+                    frontBg: card.frontBg || '',
+                    backBg:  card.backBg  || ''
+                }))
             })
         });
 
         if (response.ok) {
-            alert(I18n.t('alert_cards_saved'));
+            alert('カードを保存しました');
             return true;
         } else {
             const data = await response.json();
-            alert(I18n.t('alert_save_failed_server', { message: data.message || '' }));
+            alert('保存に失敗しました: ' + (data.message || ''));
             return false;
         }
     } catch (e) {
         console.error("Save Error:", e);
-        alert(I18n.t('alert_save_network_error'));
+        alert('ネットワークエラー');
         return false;
     }
 }
 
 async function saveAndExit() {
     const success = await saveCardSet();
-    if (success) goToHome();
+    if (success) window.location.href = '/';
 }
 
 async function loadSavedCards(folderId) {
@@ -812,7 +817,7 @@ async function loadSavedCards(folderId) {
         const url = `/api/cards/load/${folderId}${session ? `?userEmail=${encodeURIComponent(session.id)}` : ''}`;
         const response = await fetch(url);
         if (!response.ok) {
-            alert(I18n.t('alert_load_failed'));
+            alert('読み込みに失敗しました');
             return;
         }
 
@@ -827,7 +832,7 @@ async function loadSavedCards(folderId) {
         }
     } catch (e) {
         console.error("Load Error:", e);
-        alert(I18n.t('alert_load_network_error'));
+        alert('通信エラー');
     }
 }
 
@@ -1028,9 +1033,9 @@ function jumpToFace(isBack) {
 
 // --- キーボード操作（エディター用：Viewerと同じ挙動 + 入力欄ガード） ---
 window.addEventListener('keydown', (e) => {
-    // ✨ Editor専用ガード：入力欄（inputやtextarea）にフォーカスがある時はカード操作をしない
     const activeTag = document.activeElement.tagName.toLowerCase();
     if (activeTag === 'input' || activeTag === 'textarea') return;
+    if (document.activeElement.contentEditable === 'true') return;
 
     const cardInner = document.getElementById('current-card');
     if (!cardInner) return;
@@ -1117,7 +1122,7 @@ function addImageToCard(url) {
     };
 
     imgEl.onerror = () => {
-        alert(I18n.t('alert_image_load_failed'));
+        alert('画像の読み込みに失敗しました');
         wrapper.remove();
     };
 
@@ -1135,7 +1140,62 @@ function addImageToCard(url) {
     updateThumbnailBar(); 
 }
 
+function getServerHTML(html) {
+    const temp = document.createElement('div');
+    temp.innerHTML = html;
+    // 削除ボタン・ドラッグハンドル・リサイズハンドル・ラベルを除去
+    temp.querySelectorAll('.delete-btn, .drag-handle, .resize-handle, .textbox-label').forEach(el => el.remove());
+    // 選択状態クラスを除去
+    temp.querySelectorAll('.is-selected').forEach(el => el.classList.remove('is-selected'));
+    return temp.innerHTML;
+}
+function restoreUIElements(container) {
+    container.querySelectorAll('.draggable-text').forEach(box => {
+        const boxName = box.getAttribute('data-name') || 'テキストボックス';
+        if (!box.querySelector('.textbox-label')) {
+            const label = document.createElement('div');
+            label.className = 'textbox-label';
+            label.textContent = boxName;
+            box.insertBefore(label, box.firstChild);
+        }
+        if (!box.querySelector('.drag-handle')) {
+            const handle = document.createElement('div');
+            handle.innerHTML = '<i data-lucide="move"></i>';
+            handle.className = 'drag-handle';
+            box.insertBefore(handle, box.firstChild);
+        }
+        if (!box.querySelector('.delete-btn')) {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.innerHTML = '<i data-lucide="x"></i>';
+            btn.className = 'delete-btn';
+            box.appendChild(btn);
+        }
+        const tc = box.querySelector('.text-content');
+        if (tc) tc.contentEditable = 'true';
+    });
 
+    container.querySelectorAll('.draggable-image').forEach(img => {
+        if (!img.querySelector('.drag-handle')) {
+            const handle = document.createElement('div');
+            handle.innerHTML = '<i data-lucide="move"></i>';
+            handle.className = 'drag-handle';
+            img.insertBefore(handle, img.firstChild);
+        }
+        if (!img.querySelector('.delete-btn')) {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.innerHTML = '<i data-lucide="x"></i>';
+            btn.className = 'delete-btn';
+            img.appendChild(btn);
+        }
+        if (!img.querySelector('.resize-handle')) {
+            const resize = document.createElement('div');
+            resize.className = 'resize-handle';
+            img.appendChild(resize);
+        }
+    });
+}
 // icon --------------------------------------------------------------------------
 // アイコンを再描画する専用の関数を作る
 function refreshIcons() {

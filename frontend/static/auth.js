@@ -30,7 +30,7 @@ async function authenticatedFetch(url, options = {}) {
 // --- 【新規登録】1. コードを送信 ---
 async function sendVerificationCode() {
     const email = document.getElementById('signup-email').value;
-    if (!email) return alert(I18n.t('alert_email_required'));
+    if (!email) return alert('メールアドレスを入力してください');
  
     const COOLDOWN_MS = 60 * 1000;
     const lastSentAt = parseInt(localStorage.getItem('codeSentAt') || '0', 10);
@@ -38,7 +38,7 @@ async function sendVerificationCode() {
  
     if (elapsed < COOLDOWN_MS) {
         const remaining = Math.ceil((COOLDOWN_MS - elapsed) / 1000);
-        alert(I18n.t('alert_code_resend_cooldown', { seconds: remaining }));
+        alert(`${remaining}秒後に再送信できます`);
         return;
     }
  
@@ -54,19 +54,19 @@ async function sendVerificationCode() {
         });
         const data = await response.json();
         if (response.ok) {
-            alert(I18n.t('alert_code_sent'));
+            alert('確認コードを送信しました');
         } else {
-            alert(I18n.t('alert_send_failed') + (data.message ? ': ' + data.message : ''));
+            alert('送信に失敗しました' + (data.message ? ': ' + data.message : ''));
             localStorage.removeItem('codeSentAt');
             btn.disabled = false;
-            btn.innerText = I18n.t('btn_send_code');
+            btn.innerText = '送信';
         }
     } catch (e) {
         console.error("Fetch Error:", e);
-        alert(I18n.t('alert_server_unreachable'));
+        alert('サーバーに接続できません');
         localStorage.removeItem('codeSentAt');
         btn.disabled = false;
-        btn.innerText = I18n.t('btn_send_code');
+        btn.innerText = '送信';
     }
 }
 
@@ -77,9 +77,9 @@ function startCooldownTimer(btn) {
         const remaining = COOLDOWN_SEC - Math.floor((Date.now() - lastSentAt) / 1000);
         if (remaining <= 0) {
             btn.disabled = false;
-            btn.innerText = I18n.t('btn_send_code');
+            btn.innerText = '送信';
         } else {
-            btn.innerText = I18n.t('alert_code_resend_cooldown', { seconds: remaining });
+            btn.innerText = `${remaining}秒後に再送信できます`;
             setTimeout(update, 1000);
         }
     };
@@ -95,7 +95,7 @@ async function handleSignup(e) {
     const code = document.getElementById('signup-code').value;
     const password = document.getElementById('signup-password').value;
 
-    if (!username || !email || !code || !password) return alert(I18n.t('alert_fill_all_fields'));
+    if (!username || !email || !code || !password) return alert('すべての項目を入力してください');
 
     try {
         const response = await authenticatedFetch(`${API_URL}/signup`, {
@@ -111,11 +111,11 @@ async function handleSignup(e) {
             document.getElementById('login-password').value = password;
             handleLogin();
         } else {
-            alert(I18n.t('alert_signup_failed', { message: data.message || '' }));
+            alert('登録に失敗しました: ' + (data.message || ''));
         }
     } catch (e) {
         console.error("Signup Error:", e);
-        alert(I18n.t('alert_network_error'));
+        alert('ネットワークエラー');
     }
 }
 
@@ -144,15 +144,15 @@ async function handleLogin(e) {
                 csrfToken: data.csrfToken || null
             }));
 
-            alert(I18n.t('alert_login_success'));
+            alert('ログインしました');
             closeAuthModal();
             window.location.reload();
         } else {
-            alert(I18n.t('alert_login_failed'));
+            alert('ログインに失敗しました');
         }
     } catch (err) {
         console.error("Login Error:", err);
-        alert(I18n.t('alert_login_error'));
+        alert('通信エラー');
     }
 }
 
@@ -160,7 +160,7 @@ async function handleLogin(e) {
 function handleLogout() {
     localStorage.removeItem('user_session');
     localStorage.removeItem('csrf_token');
-    alert(I18n.t('alert_logout_success'));
+    alert('ログアウトしました');
     window.location.reload();
 }
 
@@ -176,11 +176,14 @@ window.addEventListener('DOMContentLoaded', () => {
         }
         if (dropdown) {
             dropdown.innerHTML = `
-                <a href="/account" class="dropdown-item"><i data-lucide="user"></i> <span data-i18n="menu_account_info">${I18n.t('menu_account_info')}</span></a>
+                <a href="/account" class="dropdown-item" data-i18n="menu_account_info">
+                    <i data-lucide="user"></i> アカウント情報
+                </a>
                 <div class="dropdown-divider"></div>
-                <button onclick="handleLogout()" class="dropdown-item logout-btn"><i data-lucide="log-out"></i> <span data-i18n="btn_logout">${I18n.t('btn_logout')}</span></button>
+                <button onclick="handleLogout()" class="dropdown-item logout-btn" data-i18n="menu_logout">
+                        <i data-lucide="log-out"></i> ログアウト
+                </button>
             `;
-            dropdown.classList.remove('hidden');
         }
     } else {
         if (authBtn) {
@@ -188,9 +191,10 @@ window.addEventListener('DOMContentLoaded', () => {
         }
         if (dropdown) {
             dropdown.innerHTML = `
-                <button onclick="showLogin()" class="dropdown-item"><i data-lucide="log-in"></i> <span data-i18n="btn_login">${I18n.t('btn_login')}</span></button>
+                <button onclick="showLogin()" class="dropdown-item" data-i18n="menu_login">
+                    <i data-lucide="log-in"></i> ログイン/登録
+                </button>
             `;
-            dropdown.classList.remove('hidden');
         }
     }
 
@@ -214,12 +218,12 @@ function closeAuthModal() {
 function switchAuthView(view) {
     const loginView = document.getElementById('login-view');
     const signupView = document.getElementById('signup-view');
-    
+
     if (view === 'login') {
-        if (loginView) loginView.style.display = 'block';
-        if (signupView) signupView.style.display = 'none';
+        if (loginView)  loginView.classList.remove('hidden');
+        if (signupView) signupView.classList.add('hidden');
     } else {
-        if (loginView) loginView.style.display = 'none';
-        if (signupView) signupView.style.display = 'block';
+        if (loginView)  loginView.classList.add('hidden');
+        if (signupView) signupView.classList.remove('hidden');
     }
 }
