@@ -1,85 +1,146 @@
 @charset "UTF-8";
 
-/* アカウントページも共通変数を使用するよう修正 */
+/* ==========================================
+   アカウントページ全体
+========================================== */
 body {
-  background-color: var(--bg-canvas);
-  color: var(--text-main);
-  transition:
-    background-color 0.3s,
-    color 0.3s; /* ふんわり切り替え */
+  background-color: var(--bg-canvas, #f4f4f9);
+  color: var(--text-main, #333);
+  transition: background-color 0.3s, color 0.3s;
 }
+
 .account-container {
   max-width: 600px;
   margin: 40px auto;
   padding: 30px;
-  background: var(--bg-surface); /* 変数に変更 */
+  background: var(--bg-surface, #fff); 
   border-radius: 12px;
-  box-shadow: var(--shadow-md);
-  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  border: 1px solid var(--border-color, #ddd);
+  transition: background-color 0.3s, border-color 0.3s; /* 箱の色もふんわり変える */
 }
+
+/* ✨ 見出しの文字色をテーマに連動させる */
+h2, h3 {
+  color: var(--text-main);
+  margin-top: 0;
+}
+
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-muted, #64748b);
+  text-decoration: none;
+  margin-bottom: 20px;
+  transition: color 0.2s;
+}
+
+.back-btn:hover {
+  color: var(--accent-color, #0284c7);
+}
+
+/* ==========================================
+   プロフィール上部
+========================================== */
 .profile-header {
   text-align: center;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color, #ddd);
   padding-bottom: 20px;
   margin-bottom: 20px;
+  transition: border-color 0.3s;
 }
+
 .profile-icon {
   width: 80px;
   height: 80px;
-  background: var(--accent-light);
-  color: var(--accent-color);
+  background: var(--accent-light, #e0f2fe);
+  color: var(--accent-color, #0284c7);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 0 auto 15px;
+  transition: background 0.3s, color 0.3s;
 }
+
+/* ==========================================
+   統計情報 (カード・いいね等)
+========================================== */
 .stat-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 15px;
   text-align: center;
 }
+
 .stat-box {
-  background: var(--bg-surface-hover);
+  background: var(--bg-surface-hover, #f8fafc);
   padding: 20px;
   border-radius: 8px;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border-color, #ddd);
+  transition: background-color 0.3s, border-color 0.3s;
 }
+
 .stat-number {
   font-size: 1.5em;
   font-weight: bold;
   color: var(--text-main);
   margin-top: 10px;
 }
-.back-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  color: var(--text-muted);
-  text-decoration: none;
-  margin-bottom: 20px;
-}
-.back-btn:hover {
-  color: var(--accent-color);
+
+/* ==========================================
+   設定・セキュリティ セクション
+========================================== */
+.settings-section,
+.account-section {
+  margin-top: 30px;
+  border-top: 1px solid var(--border-color, #ddd);
+  padding-top: 20px;
+  transition: border-color 0.3s;
 }
 
-/* 設定エリア */
-.settings-section {
-  margin-top: 30px;
-  border-top: 1px solid var(--border-color);
-}
 .setting-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-top: 15px;
   padding: 10px;
+  background: var(--bg-surface);
+  border-radius: 8px;
 }
+
+/* ✨ 説明文の文字色をテーマに連動 */
+.setting-item p {
+  color: var(--text-muted, #64748b);
+  margin: 0;
+  font-size: 0.9em;
+}
+
+/* セレクトボックス（テーマ選択） */
 .theme-select {
   padding: 8px;
   border-radius: 6px;
-  background: var(--bg-surface);
+  background: var(--bg-canvas, #fff);
   color: var(--text-main);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border-color, #ddd);
+  outline: none;
+  cursor: pointer;
+}
+
+/* ✨ パスワード変更ボタン（ダークモード対応） */
+.btn-secondary {
+  background: var(--bg-canvas, #f1f5f9);
+  color: var(--text-main);
+  border: 1px solid var(--border-color, #ddd);
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9em;
+  font-weight: bold;
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+  background: var(--border-color, #e2e8f0);
 }

@@ -375,6 +375,49 @@ def send_code():
         return jsonify({"message": "メール送信に失敗しました"}), 500
 
 
+# --- パスワード変更画面の表示 ---
+@app.route('/change-password')
+def change_password_page():
+    return render_template('change_password.html')
+
+# --- パスワード変更のAPI処理 ---
+@app.route('/api/user/change-password', methods=['POST'])
+def change_password_api():
+    data = request.json
+    user_email = data.get('userEmail')
+    current_password = data.get('currentPassword')
+    new_password = data.get('newPassword')
+    
+    if not user_email or not current_password or not new_password:
+        return jsonify({"error": "入力情報が不足しています"}), 400
+
+    try:
+        conn = get_db()
+        with conn.cursor() as c:
+            # 1. ユーザーの現在のパスワードをDBから取得
+            c.execute('SELECT password FROM users WHERE email = %s', (user_email,))
+            user = c.fetchone()
+            
+            # 2. ユーザーが存在するか、現在のパスワードが合っているか確認
+            if not user or not check_password_hash(user['password'], current_password):
+                conn.close()
+                return jsonify({"error": "現在のパスワードが間違っています"}), 401
+            
+            # 3. 新しいパスワードをハッシュ化（暗号化）
+            hashed_password = generate_password_hash(new_password)
+            
+            # 4. DBを新しいパスワードで更新
+            c.execute('UPDATE users SET password = %s WHERE email = %s', (hashed_password, user_email))
+            conn.commit()
+            
+        conn.close()
+        return jsonify({"message": "パスワードを更新しました"}), 200
+        
+    except Exception as e:
+        print(f"Password change error: {e}")
+        return jsonify({"error": "サーバーエラーが発生しました"}), 500
+
+
 # --- フォルダ作成 API ---
 @app.route('/api/folders/create', methods=['POST'])
 def create_folder():

@@ -75,6 +75,31 @@ const translations = {
         "btn_save_template":        "現在の状態を保存",
         "btn_save_exit":            "セーブして終了",
         "btn_delete_card":          "削除",
+
+        "btn_back_home":          "ホームに戻る",
+
+        "changing_password":    "アカウントのパスワードを変更します。",
+        "password_change":      "パスワードを変更する",
+
+        "stat_cards":            "カード",
+        "stat_likes":          "いいね",
+        "stat_favorites":        "お気に入り",
+
+        "setting_theme":         "テーマ",
+        "theme_sand":          "サンド＆クリーム",
+        "theme_dark":           "ダークモード",
+
+        "change_password_title":    "パスワード変更",
+        "change_password_heading":  "パスワードの変更",
+        "btn_back_to_account":      "アカウントに戻る",
+        "label_current_password":   "現在のパスワード",
+        "placeholder_current_password": "現在のパスワード",
+        "label_new_password":       "新しいパスワード",
+        "placeholder_new_password": "新しいパスワード",
+        "label_confirm_password":   "新しいパスワード（確認用）",
+        "placeholder_confirm_password": "もう一度入力",
+        "btn_save_password":        "変更を保存",
+
     },
     en: {
         // Navigation common
@@ -148,6 +173,30 @@ const translations = {
         "btn_save_template":        "Save current state",
         "btn_save_exit":            "Save & Exit",
         "btn_delete_card":          "Delete",
+
+        "btn_back_home":          "Go to Home",
+
+        "changing_password":    "change the account password.",
+        "password_change":      "change password",
+
+        "stat_cards":            "Cards",
+        "stat_likes":          "Likes",
+        "stat_favorites":        "Favorites",
+
+        "setting_theme":         "Theme",
+        "theme_sand":          "Sand & Cream",
+        "theme_dark":           "Dark Mode",
+
+        "change_password_title":    "Change Password",
+        "change_password_heading":  "Change Password",
+        "btn_back_to_account":      "Back to Account",
+        "label_current_password":   "Current Password",
+        "placeholder_current_password": "Current password",
+        "label_new_password":       "New Password",
+        "placeholder_new_password": "New password",
+        "label_confirm_password":   "Confirm New Password",
+        "placeholder_confirm_password": "Enter again",
+        "btn_save_password":        "Save Changes",
     }
 };
 

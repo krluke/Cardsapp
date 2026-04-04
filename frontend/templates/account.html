@@ -14,6 +14,10 @@
 </head>
 <body>
 
+    <header class="navbar">
+        <h1 class="logo">CardsApp</h1>
+    </header>
+
 <div class="account-container">
     <a href="/" class="back-btn"><i data-lucide="arrow-left"></i> <span data-i18n="btn_back_home">ホームに戻る</span></a>
 
@@ -42,9 +46,16 @@
         <div class="setting-item">
             <span data-i18n="setting_theme">サイトのテーマ</span>
             <select id="theme-selector" class="theme-select">
-                <option value="light" data-i18n="theme_sand">🌅 サンド＆クリーム</option>
-                <option value="dark" data-i18n="theme_dark">🌙 ダークモード</option>
+                <option value="light" data-i18n="theme_sand">サンド＆クリーム</option>
+                <option value="dark" data-i18n="theme_dark">ダークモード</option>
             </select>
+        </div>
+
+        <div class="account-section">
+            <div class="setting-item">
+                <span data-i18n="changing_password">アカウントのパスワードを変更します。</span>
+                <button onclick="window.location.href='/change-password'" class="btn btn-secondary" data-i18n="password_change">パスワードを変更する</button>
+            </div>
         </div>
     </div>
 </div>
