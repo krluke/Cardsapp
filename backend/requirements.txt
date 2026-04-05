@@ -4,3 +4,6 @@ pymysql
 cryptography
 bleach
 tinycss2
+
+flake8
+pytest
