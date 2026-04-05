@@ -3,16 +3,20 @@
 ## Project Overview
 
 This is a flashcard application with:
+
 - **Backend**: Python Flask API (`backend/app.py`)
 - **Frontend**: Vanilla JavaScript with HTML/CSS templates
 - **Database**: MySQL 8.0
 - **Infrastructure**: Docker Compose (Nginx + Flask + MySQL)
+
+- github(build-and-test, deploy)
 
 ---
 
 ## Build, Run & Development Commands
 
 ### Docker Compose (Full Stack)
+
 ```bash
 # Start all services
 docker-compose up -d
@@ -28,6 +32,7 @@ docker-compose down
 ```
 
 ### Backend Development
+
 ```bash
 # Install dependencies locally
 pip install -r backend/requirements.txt
@@ -58,6 +63,7 @@ isort --check-only backend/
 ```
 
 ### Frontend Development
+
 ```bash
 # No build step - pure static files served by Nginx
 # Edit files in frontend/static/ and frontend/templates/ directly
@@ -79,6 +85,7 @@ isort --check-only backend/
 ```
 
 ### Database
+
 ```bash
 # Connect to MySQL container
 docker exec -it my-mysql-db mysql -u flashcard_user -pflashcards_db
@@ -100,6 +107,7 @@ cat backup_all.sql | docker exec -i my-mysql-db mysql -u flashcard_user -pflashc
 ### Python (Backend)
 
 **Imports**
+
 - Standard library first, then third-party (flask, pymysql), then local
 - One import per line
 - Group by: stdlib → third-party → local (with blank lines between)
@@ -126,6 +134,7 @@ import bleach
 ```
 
 **Formatting**
+
 - 4 spaces indentation (no tabs)
 - Maximum line length: 120 characters
 - Use blank lines to separate logical sections
@@ -133,6 +142,7 @@ import bleach
 - Follow existing code patterns in the codebase
 
 **Naming Conventions**
+
 - `snake_case` for variables, functions, and methods
 - `SCREAMING_SNAKE_CASE` for constants
 - `PascalCase` for class names (if used)
@@ -140,11 +150,13 @@ import bleach
 - Constants like `BASE_DIR`, `PROJECT_DIR`, `FRONTEND_DIR` use SCREAMING_SNAKE_CASE
 
 **Types**
+
 - Use type hints for function parameters and return values where helpful
 - Current codebase uses dynamic typing - add type hints incrementally
 - For complex return types, use comments or docstrings
 
 **Error Handling**
+
 - Wrap database operations in try/except blocks
 - Return JSON error responses with appropriate HTTP status codes:
   - 400 for client errors (validation, missing data)
@@ -182,6 +194,7 @@ finally:
 ```
 
 **Security**
+
 - Never hardcode credentials - use environment variables
 - Use parameterized queries (`%s`) to prevent SQL injection
 - Sanitize HTML input with `bleach` before storing
@@ -191,6 +204,7 @@ finally:
 - Validate and sanitize all user inputs
 
 **Database**
+
 - Use `with conn.cursor() as c:` for automatic cleanup
 - Always `conn.commit()` after write operations
 - Use `pymysql.cursors.DictCursor` for dict-like row access
@@ -202,12 +216,14 @@ finally:
 ### JavaScript (Frontend)
 
 **Formatting**
+
 - 4 spaces indentation
 - Maximum line length: 120 characters
 - Semicolons required
 - Use `const` by default, `let` when reassignment needed, avoid `var`
 
 **Naming**
+
 - `camelCase` for variables and functions
 - `PascalCase` for constructors and classes
 - `SCREAMING_SNAKE_CASE` for constants
@@ -215,6 +231,7 @@ finally:
 - Follow existing patterns in the codebase
 
 **Error Handling**
+
 - Wrap async fetch calls in try/catch blocks
 - Check `response.ok` before parsing JSON
 - Show user-friendly error messages via `alert()` or console
@@ -224,24 +241,25 @@ finally:
 ```javascript
 // Following the pattern from auth.js
 try {
-    const res = await fetch('/api/folders/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userEmail: session.id, title: title })
-    });
+  const res = await fetch("/api/folders/create", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userEmail: session.id, title: title }),
+  });
 
-    if (res.ok) {
-        loadFolders();
-    } else {
-        alert("作成に失敗しました");
-    }
+  if (res.ok) {
+    loadFolders();
+  } else {
+    alert("作成に失敗しました");
+  }
 } catch (e) {
-    console.error("Error:", e);
-    alert("通信エラー");
+  console.error("Error:", e);
+  alert("通信エラー");
 }
 ```
 
 **DOM Manipulation**
+
 - Use `document.getElementById()` for single elements
 - Use `document.querySelector()` for complex selectors
 - Check element existence before manipulation
@@ -249,6 +267,7 @@ try {
 - Minimize direct DOM manipulation; consider using templates
 
 **State Management**
+
 - Store session in `localStorage` as JSON
 - Parse with `JSON.parse()` and serialize with `JSON.stringify()`
 - Always check for null/undefined before parsing
@@ -257,12 +276,13 @@ try {
 
 ```javascript
 // Following the pattern from index.js
-const sessionStr = localStorage.getItem('user_session');
+const sessionStr = localStorage.getItem("user_session");
 if (!sessionStr) return;
 const session = JSON.parse(sessionStr);
 ```
 
 **API Communication**
+
 - Always set proper headers for JSON requests
 - Handle CSRF tokens for state-changing operations
 - Use consistent error handling patterns
@@ -298,12 +318,14 @@ const session = JSON.parse(sessionStr);
 ## API Conventions
 
 ### Request/Response Format
+
 - All API requests use JSON: `Content-Type: application/json`
 - Success responses include appropriate data
 - Error responses always include `message` or `error` field
 - Consistent response structure across endpoints
 
 ### Endpoints Pattern
+
 ```
 /api/{resource}/{action}     POST   - Create/update
 /api/{resource}/list         GET    - List with filters
@@ -312,6 +334,7 @@ const session = JSON.parse(sessionStr);
 ```
 
 ### Status Codes
+
 - 200: Success
 - 400: Bad request / validation error
 - 401: Unauthorized
@@ -321,6 +344,7 @@ const session = JSON.parse(sessionStr);
 - 500: Server error
 
 ### Specific Patterns from Codebase
+
 - Authentication endpoints: `/api/login`, `/api/signup`, `/api/send-code`
 - Folder management: `/api/folders/create`, `/api/folders/list`, `/api/folders/update`, `/api/folders/delete`
 - Card management: `/api/cards/save`, `/api/cards/load/<int:folder_id>`, `/api/cards/delete`
@@ -341,6 +365,7 @@ const session = JSON.parse(sessionStr);
 - Aim for high coverage of critical paths
 
 When tests are implemented:
+
 ```bash
 # Run all tests
 python -m pytest tests/
@@ -429,6 +454,7 @@ python -m pytest tests/ -k "login" -v
 10. **Disaster Recovery**: Have a plan for data recovery and service restoration
 
 When making changes:
+
 - Follow the existing code patterns
 - Write tests for new functionality
 - Update documentation as needed
