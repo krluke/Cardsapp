@@ -52,4 +52,7 @@ jobs:
       - name: Dockerコンテナを更新して再起動
         run: |
           cd ~/server-project
-          docker-compose up -d --build
+          # 1. 一度コンテナを完全に停止・削除して掃除する
+          docker-compose down
+          # 2. 新しくビルドして起動する（--force-recreate をつけるとより確実）
+          docker-compose up -d --build --force-recreate
