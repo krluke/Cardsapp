@@ -1,86 +1,31 @@
-// =============================================
-// i18n.js - 多言語対応
-// =============================================
+// i18n.js - i18next migration
+// This handles loading translations from JSON files and updating the DOM.
 
-const translations = {
-    ja: {
-        // ナビゲーション共通
-        "btn_create_folder":        "新規作成",
-        "btn_home":                 "ホームに戻る",
-        // ホーム タブ
-        "tab_my_folders":           "マイドライブ",
-        "tab_global_folders":       "公開カード",
-        // ホーム 検索
-        "search_placeholder":       "フォルダーを検索...",
-        "btn_search":               "🔍 検索",
-        // ホーム ゲストメッセージ
-        "guest_message":            "ログインするとフォルダを作成できます。",
-        "guest_login_btn":          "ログインする",
-        "global_guest_message":     "ログインすると全世界の公開カードを閲覧できます。",
-        // フォルダ設定モーダル
-        "folder_settings_title":    "フォルダ設定",
-        "label_folder_name":        "フォルダ名",
-        "placeholder_folder_name":  "フォルダ名",
-        "label_visibility":         "公開設定",
-        "visibility_private":       "プライベート (自分のみ)",
-        "visibility_public":        "パブリック (全体公開)",
-        "visibility_shared":        "特定の人のみ (準備中)",
-        "btn_save":                 "セーブ",
-        "btn_delete":               "削除",
-        // 認証モーダル
-        "login_title":              "ログイン",
-        "placeholder_login_id":     "メール または ユーザー名",
-        "placeholder_password":     "パスワード",
-        "btn_login":                "ログイン",
-        "switch_to_signup_text":    "アカウントがない？",
-        "switch_to_signup_link":    "新規登録",
-        "signup_title":             "新規登録",
-        "placeholder_username":     "ユーザー名",
-        "placeholder_email":        "メールアドレス",
-        "btn_send_code":            "送信",
-        "placeholder_verify_code":  "認証コード",
-        "btn_signup":               "登録",
-        "switch_to_login_text":     "作成済み？",
-        "switch_to_login_link":     "ログイン",
-        // フォルダグリッド
-        "no_folders":               "該当するフォルダがありません。",
-        "creator_label":            "作成者: ",
-        // アカウントメニュー
-        "menu_account_info":        "アカウント情報",
-        "menu_logout":              "ログアウト",
-        "menu_login":               "ログイン / 登録",
-        // ビューワー
-        "viewer_title":             "カードビューワー",
-        "viewing_mode":             "閲覧モード",
-        "btn_prev_card":            "前のカード",
-        "btn_next_card":            "次のカード",
-        // ★ エディタ
-        "editor_title":             "カードエディタ",
-        "btn_add_text":             "テキスト追加",
-        "btn_bold":                 "太字",
-        "btn_underline":            "下線",
-        "btn_italic":               "斜体",
-        "font_size_label":          "サイズ",
-        "font_standard":            "標準",
-        "font_large":               "やや大",
-        "font_xlarge":              "特大",
-        "font_size_input":          "サイズ変更",
-        "label_bg_color":           "背景色:",
-        "label_text_color":         "テキスト色:",
-        "label_add_image":          "画像追加:",
-        "placeholder_image_url":    "URLをペーストしてEnter",
-        "btn_list_view":            "一覧表示",
-        "text_list_title":          "テキスト一覧",
-        "btn_template":             "テンプレート",
-        "btn_save_template":        "現在の状態を保存",
-        "btn_save_exit":            "セーブして終了",
-        "btn_delete_card":          "削除",
+async function initI18n() {
+    const savedLang = localStorage.getItem('selectedLang') || 'ja';
 
-        "btn_back_home":          "ホームに戻る",
+    await i18next
+        .use(i18nextHttpBackend)
+        .init({
+            lng: savedLang,
+            fallbackLng: 'en',
+            backend: {
+                loadPath: '/static/locales/{{lng}}.json',
+            }
+        });
 
-        "changing_password":    "アカウントのパスワードを変更します。",
-        "password_change":      "パスワードを変更する",
+    updateDOM();
+    document.body.classList.remove('i18n-loading');
+    
+    // Set language switcher text if it exists
+    const textSpan = document.getElementById('current-lang-text');
+    if (textSpan) textSpan.textContent = savedLang.toUpperCase();
+}
 
+<<<<<<< HEAD
+function updateDOM() {
+    // 1. Text, placeholders, and options
+=======
         "stat_cards":            "カード",
         "stat_likes":          "いいね",
         "stat_favorites":        "お気に入り",
@@ -207,10 +152,11 @@ function changeLanguage(lang) {
     localStorage.setItem('selectedLang', lang);
 
     // data-i18n：テキスト・placeholder・option の書き換え
+>>>>>>> main
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
-        const text = translations[lang]?.[key];
-        if (!text) return;
+        const text = i18next.t(key);
+        if (!text || text === key) return;
 
         if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
             el.placeholder = text;
@@ -218,28 +164,46 @@ function changeLanguage(lang) {
             el.textContent = text;
         } else if (el.tagName === 'TITLE') {
             document.title = text;
-        } else if (el.querySelector('i[data-lucide]')) {
-            // アイコン付きボタン：アイコンを保持してテキストだけ差し替え
-            const icon = el.querySelector('i[data-lucide]');
-            el.textContent = ' ' + text;
-            el.prepend(icon);
         } else {
-            el.textContent = text;
+            // Check for Lucide icons (i or svg)
+            const icon = el.querySelector('[data-lucide]');
+            if (icon) {
+                // Keep the icon and update only the text node
+                // Clear all but the icon
+                Array.from(el.childNodes).forEach(node => {
+                    if (node !== icon && !icon.contains(node)) {
+                        el.removeChild(node);
+                    }
+                });
+                el.appendChild(document.createTextNode(' ' + text));
+            } else {
+                el.textContent = text;
+            }
         }
     });
 
-    // data-i18n-title：title属性（tooltip）の書き換え
+    // 2. Tooltips (title attributes)
     document.querySelectorAll('[data-i18n-title]').forEach(el => {
         const key = el.getAttribute('data-i18n-title');
-        const text = translations[lang]?.[key];
-        if (text) el.title = text;
+        const text = i18next.t(key);
+        if (text && text !== key) el.title = text;
     });
 }
 
-// --- 3. 言語ドロップダウンの開閉 ---
+function changeLanguage(lang) {
+    i18next.changeLanguage(lang, () => {
+        localStorage.setItem('selectedLang', lang);
+        updateDOM();
+        const textSpan = document.getElementById('current-lang-text');
+        if (textSpan) textSpan.textContent = lang.toUpperCase();
+    });
+}
+
+// Global helpers for other scripts
 function toggleLangMenu(event) {
     event.stopPropagation();
     const dropdown = document.getElementById('lang-dropdown');
+    if (!dropdown) return;
     const isHidden = dropdown.classList.contains('hidden');
     document.getElementById('auth-dropdown')?.classList.add('hidden');
     dropdown.classList.toggle('hidden', !isHidden);
@@ -247,12 +211,11 @@ function toggleLangMenu(event) {
 
 function selectLanguage(lang, event) {
     event.stopPropagation();
-    document.getElementById('lang-dropdown').classList.add('hidden');
-    document.getElementById('current-lang-text').textContent = lang.toUpperCase();
+    document.getElementById('lang-dropdown')?.classList.add('hidden');
     changeLanguage(lang);
 }
 
-// 外側クリックで言語メニューを閉じる
+// Close dropdown on outside click
 window.addEventListener('click', function (e) {
     const langMenu = document.querySelector('.lang-menu');
     const langDropdown = document.getElementById('lang-dropdown');
@@ -261,10 +224,5 @@ window.addEventListener('click', function (e) {
     }
 });
 
-// --- 4. ページ読み込み時に保存済み言語を適用 ---
-window.addEventListener('DOMContentLoaded', () => {
-    const savedLang = localStorage.getItem('selectedLang') || 'ja';
-    const textSpan = document.getElementById('current-lang-text');
-    if (textSpan) textSpan.textContent = savedLang.toUpperCase();
-    changeLanguage(savedLang);
-});
+// Auto-init (Wait for DOM because we need to remove the loading class)
+document.addEventListener('DOMContentLoaded', initI18n);
