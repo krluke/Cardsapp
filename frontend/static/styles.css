@@ -34,6 +34,9 @@
     --text-main: #EAE6DF;
     --text-muted: #9E9891;
     --border-color: #4A453F;
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.6);
 }
 
 /* ==========================================
@@ -44,6 +47,12 @@ body {
     font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
     background-color: var(--bg-canvas);
     color: var(--text-main);
+    transition: background-color 0.3s, color 0.3s;
+}
+
+/* Fix for language flicker */
+.i18n-loading {
+    visibility: hidden;
 }
 .hidden { display: none !important; }
 .mb-1 { margin-bottom: 1rem; }
@@ -405,4 +414,35 @@ button.dropdown-item {
 .lang-dropdown .lang-option.active {
     color: var(--accent-color);
     font-weight: bold;
+}
+
+/* =============================================
+   🎨 テーマ切り替えメニュー
+   ============================================= */
+.theme-menu {
+    display: flex;
+    align-items: center;
+}
+
+#theme-toggle {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border-radius: 50%;
+    position: relative;
+    overflow: hidden;
+}
+
+#theme-toggle i {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+#theme-toggle i.hidden {
+    opacity: 0;
+    transform: translate(-50%, -100%);
+    pointer-events: none;
 }

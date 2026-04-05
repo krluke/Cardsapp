@@ -50,6 +50,9 @@
     --text-main: #EAE6DF;
     --text-muted: #9E9891;
     --border-color: #4A453F;
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.6);
 }
 
 
@@ -64,6 +67,7 @@ body.editor-body {
     overflow: hidden;
     margin: 0;
     padding: 0;
+    transition: background-color 0.3s, color 0.3s;
 }
 .spacer { flex-grow: 1; }
 
