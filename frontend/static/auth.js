@@ -177,11 +177,11 @@ window.addEventListener('DOMContentLoaded', () => {
         if (dropdown) {
             dropdown.innerHTML = `
                 <a href="/account" class="dropdown-item" data-i18n="menu_account_info">
-                    <i data-lucide="user"></i> アカウント情報
+                    <i data-lucide="user"></i>
                 </a>
                 <div class="dropdown-divider"></div>
                 <button onclick="handleLogout()" class="dropdown-item logout-btn" data-i18n="menu_logout">
-                        <i data-lucide="log-out"></i> ログアウト
+                        <i data-lucide="log-out"></i>
                 </button>
             `;
         }
@@ -192,13 +192,14 @@ window.addEventListener('DOMContentLoaded', () => {
         if (dropdown) {
             dropdown.innerHTML = `
                 <button onclick="showLogin()" class="dropdown-item" data-i18n="menu_login">
-                    <i data-lucide="log-in"></i> ログイン/登録
+                    <i data-lucide="log-in"></i>
                 </button>
             `;
         }
     }
 
     if (window.lucide) lucide.createIcons();
+    if (typeof updateDOM === 'function') updateDOM();
 });
 
 // --- モーダル制御 ---

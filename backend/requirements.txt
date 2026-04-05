@@ -4,3 +4,4 @@ pymysql
 cryptography
 bleach
 tinycss2
+requests
