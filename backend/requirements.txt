@@ -5,3 +5,5 @@ cryptography
 bleach
 tinycss2
 requests
+flake8
+pytest
