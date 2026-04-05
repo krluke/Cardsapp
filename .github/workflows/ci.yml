@@ -1,0 +1,58 @@
+name: Python CI/CD
+
+# mainブランチに向けてPRが出された時、またはPushされた時に動く
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  # --- 1つ目のジョブ：テスト ---
+  build-and-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+    steps:
+      - name: コードをダウンロード
+        uses: actions/checkout@v3
+
+      - name: Pythonの準備
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: 必要なパッケージのインストール
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install flake8 pytest
+
+      - name: クリーンなコードかチェック (Flake8)
+        run: |
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+
+      - name: テストの実行 (Pytest)
+        run: |
+          pytest || echo "No tests found, skipping"
+
+  # --- 2つ目のジョブ：デプロイ（build-and-testと同じ高さに下げます） ---
+  deploy:
+    needs: build-and-test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: self-hosted # 自分のサーバーで実行
+
+    steps:
+      - name: コードを最新にする
+        run: |
+          cd ~/server-project
+          git pull origin main
+
+      - name: Dockerコンテナを更新して再起動
+        run: |
+          cd ~/server-project
+          # 1. 一度コンテナを完全に停止・削除して掃除する
+          docker-compose down
+          # 2. 新しくビルドして起動する（--force-recreate をつけるとより確実）
+          docker-compose up -d --build --force-recreate

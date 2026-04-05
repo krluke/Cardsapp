@@ -6,10 +6,13 @@
 - **Database** – MySQL 8.0 (Docker service)
 - **Infrastructure** – Docker-Compose (Nginx + Flask + MySQL)
 
+- github(build-and-test, deploy)
+
 ---
 
 ## Build / Run / Test Commands
 ### Docker Compose (Full Stack)
+
 ```bash
 # Start all services
 docker-compose up -d
@@ -25,6 +28,7 @@ docker-compose down
 ```
 
 ### Backend Development
+
 ```bash
 # Install Python dependencies
 pip install -r backend/requirements.txt
@@ -49,6 +53,7 @@ python -m pytest tests/ --cov=backend --cov-report=term-missing
 ```
 
 ### Frontend Development
+
 ```bash
 # No build step – static files served by Nginx
 # Lint / validate helpers (install globally if needed)
@@ -66,6 +71,7 @@ eslint frontend/static/**/*.js --fix
 ```
 
 ### Database Helpers
+
 ```bash
 # Open a shell to the MySQL container
 docker exec -it my-mysql-db mysql -u flashcard_user -pflashcards_db
@@ -180,13 +186,21 @@ try {
 
 ---
 
-## Linting & Formatting Toolchain
-| Area | Tool | Command |
-|------|------|---------|
-| Python imports & style | **isort**, **black**, **flake8** | `isort backend/ && black backend/ && flake8 backend/` |
-| JavaScript lint | **eslint** | `eslint frontend/static/**/*.js` |
-| CSS lint | **stylelint** | `stylelint frontend/static/**/*.css` |
-| HTML validation | **html-validator** | `html-validator frontend/templates/*.html` |
+## API Conventions
+
+### Request/Response Format
+- All API requests use JSON: `Content-Type: application/json`
+- Success responses include appropriate data
+- Error responses always include `message` or `error` field
+- Consistent response structure across endpoints
+
+### Endpoints Pattern
+```
+/api/{resource}/{action}     POST   - Create/update
+/api/{resource}/list         GET    - List with filters
+/api/{resource}/{id}         GET    - Get single
+/api/{resource}/delete       POST   - Delete
+```
 
 ---
 
@@ -229,16 +243,6 @@ Cardsapp/
 
 ---
 
-## Development Best Practices
-1. **Read the existing code** before making changes.
-2. **Run linters** (`black`, `flake8`, `eslint`) before committing.
-3. **Run tests** after every change; aim for > 80 % coverage.
-4. **Commit frequently** with clear, concise messages.
-5. **Document** any public API changes in this guide.
-6. **Stay consistent** with naming, error handling, and security patterns.
-
----
-
 ## API Endpoints
 ### Authentication
 - `POST /api/login` - User login with email/username and password
@@ -271,6 +275,9 @@ Cardsapp/
 ### Like & Favorite System
 - `POST /api/folders/toggle-action` - Toggle like/favorite status
 
+### AI Translation
+- `POST /api/ai/translate` - AI translation using NVIDIA NIM
+
 ---
 
 ## Environment Variables
@@ -280,6 +287,7 @@ Create a `.env` file based on `.env.example`:
 - `ADMIN_API_KEY` - Secret key for admin operations
 - `MYSQL_ROOT_PASSWORD` - MySQL root password
 - `MYSQL_PASSWORD` - MySQL user password
+- `NVIDIA_NIM_API_KEY` - NVIDIA NIM API Key (Optional)
 
 ## Database Schema
 ### Users Table

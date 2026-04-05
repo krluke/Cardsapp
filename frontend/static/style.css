@@ -48,7 +48,24 @@
     --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.6);
 }
 
-
+[data-theme="blue"] {
+    --bg-canvas: #0D1B3E;
+    --bg-surface: #223768;
+    --bg-surface-hover: #324063;
+    --text-main: #c7cbdd;
+    --text-muted: #b1b8c9;
+    --border-color: #65779c;
+    --shadow-sm: 0 2px 8px rgba(13, 27, 62, 0.08);
+    --shadow-md: 0 8px 24px rgba(13, 27, 62, 0.14);
+    --shadow-lg: 0 16px 40px rgba(13, 27, 62, 0.20);
+    --accent-color: #D94F6E;
+    --accent-hover: #BF3A58;
+    --accent-light: rgba(217, 79, 110, 0.12);
+    --danger-color: #C93E3E;
+    --danger-hover: #A83030;
+    --bg-card: #e2e7f3;
+    --bg-card-back: #C8D0E4;
+}
 /* =========================================
    1. ベーススタイル & テーマカラー対応
 ========================================= */

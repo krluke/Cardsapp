@@ -7,8 +7,8 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         
         // メッセージをリセット
-        errorMsg.style.display = 'none';
-        successMsg.style.display = 'none';
+        errorMsg.classList.add('hidden');
+        successMsg.classList.add('hidden');
 
         const currentPassword = document.getElementById('current-password').value;
         const newPassword = document.getElementById('new-password').value;
@@ -51,17 +51,17 @@ document.addEventListener('DOMContentLoaded', () => {
             if (response.ok) {
                 // 成功時
                 successMsg.textContent = 'パスワードが正常に変更されました！';
-                successMsg.style.display = 'block';
+                successMsg.classList.remove('hidden');
                 form.reset(); // フォームを空にする
             } else {
                 // エラー時（現在のパスワードが違うなど）
                 errorMsg.textContent = data.error || data.message || 'パスワードの変更に失敗しました。';
-                errorMsg.style.display = 'block';
+                errorMsg.classList.remove('hidden');
             }
         } catch (error) {
             console.error('Error:', error);
             errorMsg.textContent = '通信エラーが発生しました。';
-            errorMsg.style.display = 'block';
+            successMsg.classList.remove('hidden');
         }
     });
 });
