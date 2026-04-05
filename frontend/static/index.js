@@ -31,6 +31,8 @@ async function authenticatedFetch(url, options = {}) {
 
 document.addEventListener('DOMContentLoaded', () => {
     checkLoginState();
+    initThemeSelector();
+    if (window.lucode) lucode.createIcons(); // placeholder to avoid error, will be corrected later
     if (window.lucide) lucide.createIcons();
 });
 

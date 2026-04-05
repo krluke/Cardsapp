@@ -1205,3 +1205,121 @@ function refreshIcons() {
         console.error("Lucide is not loaded!");
     }
 }
+
+// Helper to create a new text box programmatically
+function createTextBox(x, y, content = "テキストを入力") {
+    const textWrapper = document.createElement('div');
+    textWrapper.className = 'draggable-text';
+    
+    textBoxCounter++;
+    const boxName = `テキストボックス ${textBoxCounter}`;
+    textWrapper.setAttribute('data-name', boxName);
+
+    const labelEl = document.createElement('div');
+    labelEl.className = 'textbox-label';
+    labelEl.textContent = boxName;
+    textWrapper.appendChild(labelEl);
+
+    textWrapper.style.left = `${x}px`;
+    textWrapper.style.top = `${y}px`;
+    
+    const textContent = document.createElement('div');
+    textContent.contentEditable = "true";
+    textContent.innerText = content;
+    textContent.className = 'text-content';
+    
+    const dragHandle = document.createElement('div');
+    dragHandle.innerHTML = '<i data-lucide="move"></i>';
+    dragHandle.className = 'drag-handle';
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.type = 'button'; 
+    deleteBtn.innerHTML = '<i data-lucide="x"></i>'; 
+    deleteBtn.className = 'delete-btn';
+
+    textWrapper.appendChild(dragHandle); 
+    textWrapper.appendChild(textContent);
+    textWrapper.appendChild(deleteBtn);
+    
+    return textWrapper;
+}
+
+// NVIDIA NIM AI Translation
+async function translateWithAI() {
+    const currentCard = document.getElementById('current-card');
+    const isBack = currentCard.classList.contains('is-flipped');
+    const sourceFace = isBack ? document.getElementById('card-back') : document.getElementById('card-front');
+    const targetFace = isBack ? document.getElementById('card-front') : document.getElementById('card-back');
+
+    // Get text from source face (preferring selected text box, otherwise first one found)
+    let sourceText = "";
+    const selectedBox = sourceFace.querySelector('.draggable-text.is-selected .text-content');
+    if (selectedBox) {
+        sourceText = selectedBox.innerText;
+    } else {
+        const firstBox = sourceFace.querySelector('.text-content');
+        if (firstBox) sourceText = firstBox.innerText;
+    }
+
+    if (!sourceText || !sourceText.trim()) {
+        alert(i18next.t('error_no_text_to_translate') || "翻訳するテキストが見つかりません。");
+        return;
+    }
+
+    const btn = document.getElementById('ai-translate-btn');
+    const originalContent = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i data-lucide="loader-2" class="animate-spin"></i> Loading...';
+    refreshIcons();
+
+    const session = JSON.parse(localStorage.getItem('user_session'));
+    const userEmail = session ? (session.id || session.email) : null;
+    const targetLang = (localStorage.getItem('selectedLang') || 'ja') === 'ja' ? 'en' : 'ja';
+
+    try {
+        const response = await fetch('/api/ai/translate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': getCsrfToken()
+            },
+            json: true, // This is not a standard fetch option, just a reminder
+            body: JSON.stringify({
+                text: sourceText,
+                target_lang: targetLang,
+                userEmail: userEmail
+            })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            // Find or create a text box on the target face
+            let targetBox = targetFace.querySelector('.text-content');
+            if (!targetBox) {
+                // If no box exists, add a new one
+                const x = 50, y = 50;
+                const newBox = createTextBox(x, y, data.translatedText);
+                targetFace.appendChild(newBox);
+                rebindEvents(targetFace);
+                refreshIcons();
+            } else {
+                targetBox.innerText = data.translatedText;
+            }
+            
+            // Flip to the target face to show the result
+            jumpToFace(!isBack);
+            saveCurrentCardState();
+            updateThumbnailBar();
+        } else {
+            alert(data.error || "AI翻訳に失敗しました。");
+        }
+    } catch (e) {
+        console.error(e);
+        alert("通信エラーが発生しました。");
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalContent;
+        refreshIcons();
+    }
+}
