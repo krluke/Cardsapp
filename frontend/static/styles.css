@@ -35,6 +35,25 @@
     --text-muted: #9E9891;
     --border-color: #4A453F;
 }
+/* ==========================================
+   🌙 2. 青のカラーパレット
+   ========================================== */
+[data-theme="blue"] {
+    --bg-canvas: #4e6fc2;
+    --bg-surface: #223768;
+    --bg-surface-hover: #324063;
+    --text-main: #c7cbdd;
+    --text-muted: #b1b8c9;
+    --border-color: #65779c;
+    --shadow-sm: 0 2px 8px rgba(13, 27, 62, 0.08);
+    --shadow-md: 0 8px 24px rgba(13, 27, 62, 0.14);
+    --shadow-lg: 0 16px 40px rgba(13, 27, 62, 0.20);
+    --accent-color: #D94F6E;
+    --accent-hover: #BF3A58;
+    --accent-light: rgba(217, 79, 110, 0.12);
+    --danger-color: #C93E3E;
+    --danger-hover: #A83030;
+}
 
 /* ==========================================
    📐 3. ベーススタイル

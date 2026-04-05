@@ -88,6 +88,7 @@ const translations = {
         "setting_theme":         "テーマ",
         "theme_sand":          "サンド＆クリーム",
         "theme_dark":           "ダークモード",
+        "theme_blue":           "青",
 
         "change_password_title":    "パスワード変更",
         "change_password_heading":  "パスワードの変更",
@@ -186,6 +187,7 @@ const translations = {
         "setting_theme":         "Theme",
         "theme_sand":          "Sand & Cream",
         "theme_dark":           "Dark Mode",
+        "theme_blue":           "Blue",
 
         "change_password_title":    "Change Password",
         "change_password_heading":  "Change Password",
