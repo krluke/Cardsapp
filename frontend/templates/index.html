@@ -26,12 +26,13 @@
 
             <!-- ★ 言語切り替えボタン -->
             <!-- ★ テーマ切り替え -->
-            <div class="theme-menu">
-                <button id="theme-toggle" class="icon-btn shadow-btn" onclick="toggleTheme()" data-i18n-title="setting_theme">
-                    <i data-lucide="sun" id="theme-icon-sun"></i>
-                    <i data-lucide="moon" id="theme-icon-moon" class="hidden"></i>
-                </button>
-            </div>
+<div class="theme-menu">
+                  <select id="theme-select" class="icon-btn shadow-btn" onchange="toggleTheme(this.value)" data-i18n-title="setting_theme">
+                      <option value="light" data-i18n="theme_light">Light</option>
+                      <option value="dark" data-i18n="theme_dark">Dark</option>
+                      <option value="sepia" data-i18n="theme_sepia">Sepia</option>
+                  </select>
+              </div>
             <div class="lang-menu">
                 <button class="lang-btn" id="lang-btn" onclick="toggleLangMenu(event)">
                     <i data-lucide="globe"></i>
