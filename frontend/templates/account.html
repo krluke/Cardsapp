@@ -43,15 +43,6 @@
     </div>
 
     <div class="settings-section">
-        <div class="setting-item">
-            <span data-i18n="setting_theme">サイトのテーマ</span>
-            <select id="theme-selector" class="theme-select">
-                <option value="light" data-i18n="theme_sand">サンド＆クリーム</option>
-                <option value="dark" data-i18n="theme_dark">ダークモード</option>
-                <option value="blue" data-i18n="theme_blue">青</option>
-            </select>
-        </div>
-
         <div class="account-section">
             <div class="setting-item">
                 <span data-i18n="changing_password">アカウントのパスワードを変更します。</span>
@@ -64,15 +55,6 @@
 <script>
     document.addEventListener("DOMContentLoaded", () => {
         lucide.createIcons();
-        const themeSelector = document.getElementById("theme-selector");
-        const currentTheme = localStorage.getItem("app-theme") || "light";
-        themeSelector.value = currentTheme;
-
-        themeSelector.addEventListener("change", (e) => {
-            const newTheme = e.target.value;
-            document.documentElement.setAttribute("data-theme", newTheme);
-            localStorage.setItem("app-theme", newTheme);
-        });
     });
 </script>
 <script src="/static/account.js"></script>
