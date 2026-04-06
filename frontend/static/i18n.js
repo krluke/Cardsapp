@@ -343,6 +343,7 @@ function toggleLangMenu(event) {
     const dropdown = document.getElementById('lang-dropdown');
     const isHidden = dropdown.classList.contains('hidden');
     document.getElementById('auth-dropdown')?.classList.add('hidden');
+    document.getElementById('theme-dropdown')?.classList.add('hidden');
     dropdown.classList.toggle('hidden', !isHidden);
 }
 

@@ -50,6 +50,10 @@ function initTheme() {
 }
 
 function toggleThemeMenu(e) {
+    e.stopPropagation();
+    document.getElementById('lang-dropdown')?.classList.add('hidden');
+    document.getElementById('auth-dropdown')?.classList.add('hidden');
+
     const dropdown = document.getElementById('theme-dropdown');
     dropdown.classList.toggle('hidden');
     
@@ -57,16 +61,18 @@ function toggleThemeMenu(e) {
     const lang = localStorage.getItem('selectedLang') || 'ja';
     
     document.querySelectorAll('.theme-option').forEach(opt => {
-        // 1. 翻訳テキストの更新 (.theme-text の中身だけを書き換える)
-        const key = opt.getAttribute('data-i18n');
+        // ★ 変更箇所： textElement を先に取得し、そこから data-i18n を取る
         const textElement = opt.querySelector('.theme-text');
+        const key = textElement ? textElement.getAttribute('data-i18n') : null;
         
+        // 1. 翻訳テキストの更新
         if (key && typeof translations !== 'undefined' && translations[lang] && translations[lang][key]) {
             if (textElement) {
                 textElement.textContent = translations[lang][key];
             }
         }
-        // 2. アクティブなテーマのハイライト (data-value 属性を使って判定)
+        
+        // 2. アクティブなテーマのハイライト
         opt.classList.remove('active');
         const themeValue = opt.getAttribute('data-value');
         if (themeValue === current) {
@@ -231,6 +237,8 @@ async function confirmDeleteFolder() {
 
 // --- UI操作系 ---
 function toggleAuthMenu() {
+    document.getElementById('theme-dropdown')?.classList.add('hidden');
+    document.getElementById('lang-dropdown')?.classList.add('hidden');
     const authDropdown = document.getElementById('auth-dropdown');
     authDropdown.classList.toggle('hidden');
 }
