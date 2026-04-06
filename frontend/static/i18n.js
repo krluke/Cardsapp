@@ -111,6 +111,53 @@ const translations = {
         "placeholder_confirm_password": "もう一度入力",
         "btn_save_password":        "変更を保存",
 
+        // index.js
+        "prompt_folder_name":       "フォルダ名を入力",
+        "untitled_folder":          "無題のフォルダ",
+        "alert_folder_create_failed": "フォルダの作成に失敗しました",
+        "alert_comm_error":         "通信エラー",
+        "alert_save_failed":        "保存に失敗しました",
+        "confirm_delete_folder":    "本当に削除しますか？",
+        "alert_delete_failed":      "削除に失敗しました",
+        "alert_login_required":     "ログインしてください",
+        "label_creator":            "作成者: ",
+        "unknown_user":             "不明",
+        "label_id":                 "ID: ",
+        // editor.js
+        "confirm_discard_exit":     "編集内容を破棄してホームに戻りますか？",
+        "placeholder_text_input":   "テキストを入力",
+        "confirm_discard_card":     "このカードを破棄しますか？",
+        "confirm_delete_card":      "本当に削除しますか？",
+        "alert_card_deleted":       "カードを削除しました",
+        "alert_card_delete_failed": "カードの削除に失敗しました",
+        "label_textbox":            "テキストボックス",
+        "prompt_template_name":     "テンプレート名を入力",
+        "new_template":             "新しいテンプレート",
+        "alert_template_saved":     "テンプレートを保存しました",
+        "tooltip_rename":           "名前を変更",
+        "tooltip_delete_template":  "テンプレートを削除",
+        "prompt_new_name":          "新しい名前を入力",
+        "confirm_delete_template":  "このテンプレートを削除しますか？",
+        "confirm_apply_template":   "テンプレート「",
+        "confirm_apply_template_end": "」を適用しますか？",
+        "alert_login_to_save":      "保存するにはログインしてください",
+        "alert_card_saved":         "カードを保存しました",
+        "alert_load_failed":        "読み込みに失敗しました",
+        "alert_image_load_failed":  "画像の読み込みに失敗しました",
+        "alt_card_image":           "カード画像",
+        "unnamed_textbox":          "名称未設定",
+        // viewer.js
+        "alert_data_load_failed":   "データの読み込みに失敗しました",
+        // change_password.js
+        "alert_not_logged_in":      "ログインしていません。ログイン画面に戻ります。",
+        "password_mismatch":        "新しいパスワードが一致しません。",
+        "password_changed_success": "パスワードが正常に変更されました！",
+        "password_change_failed":   "パスワードの変更に失敗しました。",
+        "comm_error_occurred":      "通信エラーが発生しました。",
+        // account.js
+        "session_error":            "セッションエラー",
+        "load_failed":              "読み込み失敗",
+
     },
     en: {
         // Navigation common
@@ -219,33 +266,55 @@ const translations = {
         "label_confirm_password":   "Confirm New Password",
         "placeholder_confirm_password": "Enter again",
         "btn_save_password":        "Save Changes",
+
+        // index.js
+        "prompt_folder_name":       "Enter folder name",
+        "untitled_folder":          "Untitled Folder",
+        "alert_folder_create_failed": "Failed to create folder",
+        "alert_comm_error":         "Communication error",
+        "alert_save_failed":        "Failed to save",
+        "confirm_delete_folder":    "Are you sure you want to delete?",
+        "alert_delete_failed":      "Failed to delete",
+        "alert_login_required":     "Please log in",
+        "label_creator":            "By: ",
+        "unknown_user":             "Unknown",
+        "label_id":                 "ID: ",
+        // editor.js
+        "confirm_discard_exit":     "Discard changes and return to home?",
+        "placeholder_text_input":   "Type text here",
+        "confirm_discard_card":     "Discard this card?",
+        "confirm_delete_card":      "Are you sure you want to delete?",
+        "alert_card_deleted":       "Card deleted",
+        "alert_card_delete_failed": "Failed to delete card",
+        "label_textbox":            "Text Box",
+        "prompt_template_name":     "Enter template name",
+        "new_template":             "New Template",
+        "alert_template_saved":     "Template saved",
+        "tooltip_rename":           "Rename",
+        "tooltip_delete_template":  "Delete template",
+        "prompt_new_name":          "Enter new name",
+        "confirm_delete_template":  "Delete this template?",
+        "confirm_apply_template":   "Apply template \"",
+        "confirm_apply_template_end": "\"?",
+        "alert_login_to_save":      "Please log in to save",
+        "alert_card_saved":         "Card saved",
+        "alert_load_failed":        "Failed to load",
+        "alert_image_load_failed":  "Failed to load image",
+        "alt_card_image":           "Card image",
+        "unnamed_textbox":          "Unnamed",
+        // viewer.js
+        "alert_data_load_failed":   "Failed to load data",
+        // change_password.js
+        "alert_not_logged_in":      "Not logged in. Returning to login screen.",
+        "password_mismatch":        "New passwords do not match.",
+        "password_changed_success": "Password changed successfully!",
+        "password_change_failed":   "Failed to change password.",
+        "comm_error_occurred":      "A communication error occurred.",
+        // account.js
+        "session_error":            "Session error",
+        "load_failed":              "Load failed",
+
     }
-};
-
-// --- 2. 翻訳を適用する ---
-function changeLanguage(lang) {
-    localStorage.setItem('selectedLang', lang);
-
-    // data-i18n：テキスト・placeholder・option の書き換え
-    document.querySelectorAll('[data-i18n]').forEach(el => {
-        const key = el.getAttribute('data-i18n');
-        const text = translations[lang]?.[key];
-        if (!text) return;
-
-        if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
-            el.placeholder = text;
-        } else if (el.tagName === 'OPTION') {
-            el.textContent = text;
-        } else if (el.tagName === 'TITLE') {
-            document.title = text;
-        } else if (el.querySelector('i[data-lucide]')) {
-            // アイコン付きボタン：アイコンを保持してテキストだけ差し替え
-            const icon = el.querySelector('i[data-lucide]');
-            el.textContent = ' ' + text;
-            el.prepend(icon);
-        } else {
-            el.textContent = text;
-        }
     });
 
     // data-i18n-title：title属性（tooltip）の書き換え

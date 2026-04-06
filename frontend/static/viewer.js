@@ -123,7 +123,7 @@ async function loadSavedCards(folderId) {
             document.getElementById('card-counter').innerText = "0 / 0";
         }
     } catch (e) {
-        console.error("読み込み失敗", e);
+        console.error("Load failed", e);
     }
 }
 
