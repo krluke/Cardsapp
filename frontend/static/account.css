@@ -4,6 +4,8 @@
    アカウントページ全体
 ========================================== */
 body {
+  background-color: var(--bg-canvas, #f4f4f9);
+  color: var(--text-main, #333);
   transition: background-color 0.3s, color 0.3s;
 }
 
@@ -15,7 +17,7 @@ body {
   border-radius: 12px;
   box-shadow: 0 4px 6px rgba(0,0,0,0.1);
   border: 1px solid var(--border-color, #ddd);
-  transition: background-color 0.3s, border-color 0.3s;
+  transition: background-color 0.3s, border-color 0.3s; /* 箱の色もふんわり変える */
 }
 
 /* ✨ 見出しの文字色をテーマに連動させる */
@@ -113,6 +115,17 @@ h2, h3 {
   color: var(--text-muted, #64748b);
   margin: 0;
   font-size: 0.9em;
+}
+
+/* セレクトボックス（テーマ選択） */
+.theme-select {
+  padding: 8px;
+  border-radius: 6px;
+  background: var(--bg-canvas, #fff);
+  color: var(--text-main);
+  border: 1px solid var(--border-color, #ddd);
+  outline: none;
+  cursor: pointer;
 }
 
 /* ✨ パスワード変更ボタン（ダークモード対応） */

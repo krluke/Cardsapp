@@ -10,30 +10,15 @@
     <title data-i18n="editor_title">カードエディタ</title>
     <link rel="stylesheet" href="/static/editor.css?v=dark">
     <script src="https://unpkg.com/lucide@0.475.0"></script>
-    <script src="https://unpkg.com/i18next@latest/dist/umd/i18next.min.js"></script>
-    <script src="https://unpkg.com/i18next-http-backend@latest/i18nextHttpBackend.min.js"></script>
     <script src="/static/i18n.js"></script>
-    <script src="/static/theme.js"></script>
 </head>
-<body class="editor-body i18n-loading">
+<body class="editor-body">
     <div class="editor-toolbar">
 
-        <!-- ★ ホーム戻るボタン -->
+        <!-- ★ アイコンのみ → data-i18n-title でtooltipを翻訳 -->
         <button onclick="goToHome()" class="icon-btn shadow-btn mr-2"
                 data-i18n-title="btn_home" title="ホームに戻る">
             <i data-lucide="home"></i>
-        </button>
-
-        <!-- ★ テーマ切り替え -->
-        <button id="theme-toggle" class="icon-btn shadow-btn mr-2" onclick="toggleTheme()" data-i18n-title="setting_theme">
-            <i data-lucide="sun" id="theme-icon-sun"></i>
-            <i data-lucide="moon" id="theme-icon-moon" class="hidden"></i>
-        </button>
-
-        <!-- AI翻訳ボタン -->
-        <button onclick="translateWithAI()" class="tool-btn mr-2" id="ai-translate-btn" style="background: var(--accent-light); border-color: var(--accent-color);">
-            <i data-lucide="sparkles"></i>
-            <span data-i18n="btn_ai_translate">AI翻訳</span>
         </button>
 
         <!-- テキスト追加ボタン：spanにdata-i18nを付けてアイコンを保護 -->
@@ -174,11 +159,6 @@
     </script>
     <script src="/static/editor.js"></script>
     <!-- ★ アイコン描画（最後に呼ぶ） -->
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            lucide.createIcons();
-            initThemeSelector();
-        });
-    </script>
+    <script>lucide.createIcons();</script>
 </body>
 </html>
