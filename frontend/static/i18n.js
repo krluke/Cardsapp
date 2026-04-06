@@ -42,6 +42,16 @@ const translations = {
         "btn_signup":               "登録",
         "switch_to_login_text":     "作成済み？",
         "switch_to_login_link":     "ログイン",
+        // Auth alerts
+        "code_sent":                "確認コードを送信しました",
+        "send_failed":              "送信に失敗しました",
+        "server_connect_error":     "サーバーに接続できません",
+        "fill_all_fields":          "すべての項目を入力してください",
+        "signup_failed":            "登録に失敗しました",
+        "network_error":            "ネットワークエラー",
+        "login_success":            "ログインしました",
+        "login_failed":             "ログインに失敗しました",
+        "logged_out":               "ログアウトしました",
         // フォルダグリッド
         "no_folders":               "該当するフォルダがありません。",
         "creator_label":            "作成者: ",
@@ -141,6 +151,16 @@ const translations = {
         "btn_signup":               "Register",
         "switch_to_login_text":     "Already have one?",
         "switch_to_login_link":     "Login",
+        // Auth alerts
+        "code_sent":                "Verification code sent",
+        "send_failed":              "Failed to send",
+        "server_connect_error":     "Cannot connect to server",
+        "fill_all_fields":          "Please fill in all fields",
+        "signup_failed":            "Registration failed",
+        "network_error":            "Network error",
+        "login_success":            "Logged in successfully",
+        "login_failed":             "Login failed",
+        "logged_out":               "Logged out",
         // Folder grid
         "no_folders":               "No folders found.",
         "creator_label":            "By: ",
