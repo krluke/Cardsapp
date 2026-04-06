@@ -493,7 +493,7 @@ button.dropdown-item {
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-lg);
     z-index: 2000;
-    min-width: 160px;
+    min-width: 200px;
     padding: 6px 0;
     overflow: hidden;
     animation: dropdownFadeIn 0.15s ease-out;
