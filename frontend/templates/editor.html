@@ -25,11 +25,10 @@
         </button>
 
         <!-- ★ テーマ切り替え -->
-        <select id="theme-select" class="icon-btn shadow-btn mr-2" onchange="toggleTheme(this.value)" data-i18n-title="setting_theme">
-            <option value="light" data-i18n="theme_light">Light</option>
-            <option value="dark" data-i18n="theme_dark">Dark</option>
-            <option value="sepia" data-i18n="theme_sepia">Sepia</option>
-        </select>
+        <button id="theme-toggle" class="icon-btn shadow-btn mr-2" onclick="toggleTheme()" data-i18n-title="setting_theme">
+            <i data-lucide="sun" id="theme-icon-sun"></i>
+            <i data-lucide="moon" id="theme-icon-moon" class="hidden"></i>
+        </button>
 
 
         <!-- テキスト追加ボタン：spanにdata-i18nを付けてアイコンを保護 -->
