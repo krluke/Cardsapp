@@ -245,12 +245,12 @@ window.addEventListener('click', function(event) {
     const themeDropdown = document.getElementById('theme-dropdown');
     if (themeDropdown && themeMenu && !themeMenu.contains(event.target)) {
         themeDropdown.classList.add('hidden');
+    }
 
     const langMenu = document.querySelector('.lang-menu');
     const langDropdown = document.getElementById('lang-dropdown');
     if (langDropdown && langMenu && !langMenu.contains(event.target)) {
         langDropdown.classList.add('hidden');
-    }
     }
 });
 
