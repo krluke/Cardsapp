@@ -140,6 +140,7 @@
 
             <form id="login-view" onsubmit="handleLogin(event)">
                 <h2 class="auth-title" data-i18n="login_title">ログイン</h2>
+                <div id="login-message" class="auth-message hidden"></div>
                 <input type="text"     id="login-id"       class="input-field mb-1"
                        data-i18n="placeholder_login_id" placeholder="メール または ユーザー名" required>
                 <input type="password" id="login-password" class="input-field mb-1"
@@ -154,6 +155,7 @@
 
             <form id="signup-view" class="hidden" onsubmit="handleSignup(event)">
                 <h2 class="auth-title" data-i18n="signup_title">新規登録</h2>
+                <div id="signup-message" class="auth-message hidden"></div>
                 <input type="text"  id="signup-username" class="input-field mb-1"
                        data-i18n="placeholder_username" placeholder="ユーザー名" required>
                 <div class="input-with-btn mb-1">

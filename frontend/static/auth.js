@@ -2,6 +2,33 @@
 // auth.js の一番上に追加
 const API_URL = "/api";
 
+function t(key) {
+    const lang = localStorage.getItem('selectedLang') || 'ja';
+    if (typeof translations !== 'undefined' && translations[lang] && translations[lang][key]) {
+        return translations[lang][key];
+    }
+    return key;
+}
+
+function showMessage(containerId, text, type) {
+    const el = document.getElementById(containerId);
+    if (!el) {
+        alert(text);
+        return;
+    }
+    el.textContent = text;
+    el.className = 'auth-message ' + type;
+    el.classList.remove('hidden');
+}
+
+function clearMessage(containerId) {
+    const el = document.getElementById(containerId);
+    if (el) {
+        el.classList.add('hidden');
+        el.textContent = '';
+    }
+}
+
 function getCsrfToken() {
     const session = JSON.parse(localStorage.getItem('user_session') || '{}');
     return session.csrfToken || null;
@@ -30,7 +57,7 @@ async function authenticatedFetch(url, options = {}) {
 // --- 【新規登録】1. コードを送信 ---
 async function sendVerificationCode() {
     const email = document.getElementById('signup-email').value;
-    if (!email) return alert('メールアドレスを入力してください');
+    if (!email) return showMessage('signup-message', t('placeholder_email'), 'error');
  
     const COOLDOWN_MS = 60 * 1000;
     const lastSentAt = parseInt(localStorage.getItem('codeSentAt') || '0', 10);
@@ -38,7 +65,7 @@ async function sendVerificationCode() {
  
     if (elapsed < COOLDOWN_MS) {
         const remaining = Math.ceil((COOLDOWN_MS - elapsed) / 1000);
-        alert(`${remaining}秒後に再送信できます`);
+        showMessage('signup-message', `${remaining}s`, 'error');
         return;
     }
  
@@ -54,19 +81,19 @@ async function sendVerificationCode() {
         });
         const data = await response.json();
         if (response.ok) {
-            alert('確認コードを送信しました');
+            showMessage('signup-message', t('code_sent'), 'success');
         } else {
-            alert('送信に失敗しました' + (data.message ? ': ' + data.message : ''));
+            showMessage('signup-message', t('send_failed') + (data.message ? ': ' + data.message : ''), 'error');
             localStorage.removeItem('codeSentAt');
             btn.disabled = false;
-            btn.innerText = '送信';
+            btn.innerText = t('btn_send_code');
         }
     } catch (e) {
         console.error("Fetch Error:", e);
-        alert('サーバーに接続できません');
+        showMessage('signup-message', t('server_connect_error'), 'error');
         localStorage.removeItem('codeSentAt');
         btn.disabled = false;
-        btn.innerText = '送信';
+        btn.innerText = t('btn_send_code');
     }
 }
 
@@ -77,9 +104,9 @@ function startCooldownTimer(btn) {
         const remaining = COOLDOWN_SEC - Math.floor((Date.now() - lastSentAt) / 1000);
         if (remaining <= 0) {
             btn.disabled = false;
-            btn.innerText = '送信';
+            btn.innerText = t('btn_send_code');
         } else {
-            btn.innerText = `${remaining}秒後に再送信できます`;
+            btn.innerText = `${remaining}s`;
             setTimeout(update, 1000);
         }
     };
@@ -89,13 +116,14 @@ function startCooldownTimer(btn) {
 // --- 【新規登録】2. アカウント作成 ---
 async function handleSignup(e) {
     if (e) e.preventDefault();
+    clearMessage('signup-message');
 
     const username = document.getElementById('signup-username').value;
     const email = document.getElementById('signup-email').value;
     const code = document.getElementById('signup-code').value;
     const password = document.getElementById('signup-password').value;
 
-    if (!username || !email || !code || !password) return alert('すべての項目を入力してください');
+    if (!username || !email || !code || !password) return showMessage('signup-message', t('fill_all_fields'), 'error');
 
     try {
         const response = await authenticatedFetch(`${API_URL}/signup`, {
@@ -106,22 +134,27 @@ async function handleSignup(e) {
         const data = await response.json();
 
         if (response.ok) {
-            alert(data.message);
+            showMessage('signup-message', data.message, 'success');
             document.getElementById('login-id').value = email;
             document.getElementById('login-password').value = password;
-            handleLogin();
+            setTimeout(() => {
+                switchAuthView('login');
+                clearMessage('signup-message');
+                handleLogin();
+            }, 1000);
         } else {
-            alert('登録に失敗しました: ' + (data.message || ''));
+            showMessage('signup-message', t('signup_failed') + (data.message ? ': ' + data.message : ''), 'error');
         }
     } catch (e) {
         console.error("Signup Error:", e);
-        alert('ネットワークエラー');
+        showMessage('signup-message', t('network_error'), 'error');
     }
 }
 
 // --- 【ログイン】 ---
 async function handleLogin(e) {
     if (e) e.preventDefault();
+    clearMessage('login-message');
 
     const loginId = document.getElementById('login-id').value;
     const password = document.getElementById('login-password').value;
@@ -144,15 +177,17 @@ async function handleLogin(e) {
                 csrfToken: data.csrfToken || null
             }));
 
-            alert('ログインしました');
-            closeAuthModal();
-            window.location.reload();
+            showMessage('login-message', t('login_success'), 'success');
+            setTimeout(() => {
+                closeAuthModal();
+                window.location.reload();
+            }, 800);
         } else {
-            alert('ログインに失敗しました');
+            showMessage('login-message', t('login_failed'), 'error');
         }
     } catch (err) {
         console.error("Login Error:", err);
-        alert('通信エラー');
+        showMessage('login-message', t('network_error'), 'error');
     }
 }
 
@@ -160,7 +195,6 @@ async function handleLogin(e) {
 function handleLogout() {
     localStorage.removeItem('user_session');
     localStorage.removeItem('csrf_token');
-    alert('ログアウトしました');
     window.location.reload();
 }
 
@@ -221,6 +255,9 @@ function closeAuthModal() {
 function switchAuthView(view) {
     const loginView = document.getElementById('login-view');
     const signupView = document.getElementById('signup-view');
+
+    clearMessage('login-message');
+    clearMessage('signup-message');
 
     if (view === 'login') {
         if (loginView)  loginView.classList.remove('hidden');

@@ -162,7 +162,7 @@ body {
     box-shadow: var(--shadow-lg, 0 10px 30px rgba(0,0,0,0.15)); 
     backface-visibility: hidden; 
     overflow: hidden; 
-    border: 1px solid rgba(0,0,0,0.02);
+    border: 1px solid var(--border-color);
 }
 /* ダークテーマ時の背景色を強制するならここも重要 */
 [data-theme="dark"] .card-face {
