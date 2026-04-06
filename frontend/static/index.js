@@ -42,23 +42,26 @@ function initTheme() {
 }
 
 function toggleThemeMenu(e) {
-    e.stopPropagation();
     const dropdown = document.getElementById('theme-dropdown');
     dropdown.classList.toggle('hidden');
+    
     const current = localStorage.getItem('app-theme') || 'light';
     const lang = localStorage.getItem('selectedLang') || 'ja';
-    if (typeof translations !== 'undefined' && translations[lang]) {
-        document.querySelectorAll('.theme-option').forEach(opt => {
-            const key = opt.getAttribute('data-i18n');
-            if (key && translations[lang][key]) {
-                opt.textContent = translations[lang][key];
-            }
-            opt.classList.remove('active');
-        });
-    }
-    const labels = { light: 'サンド', dark: 'ダーク', blue: '青' };
+    
     document.querySelectorAll('.theme-option').forEach(opt => {
-        if (opt.textContent.includes(labels[current])) {
+        // 1. 翻訳テキストの更新 (.theme-text の中身だけを書き換える)
+        const key = opt.getAttribute('data-i18n');
+        const textElement = opt.querySelector('.theme-text');
+        
+        if (key && typeof translations !== 'undefined' && translations[lang] && translations[lang][key]) {
+            if (textElement) {
+                textElement.textContent = translations[lang][key];
+            }
+        }
+        // 2. アクティブなテーマのハイライト (data-value 属性を使って判定)
+        opt.classList.remove('active');
+        const themeValue = opt.getAttribute('data-value');
+        if (themeValue === current) {
             opt.classList.add('active');
         }
     });
@@ -234,6 +237,12 @@ window.addEventListener('click', function(event) {
     const themeDropdown = document.getElementById('theme-dropdown');
     if (themeDropdown && themeMenu && !themeMenu.contains(event.target)) {
         themeDropdown.classList.add('hidden');
+
+    const langMenu = document.querySelector('.lang-menu');
+    const langDropdown = document.getElementById('lang-dropdown');
+    if (langDropdown && langMenu && !langMenu.contains(event.target)) {
+        langDropdown.classList.add('hidden');
+    }
     }
 });
 
