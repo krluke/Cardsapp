@@ -1,3 +1,4 @@
+// Viewer script with AI translation support added
 let cards = [{ front: "", back: "" }]; 
 let currentCardIndex = 0;
 
@@ -127,6 +128,123 @@ async function loadSavedCards(folderId) {
     }
 }
 
+// ---------- 新規追加：CSRF トークン取得 ----------
+function getCsrfToken() {
+    const session = JSON.parse(localStorage.getItem('user_session') || '{}');
+    return session.csrfToken || null;
+}
+
+// ---------- 新規追加：テキストボックス作成ユーティリティ ----------
+function createTextBox(x, y, content = "テキストを入力") {
+    const textWrapper = document.createElement('div');
+    textWrapper.className = 'draggable-text';
+    
+    // 名前は自動生成（viewer ではカウンタは不要なので簡易）
+    textWrapper.setAttribute('data-name', 'テキストボックス');
+    
+    const labelEl = document.createElement('div');
+    labelEl.className = 'textbox-label';
+    labelEl.textContent = 'テキストボックス';
+    textWrapper.appendChild(labelEl);
+    
+    textWrapper.style.left = `${x}px`;
+    textWrapper.style.top = `${y}px`;
+    
+    const textContent = document.createElement('div');
+    textContent.contentEditable = "true";
+    textContent.innerText = content;
+    textContent.className = 'text-content';
+    
+    const dragHandle = document.createElement('div');
+    dragHandle.innerHTML = '<i data-lucide="move"></i>';
+    dragHandle.className = 'drag-handle';
+    
+    const deleteBtn = document.createElement('button');
+    deleteBtn.type = 'button';
+    deleteBtn.innerHTML = '<i data-lucide="x"></i>';
+    deleteBtn.className = 'delete-btn';
+    
+    textWrapper.appendChild(dragHandle);
+    textWrapper.appendChild(textContent);
+    textWrapper.appendChild(deleteBtn);
+    
+    return textWrapper;
+}
+
+// ---------- AI 翻訳機能 ----------
+async function translateWithAI() {
+    const currentCard = document.getElementById('current-card');
+    const isBack = currentCard.classList.contains('is-flipped');
+    const sourceFace = isBack ? document.getElementById('card-back') : document.getElementById('card-front');
+    const targetFace = isBack ? document.getElementById('card-front') : document.getElementById('card-back');
+
+    let sourceText = "";
+    const selectedBox = sourceFace.querySelector('.draggable-text.is-selected .text-content');
+    if (selectedBox) {
+        sourceText = selectedBox.innerText;
+    } else {
+        const firstBox = sourceFace.querySelector('.text-content');
+        if (firstBox) sourceText = firstBox.innerText;
+    }
+
+    if (!sourceText || !sourceText.trim()) {
+        alert('翻訳するテキストが見つかりません。');
+        return;
+    }
+
+    const btn = document.getElementById('ai-translate-btn');
+    const originalContent = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader-2" class="animate-spin"></i> Loading...';
+    }
+    if (window.lucide) lucide.createIcons();
+
+    const session = JSON.parse(localStorage.getItem('user_session'));
+    const userEmail = session ? (session.id || session.email) : null;
+    const targetLang = (localStorage.getItem('selectedLang') || 'ja') === 'ja' ? 'en' : 'ja';
+
+    try {
+        const response = await fetch('/api/ai/translate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': getCsrfToken()
+            },
+            body: JSON.stringify({
+                text: sourceText,
+                target_lang: targetLang,
+                userEmail: userEmail
+            })
+        });
+        const data = await response.json();
+        if (response.ok) {
+            // Insert or replace text on target face
+            let targetBox = targetFace.querySelector('.text-content');
+            if (!targetBox) {
+                const newBox = createTextBox(50, 50, data.translatedText);
+                targetFace.appendChild(newBox);
+            } else {
+                targetBox.innerText = data.translatedText;
+            }
+            // Switch face to show result
+            jumpToFace(!isBack);
+            renderCard(); // re-render to apply any new elements
+        } else {
+            alert(data.error || 'AI 翻訳に失敗しました。');
+        }
+    } catch (e) {
+        console.error(e);
+        alert('通信エラーが発生しました。');
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = originalContent;
+        }
+        if (window.lucide) lucide.createIcons();
+    }
+}
+
 // --- キーボード操作の修正版（完全な表裏サイクル） ---
 window.addEventListener('keydown', (e) => {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
@@ -135,24 +253,19 @@ window.addEventListener('keydown', (e) => {
     const isFlipped = cardInner.classList.contains('is-flipped');
 
     if (e.key === 'ArrowRight') {
-        // 右矢印：表 → 裏 → 次の表
         if (!isFlipped) {
-            cardInner.classList.add('is-flipped'); // 表面なら裏返す（アニメあり）
+            cardInner.classList.add('is-flipped');
         } else {
-            nextCard(); // すでに裏面なら次のカードへ（アニメなしで表面へ）
+            nextCard();
         }
-    } 
-    else if (e.key === 'ArrowLeft') {
-        // 左矢印：裏 → 表 → 前の裏（右矢印の完全な逆再生）
+    } else if (e.key === 'ArrowLeft') {
         if (isFlipped) {
-            cardInner.classList.remove('is-flipped'); // 裏面なら表面に戻す（アニメあり）
+            cardInner.classList.remove('is-flipped');
         } else {
-            prevCard(); // すでに表面なら前のカードへ（アニメなしで裏面へ）
+            prevCard();
         }
-    } 
-    else if (e.key === ' ' || e.key === 'Enter') {
-        // スペース/エンター：単純な反転
-        e.preventDefault(); 
+    } else if (e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault();
         cardInner.classList.toggle('is-flipped');
     }
 });
