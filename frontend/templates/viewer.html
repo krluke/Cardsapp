@@ -34,6 +34,9 @@
 
         <!-- ★ ヘッダーテキストはdata-i18nで翻訳 -->
         <span class="viewer-header-text" data-i18n="viewing_mode">閲覧モード</span>
+    <button onclick=\"translateWithAI()\" class=\"tool-btn mr-2\" id=\"ai-translate-btn\" style=\"background: var(--accent-light); border-color: var(--accent-color);\" data-i18n-title=\"btn_translate\" title=\"AI 翻訳\">
+        <i data-lucide=\"translate\"></i>
+    </button>
     </div>
 
     <div class="card-container">
@@ -48,7 +51,10 @@
             <div class="flashcard" id="current-card">
                 <div class="card-face card-front" id="card-front"></div>
                 <div class="card-face card-back"  id="card-back"></div>
-            </div>
+        <button onclick="translateWithAI()" class="tool-btn mr-2" id="ai-translate-btn" style="background: var(--accent-light); border-color: var(--accent-color);" data-i18n-title="btn_translate" title="AI 翻訳">
+            <i data-lucide="translate"></i>
+        </button>
+    </div>
         </div>
 
         <div class="nav-right-group">
