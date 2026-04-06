@@ -314,16 +314,15 @@ const translations = {
         "session_error":            "Session error",
         "load_failed":              "Load failed",
 
-    }
-    });
-
-    // data-i18n-title：title属性（tooltip）の書き換え
-    document.querySelectorAll('[data-i18n-title]').forEach(el => {
-        const key = el.getAttribute('data-i18n-title');
-        const text = translations[lang]?.[key];
-        if (text) el.title = text;
-    });
+     }
 }
+
+// data-i18n-title：title属性（tooltip）の書き換え
+document.querySelectorAll('[data-i18n-title]').forEach(el => {
+    const key = el.getAttribute('data-i18n-title');
+    const text = translations[lang]?.[key];
+    if (text) el.title = text;
+});
 
 // --- 3. 言語ドロップダウンの開閉 ---
 function toggleLangMenu(event) {
