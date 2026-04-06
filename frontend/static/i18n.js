@@ -317,12 +317,25 @@ const translations = {
      }
 }
 
-// data-i18n-title：title属性（tooltip）の書き換え
-document.querySelectorAll('[data-i18n-title]').forEach(el => {
-    const key = el.getAttribute('data-i18n-title');
-    const text = translations[lang]?.[key];
-    if (text) el.title = text;
-});
+// --- Initialize translations on page load (with proper language detection) ---
+// This will run after translations object is defined
+let initTranslations = () => {
+    const lang = localStorage.getItem('selectedLang') || 'ja';
+    
+    // data-i18n-title：title属性（tooltip）の書き換え
+    document.querySelectorAll('[data-i18n-title]').forEach(el => {
+        const key = el.getAttribute('data-i18n-title');
+        const text = translations[lang]?.[key];
+        if (text) el.title = text;
+    });
+};
+
+// Call on DOM ready and after page load
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initTranslations);
+} else {
+    initTranslations();
+}
 
 // --- 3. 言語ドロップダウンの開閉 ---
 function toggleLangMenu(event) {
@@ -338,6 +351,55 @@ function selectLanguage(lang, event) {
     document.getElementById('lang-dropdown').classList.add('hidden');
     document.getElementById('current-lang-text').textContent = lang.toUpperCase();
     changeLanguage(lang);
+}
+
+// --- changeLanguage function: Update all UI elements to selected language ---
+function changeLanguage(lang) {
+    // Save selected language to localStorage
+    localStorage.setItem('selectedLang', lang);
+    
+    // Update all elements with data-i18n attribute
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (translations[lang] && translations[lang][key]) {
+            const text = translations[lang][key];
+            
+            // For input elements, use placeholder; for textareas, use placeholder; otherwise use textContent
+            if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+                el.placeholder = text;
+            } else if (el.tagName === 'OPTION') {
+                // For option elements, set text content
+                el.textContent = text;
+            } else {
+                // For buttons, labels, divs, spans, etc., set text content
+                el.textContent = text;
+            }
+        }
+    });
+    
+    // Update all elements with data-i18n-placeholder attribute (explicit placeholder)
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const key = el.getAttribute('data-i18n-placeholder');
+        if (translations[lang] && translations[lang][key]) {
+            el.placeholder = translations[lang][key];
+        }
+    });
+    
+    // Update all elements with data-i18n-title attribute (tooltips)
+    document.querySelectorAll('[data-i18n-title]').forEach(el => {
+        const key = el.getAttribute('data-i18n-title');
+        if (translations[lang] && translations[lang][key]) {
+            el.title = translations[lang][key];
+        }
+    });
+    
+    // Update data-i18n-value attributes (for options, buttons, etc.)
+    document.querySelectorAll('[data-i18n-value]').forEach(el => {
+        const key = el.getAttribute('data-i18n-value');
+        if (translations[lang] && translations[lang][key]) {
+            el.value = translations[lang][key];
+        }
+    });
 }
 
 // 外側クリックで言語メニューを閉じる
