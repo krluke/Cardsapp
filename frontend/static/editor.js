@@ -33,6 +33,15 @@ async function authenticatedFetch(url, options = {}) {
     return fetch(url, { ...options, headers: { ...headers, ...options.headers } });
 }
 
+// Translation helper function
+function t(key) {
+    const lang = localStorage.getItem('selectedLang') || 'ja';
+    if (typeof translations !== 'undefined' && translations[lang] && translations[lang][key]) {
+        return translations[lang][key];
+    }
+    return key;
+}
+
 window.addEventListener('DOMContentLoaded', () => {
     const pathParts = window.location.pathname.split('/');
     const folderId = pathParts[pathParts.length - 1];
@@ -620,14 +629,14 @@ function renderTemplateList() {
         return;
     }
 
-    templates.forEach(t => {
+    templates.forEach(template => {
         const row = document.createElement('div');
         row.className = 'template-item-row';
 
         const loadBtn = document.createElement('div');
         loadBtn.className = 'template-menu-item';
-        loadBtn.innerHTML = `<i data-lucide="file-text"></i> <span>${t.name}</span>`;
-        loadBtn.onclick = () => loadTemplate(t.id);
+        loadBtn.innerHTML = `<i data-lucide="file-text"></i> <span>${template.name}</span>`;
+        loadBtn.onclick = () => loadTemplate(template.id);
 
         // ボタンをまとめるコンテナ
         const actionsContainer = document.createElement('div');
@@ -640,7 +649,7 @@ function renderTemplateList() {
         editBtn.title = t('tooltip_rename');
         editBtn.onclick = (e) => {
             e.stopPropagation();
-            renameTemplate(t.id);
+            renameTemplate(template.id);
         };
 
         // 削除ボタン
@@ -650,7 +659,7 @@ function renderTemplateList() {
         delBtn.title = t('tooltip_delete_template');
         delBtn.onclick = (e) => {
             e.stopPropagation();
-            deleteTemplate(t.id);
+            deleteTemplate(template.id);
         };
 
         actionsContainer.appendChild(editBtn);
