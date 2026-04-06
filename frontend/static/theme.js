@@ -1,10 +1,48 @@
 // theme.js – handles theme selection globally (no login required)
+function getCsrfToken(){
+  const session = JSON.parse(localStorage.getItem('user_session') || '{}');
+  return session.csrfToken || null;
+}
+
 function initThemeSelector() {
-  const current = localStorage.getItem('app-theme') || 'light';
-  applyTheme(current);
+  const session = JSON.parse(localStorage.getItem('user_session') || '{}');
+  const userEmail = session.email || session.id;
+  if (userEmail) {
+    fetch(`/api/user/theme?userEmail=${encodeURIComponent(userEmail)}`)
+      .then(r => r.json())
+      .then(data => {
+        const theme = data.theme || 'light';
+        applyTheme(theme);
+      })
+      .catch(() => {
+        applyTheme('light');
+      });
+  } else {
+    const current = localStorage.getItem('app-theme') || 'light';
+    applyTheme(current);
+  }
 }
 
 function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme') || 'light';
+  const newTheme = current === 'light' ? 'dark' : 'light';
+  applyTheme(newTheme);
+  // Persist for logged-in user if available
+  const session = JSON.parse(localStorage.getItem('user_session') || '{}');
+  const userEmail = session.email || session.id;
+  if (userEmail) {
+    fetch('/api/user/theme', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': getCsrfToken()
+      },
+      body: JSON.stringify({ userEmail, theme: newTheme })
+    }).catch(() => {});
+  } else {
+    localStorage.setItem('app-theme', newTheme);
+  }
+}
   const current = document.documentElement.getAttribute('data-theme') || 'light';
   const newTheme = current === 'light' ? 'dark' : 'light';
   applyTheme(newTheme);

@@ -253,9 +253,16 @@ def init_db():
     wait_for_db()
     conn = get_db()
     with conn.cursor() as c:
-        c.execute(
-            """CREATE TABLE IF NOT EXISTS users (email VARCHAR(255) PRIMARY KEY, username VARCHAR(255), password VARCHAR(255))"""
-        )
+c.execute(
+    """CREATE TABLE IF NOT EXISTS users (email VARCHAR(255) PRIMARY KEY, username VARCHAR(255), password VARCHAR(255))"""
+)
+    # Add theme column for user preferences if not exists
+    try:
+        c.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS theme VARCHAR(20) DEFAULT 'light'")
+    except Exception as e:
+        # MySQL < 8 may not support IF NOT EXISTS, ignore duplicate column error
+        if 'Duplicate column' not in str(e):
+            raise
         c.execute(
             """CREATE TABLE IF NOT EXISTS verification_codes (email VARCHAR(255) PRIMARY KEY, code VARCHAR(255))"""
         )
@@ -1012,6 +1019,35 @@ def get_user_stats():
         ), 200
     except Exception as e:
         return jsonify({"error": "ユーザー統計の取得に失敗しました"}), 500
+
+# --- ユーザーのテーマ設定取得/更新 ---
+@app.route("/api/user/theme", methods=["GET", "POST"])
+def user_theme():
+    if request.method == "GET":
+        user_email = request.args.get("userEmail")
+        if not user_email:
+            return jsonify({"error": "userEmail required"}), 400
+        conn = get_db()
+        with conn.cursor() as c:
+            c.execute("SELECT theme FROM users WHERE email = %s", (user_email,))
+            row = c.fetchone()
+        conn.close()
+        if row:
+            return jsonify({"theme": row["theme"] or "light"}), 200
+        else:
+            return jsonify({"error": "User not found"}), 404
+    else:
+        data = request.json
+        user_email = data.get("userEmail")
+        theme = data.get("theme")
+        if not user_email or not theme:
+            return jsonify({"error": "userEmail and theme required"}), 400
+        conn = get_db()
+        with conn.cursor() as c:
+            c.execute("UPDATE users SET theme = %s WHERE email = %s", (theme, user_email))
+        conn.commit()
+        conn.close()
+        return jsonify({"message": "Theme updated"}), 200
 
 
 # --- カードの削除API ---
