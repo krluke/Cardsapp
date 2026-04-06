@@ -10,10 +10,8 @@
     <title>CardsApp - ホーム</title>
     <link rel="stylesheet" href="/static/styles.css">
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://unpkg.com/i18next@latest/dist/umd/i18next.min.js"></script>
-    <script src="https://unpkg.com/i18next-http-backend@latest/i18nextHttpBackend.min.js"></script>
 </head>
-<body class="i18n-loading">
+<body>
     <header class="navbar">
         <h1 class="logo">CardsApp</h1>
         <div class="nav-actions">
@@ -21,17 +19,10 @@
             <!-- ★ 新規作成ボタン -->
             <button id="add-folder-btn" class="primary-btn shadow-btn hidden"
                     onclick="createNewFolderUI()" data-i18n="btn_create_folder">
-                <i data-lucide="folder-plus"></i>
+                <i data-lucide="folder-plus"></i> 新規作成
             </button>
 
             <!-- ★ 言語切り替えボタン -->
-            <!-- ★ テーマ切り替え -->
-            <div class="theme-menu">
-                <button id="theme-toggle" class="icon-btn shadow-btn" onclick="toggleTheme()" data-i18n-title="setting_theme">
-                    <i data-lucide="sun" id="theme-icon-sun"></i>
-                    <i data-lucide="moon" id="theme-icon-moon" class="hidden"></i>
-                </button>
-            </div>
             <div class="lang-menu">
                 <button class="lang-btn" id="lang-btn" onclick="toggleLangMenu(event)">
                     <i data-lucide="globe"></i>
@@ -51,7 +42,7 @@
                 <div id="auth-dropdown" class="dropdown hidden">
                     <div id="menu-guest">
                         <button onclick="showLogin()" class="dropdown-item" data-i18n="menu_login">
-                            <i data-lucide="log-in"></i>
+                            <i data-lucide="log-in"></i> ログイン/登録
                         </button>
                     </div>
                     <div id="menu-user" class="hidden">
@@ -59,11 +50,11 @@
                             <span id="menu-username" style="font-weight:bold;"></span>
                         </div>
                         <a href="/account" class="dropdown-item" data-i18n="menu_account_info">
-                            <i data-lucide="user"></i>
+                            <i data-lucide="user"></i> アカウント情報
                         </a>
                         <div class="dropdown-divider"></div>
                         <button onclick="handleLogout()" class="dropdown-item logout-btn" data-i18n="menu_logout">
-                            <i data-lucide="log-out"></i>
+                            <i data-lucide="log-out"></i> ログアウト
                         </button>
                     </div>
                 </div>
@@ -74,24 +65,24 @@
     <main class="page-container">
         <div class="tabs-container">
             <button class="tab-btn active" id="tab-my"
-                    onclick="switchTab('my-folders')" data-i18n="tab_my_folders"></button>
+                    onclick="switchTab('my-folders')" data-i18n="tab_my_folders">マイドライブ</button>
             <button class="tab-btn" id="tab-global"
-                    onclick="switchTab('global-folders')" data-i18n="tab_global_folders"></button>
+                    onclick="switchTab('global-folders')" data-i18n="tab_global_folders">公開カード</button>
         </div>
 
         <div class="search-and-pagination-container">
             <div class="search-bar-wrapper">
                 <input type="text" id="search-input"
-                       data-i18n="search_placeholder">
-                <button onclick="handleSearch()" class="shadow-btn" data-i18n="btn_search"></button>
+                       data-i18n="search_placeholder" placeholder="フォルダーを検索...">
+                <button onclick="handleSearch()" class="shadow-btn" data-i18n="btn_search">🔍 検索</button>
             </div>
             <div id="pagination-controls" class="pagination-controls"></div>
         </div>
 
         <div id="my-folders-area">
             <div id="guest-message" class="empty-state">
-                <p data-i18n="guest_message"></p>
-                <button class="primary-btn" onclick="showLogin()" data-i18n="guest_login_btn"></button>
+                <p data-i18n="guest_message">ログインするとフォルダを作成できます。</p>
+                <button class="primary-btn" onclick="showLogin()" data-i18n="guest_login_btn">ログインする</button>
             </div>
             <div class="folder-grid hidden" id="my-folders-grid"></div>
         </div>
@@ -180,7 +171,6 @@
     <!-- ★ i18n.jsを最初に読み込む -->
     <script src="/static/i18n.js"></script>
     <script src="/static/auth.js"></script>
-    <script src="/static/theme.js"></script>
     <script src="/static/index.js"></script>
     <script>lucide.createIcons();</script>
 </body>
