@@ -23,14 +23,37 @@
             </button>
 
             <!-- ★ テーマ切り替えボタン -->
-            <div class="theme-menu">
+            <div class="theme-menu" style="position: relative;">
                 <button class="theme-btn" id="theme-btn" onclick="toggleThemeMenu(event)">
                     <i data-lucide="palette"></i>
                 </button>
                 <div id="theme-dropdown" class="theme-dropdown hidden">
-                    <button class="theme-option" onclick="selectTheme('light', event)" data-i18n="theme_sand">🏖 サンド＆クリーム</button>
-                    <button class="theme-option" onclick="selectTheme('dark', event)" data-i18n="theme_dark">🌙 ダークモード</button>
-                    <button class="theme-option" onclick="selectTheme('blue', event)" data-i18n="theme_blue">💙 青</button>
+                    <button class="theme-option" onclick="selectTheme('light', event)" data-value="light" data-i18n="theme_sand">
+                        <span class="theme-dots">
+                            <span style="background:#F4F0EB;"></span>
+                            <span style="background:#D97757;"></span>
+                            <span style="background:#E05252;"></span>
+                        </span>
+                        <span class="theme-text">サンド＆クリーム</span>
+                    </button>
+                    
+                    <button class="theme-option" onclick="selectTheme('dark', event)" data-value="dark" data-i18n="theme_dark">
+                        <span class="theme-dots">
+                            <span style="background:#1E1B18;"></span>
+                            <span style="background:#D97757;"></span>
+                            <span style="background:#383430;"></span>
+                        </span>
+                        <span class="theme-text">ダークモード</span>
+                    </button>
+                    
+                    <button class="theme-option" onclick="selectTheme('blue', event)" data-value="blue" data-i18n="theme_blue">
+                        <span class="theme-dots">
+                            <span style="background:#1B3A6B;"></span>
+                            <span style="background:#3B8BEB;"></span>
+                            <span style="background:#D94F6E;"></span>
+                        </span>
+                        <span class="theme-text">青</span>
+                    </button>
                 </div>
             </div>
 
