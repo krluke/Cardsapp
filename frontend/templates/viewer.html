@@ -11,27 +11,17 @@
     <title data-i18n="viewer_title">カードビューワー</title>
     <link rel="stylesheet" href="/static/style.css">
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://unpkg.com/i18next@latest/dist/umd/i18next.min.js"></script>
-    <script src="https://unpkg.com/i18next-http-backend@latest/i18nextHttpBackend.min.js"></script>
     <!-- ★ i18n.jsを最初に読む（DOMContentLoaded内で翻訳適用） -->
     <script src="/static/i18n.js"></script>
-    <script src="/static/theme.js"></script>
 </head>
-<body class="viewer-body i18n-loading">
+<body class="viewer-body">
     <div class="editor-toolbar" style="justify-content: flex-start;">
-        <!-- ★ ホーム戻るボタン -->
+        <!-- ★ ツールチップはdata-i18n-title、アイコンのみボタンなのでtitleを翻訳 -->
         <button onclick="goToHome()" class="icon-btn shadow-btn mr-2"
                 data-i18n-title="btn_home"
                 title="ホームに戻る">
             <i data-lucide="home"></i>
         </button>
-
-        <!-- ★ テーマ切り替え -->
-        <button id="theme-toggle" class="icon-btn shadow-btn mr-2" onclick="toggleTheme()" data-i18n-title="setting_theme">
-            <i data-lucide="sun" id="theme-icon-sun"></i>
-            <i data-lucide="moon" id="theme-icon-moon" class="hidden"></i>
-        </button>
-
         <!-- ★ ヘッダーテキストはdata-i18nで翻訳 -->
         <span class="viewer-header-text" data-i18n="viewing_mode">閲覧モード</span>
     </div>
@@ -67,11 +57,6 @@
     </script>
     <script src="/static/viewer.js"></script>
     <!-- ★ アイコン描画 -->
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            lucide.createIcons();
-            initThemeSelector();
-        });
-    </script>
+    <script>lucide.createIcons();</script>
 </body>
 </html>

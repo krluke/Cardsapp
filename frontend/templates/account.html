@@ -11,21 +11,11 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="/static/account.css">
     <script src="/static/i18n.js"></script>
-    <script src="/static/theme.js"></script>
-    <script src="https://unpkg.com/i18next@latest/dist/umd/i18next.min.js"></script>
-    <script src="https://unpkg.com/i18next-http-backend@latest/i18nextHttpBackend.min.js"></script>
 </head>
-<body class="i18n-loading">
+<body>
+
     <header class="navbar">
         <h1 class="logo">CardsApp</h1>
-        <div class="nav-actions">
-            <div class="theme-menu">
-                <button id="theme-toggle" class="icon-btn shadow-btn" onclick="toggleTheme()" data-i18n-title="setting_theme">
-                    <i data-lucide="sun" id="theme-icon-sun"></i>
-                    <i data-lucide="moon" id="theme-icon-moon" class="hidden"></i>
-                </button>
-            </div>
-        </div>
     </header>
 
 <div class="account-container">
@@ -53,7 +43,16 @@
     </div>
 
     <div class="settings-section">
-        <div class="account-section" style="border-top: none; padding-top: 0;">
+        <div class="setting-item">
+            <span data-i18n="setting_theme">サイトのテーマ</span>
+            <select id="theme-selector" class="theme-select">
+                <option value="light" data-i18n="theme_sand">サンド＆クリーム</option>
+                <option value="dark" data-i18n="theme_dark">ダークモード</option>
+                <option value="blue" data-i18n="theme_blue">青</option>
+            </select>
+        </div>
+
+        <div class="account-section">
             <div class="setting-item">
                 <span data-i18n="changing_password">アカウントのパスワードを変更します。</span>
                 <button onclick="window.location.href='/change-password'" class="btn btn-secondary" data-i18n="password_change">パスワードを変更する</button>
@@ -65,7 +64,15 @@
 <script>
     document.addEventListener("DOMContentLoaded", () => {
         lucide.createIcons();
-        initThemeSelector();
+        const themeSelector = document.getElementById("theme-selector");
+        const currentTheme = localStorage.getItem("app-theme") || "light";
+        themeSelector.value = currentTheme;
+
+        themeSelector.addEventListener("change", (e) => {
+            const newTheme = e.target.value;
+            document.documentElement.setAttribute("data-theme", newTheme);
+            localStorage.setItem("app-theme", newTheme);
+        });
     });
 </script>
 <script src="/static/account.js"></script>
