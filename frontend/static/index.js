@@ -32,7 +32,48 @@ async function authenticatedFetch(url, options = {}) {
 document.addEventListener('DOMContentLoaded', () => {
     checkLoginState();
     if (window.lucide) lucide.createIcons();
+    initTheme();
 });
+
+// --- テーマ切り替え ---
+function initTheme() {
+    const currentTheme = localStorage.getItem('app-theme') || 'light';
+    document.documentElement.setAttribute('data-theme', currentTheme);
+}
+
+function toggleThemeMenu(e) {
+    e.stopPropagation();
+    const dropdown = document.getElementById('theme-dropdown');
+    dropdown.classList.toggle('hidden');
+    const current = localStorage.getItem('app-theme') || 'light';
+    const lang = localStorage.getItem('selectedLang') || 'ja';
+    if (typeof translations !== 'undefined' && translations[lang]) {
+        document.querySelectorAll('.theme-option').forEach(opt => {
+            const key = opt.getAttribute('data-i18n');
+            if (key && translations[lang][key]) {
+                opt.textContent = translations[lang][key];
+            }
+            opt.classList.remove('active');
+        });
+    }
+    const labels = { light: 'サンド', dark: 'ダーク', blue: '青' };
+    document.querySelectorAll('.theme-option').forEach(opt => {
+        if (opt.textContent.includes(labels[current])) {
+            opt.classList.add('active');
+        }
+    });
+}
+
+function currentThemeForLabel() {
+    return localStorage.getItem('app-theme') || 'light';
+}
+
+function selectTheme(theme, e) {
+    e.stopPropagation();
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('app-theme', theme);
+    document.getElementById('theme-dropdown').classList.add('hidden');
+}
 
 // --- ログイン状态的チェックと表示更新 ---
 function checkLoginState() {
@@ -188,6 +229,11 @@ window.addEventListener('click', function(event) {
     const authDropdown = document.getElementById('auth-dropdown');
     if (authDropdown && accountMenu && !accountMenu.contains(event.target)) {
         authDropdown.classList.add('hidden');
+    }
+    const themeMenu = document.querySelector('.theme-menu');
+    const themeDropdown = document.getElementById('theme-dropdown');
+    if (themeDropdown && themeMenu && !themeMenu.contains(event.target)) {
+        themeDropdown.classList.add('hidden');
     }
 });
 

@@ -22,6 +22,18 @@
                 <i data-lucide="folder-plus"></i> 新規作成
             </button>
 
+            <!-- ★ テーマ切り替えボタン -->
+            <div class="theme-menu">
+                <button class="theme-btn" id="theme-btn" onclick="toggleThemeMenu(event)">
+                    <i data-lucide="palette"></i>
+                </button>
+                <div id="theme-dropdown" class="theme-dropdown hidden">
+                    <button class="theme-option" onclick="selectTheme('light', event)" data-i18n="theme_sand">🏖 サンド＆クリーム</button>
+                    <button class="theme-option" onclick="selectTheme('dark', event)" data-i18n="theme_dark">🌙 ダークモード</button>
+                    <button class="theme-option" onclick="selectTheme('blue', event)" data-i18n="theme_blue">💙 青</button>
+                </div>
+            </div>
+
             <!-- ★ 言語切り替えボタン -->
             <div class="lang-menu">
                 <button class="lang-btn" id="lang-btn" onclick="toggleLangMenu(event)">

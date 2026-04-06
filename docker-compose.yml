@@ -16,6 +16,12 @@ services:
     volumes:
       # NAS内の「db_data」フォルダにデータを永続化
       - ./db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "flashcard_user", "-p${MYSQL_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
 
   # --- Python バックエンド ---
   backend:
@@ -39,7 +45,8 @@ services:
       - ./backend:/app
       - ./frontend:/frontend
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   # --- Nginx フロントエンド ---
   nginx:
