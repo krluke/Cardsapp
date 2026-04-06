@@ -172,7 +172,8 @@ async function createNewFolderUI() {
         if (res.ok) {
             loadFolders(); 
         } else {
-            alert(t('alert_folder_create_failed'));
+            const data = await res.json();
+            alert(data.message || t('alert_folder_create_failed'));
         }
     } catch (e) { alert(t('alert_comm_error')); }
 }

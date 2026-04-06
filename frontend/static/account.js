@@ -31,9 +31,26 @@ document.addEventListener('DOMContentLoaded', async () => {
         const data = await response.json();
 
         if (response.ok) {
+            let totalCards = data.cardsCount;
+            let pendingTotal = 0;
+
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('pending_delta_')) {
+                    const val = parseInt(localStorage.getItem(key), 10);
+                    if (!isNaN(val)) {
+                        pendingTotal += val;
+                        console.log('Pending delta found:', key, '=', val);
+                    }
+                }
+            }
+
+            console.log('DB cards:', data.cardsCount, 'Pending:', pendingTotal, 'Total:', totalCards + pendingTotal);
+            totalCards += pendingTotal;
+
             document.getElementById('display-username').innerText = data.username;
             document.getElementById('display-email').innerText = data.email;
-            document.getElementById('stat-cards').innerText = data.cardsCount;
+            document.getElementById('stat-cards').innerText = totalCards;
             document.getElementById('stat-likes').innerText = formatCount(data.likesCount);
             document.getElementById('stat-favorites').innerText = formatCount(data.favoritesCount);
         } else {
