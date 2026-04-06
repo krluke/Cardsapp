@@ -385,6 +385,15 @@ def create_folder(request):
 
     with connection.cursor() as c:
         c.execute(
+            "SELECT id FROM folders WHERE user_email = %s AND title = %s",
+            (user_email, title),
+        )
+        if dictfetchone(c):
+            return JsonResponse(
+                {"message": "同じ名前のフォルダが既に存在します"}, status=400
+            )
+
+        c.execute(
             "INSERT INTO folders (user_email, title, visibility) VALUES (%s, %s, %s)",
             (user_email, title, "private"),
         )
@@ -513,6 +522,16 @@ def update_folder(request):
             return JsonResponse(
                 {"message": "このフォルダへのアクセス権限がありません"}, status=403
             )
+
+        if title:
+            c.execute(
+                "SELECT id FROM folders WHERE user_email = %s AND title = %s AND id != %s",
+                (user_email, title, folder_id),
+            )
+            if dictfetchone(c):
+                return JsonResponse(
+                    {"message": "同じ名前のフォルダが既に存在します"}, status=400
+                )
 
         c.execute(
             "UPDATE folders SET title = %s, visibility = %s WHERE id = %s",

@@ -155,9 +155,9 @@
     </div>
 
     <script>
-        window.CURRENT_FOLDER_ID = "{{ folder_id }}";
+        window.CURRENT_FOLDER_ID = "{{ folder_id }}" || window.location.pathname.split('/').filter(Boolean).pop();
     </script>
-    <script src="/static/editor.js"></script>
+    <script src="/static/editor.js?v=3"></script>
     <!-- ★ アイコン描画（最後に呼ぶ） -->
     <script>lucide.createIcons();</script>
 </body>

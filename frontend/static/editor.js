@@ -263,6 +263,12 @@ function addNewCard() {
     document.getElementById('current-card').classList.remove('is-flipped');
     updateThumbnailBar();
     renderCard();
+
+    const folderId = window.CURRENT_FOLDER_ID;
+    const key = `pending_delta_${folderId}`;
+    const delta = parseInt(localStorage.getItem(key) || '0', 10) + 1;
+    localStorage.setItem(key, delta.toString());
+    console.log('Card added - folderId:', folderId, 'key:', key, 'delta:', delta);
 }
 
 function prevCard() {
@@ -298,6 +304,11 @@ async function deleteCurrentCard() {
             }
             syncPanelWithCard();
             renderCard();
+
+            const folderId = window.CURRENT_FOLDER_ID;
+            const key = `pending_delta_${folderId}`;
+            const delta = Math.max(0, parseInt(localStorage.getItem(key) || '0', 10) - 1);
+            localStorage.setItem(key, delta.toString());
         }
         return;
     }
@@ -793,12 +804,23 @@ async function saveCardSet() {
     }
     const session = JSON.parse(sessionStr);
 
+    const folderIdVal = window.CURRENT_FOLDER_ID;
+    const folderId = parseInt(folderIdVal, 10) || parseInt(window.location.pathname.split('/').filter(Boolean).pop(), 10);
+    const userEmail = session.id || session.email;
+
+    console.log('Save debug - folderId:', folderId, 'userEmail:', userEmail, 'session:', session);
+
+    if (!folderId || !userEmail) {
+        alert(t('alert_save_failed') + ': folderId=' + folderId + ', userEmail=' + userEmail);
+        return false;
+    }
+
     try {
         const response = await authenticatedFetch('/api/cards/save', {
             method: 'POST',
             body: JSON.stringify({
-                folderId: parseInt(window.CURRENT_FOLDER_ID, 10), 
-                userEmail: session.id, 
+                folderId: folderId, 
+                userEmail: userEmail, 
                 cards: cards.map(card => ({
                     front:   getServerHTML(card.front   || ''),
                     back:    getServerHTML(card.back    || ''),
@@ -809,6 +831,9 @@ async function saveCardSet() {
         });
 
         if (response.ok) {
+            // Clear pending delta after successful save
+            const key = `pending_delta_${folderId}`;
+            localStorage.removeItem(key);
             alert(t('alert_card_saved'));
             return true;
         } else {

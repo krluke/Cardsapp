@@ -115,6 +115,7 @@ const translations = {
         "prompt_folder_name":       "フォルダ名を入力",
         "untitled_folder":          "無題のフォルダ",
         "alert_folder_create_failed": "フォルダの作成に失敗しました",
+        "alert_duplicate_folder_name": "同じ名前のフォルダが既に存在します",
         "alert_comm_error":         "通信エラー",
         "alert_save_failed":        "保存に失敗しました",
         "confirm_delete_folder":    "本当に削除しますか？",
@@ -271,6 +272,7 @@ const translations = {
         "prompt_folder_name":       "Enter folder name",
         "untitled_folder":          "Untitled Folder",
         "alert_folder_create_failed": "Failed to create folder",
+        "alert_duplicate_folder_name": "A folder with this name already exists",
         "alert_comm_error":         "Communication error",
         "alert_save_failed":        "Failed to save",
         "confirm_delete_folder":    "Are you sure you want to delete?",
@@ -329,30 +331,29 @@ function changeLanguage(lang) {
 
         if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
             el.placeholder = text;
+        } else if (el.tagName === 'OPTION') {
+            el.textContent = text;
+        } else if (el.querySelector('i[data-lucide]') || el.querySelector('svg[data-lucide]')) {
+            const icon = el.querySelector('i[data-lucide], svg[data-lucide]');
+            el.textContent = '';
+            el.appendChild(icon);
+            el.appendChild(document.createTextNode(' ' + text));
         } else {
             el.textContent = text;
         }
     });
 
-
-// --- Initialize translations on page load (with proper language detection) ---
-// This will run after translations object is defined
-let initTranslations = () => {
-    const lang = localStorage.getItem('selectedLang') || 'ja';
-    
     // data-i18n-title：title属性（tooltip）の書き換え
     document.querySelectorAll('[data-i18n-title]').forEach(el => {
         const key = el.getAttribute('data-i18n-title');
         const text = translations[lang]?.[key];
         if (text) el.title = text;
     });
-};
 
-// Call on DOM ready and after page load
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initTranslations);
-} else {
-    initTranslations();
+    // Re-render lucide icons if needed
+    if (typeof lucide !== 'undefined' && lucide.createIcons) {
+        lucide.createIcons();
+    }
 }
 
 // --- 3. 言語ドロップダウンの開閉 ---
