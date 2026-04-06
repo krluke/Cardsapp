@@ -425,3 +425,77 @@ button.dropdown-item {
     color: var(--accent-color);
     font-weight: bold;
 }
+
+/* =============================================
+    🎨 テーマ切り替えメニュー
+    ============================================= */
+.theme-menu {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.theme-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 0.5rem 0.8rem;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 13px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    cursor: pointer;
+    transition: var(--transition);
+    box-shadow: var(--shadow-sm);
+}
+.theme-btn:hover {
+    border-color: var(--accent-color);
+    color: var(--accent-color);
+    box-shadow: var(--shadow-md);
+}
+.theme-btn i {
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+}
+
+.theme-dropdown {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    z-index: 2000;
+    min-width: 160px;
+    padding: 6px 0;
+    overflow: hidden;
+    animation: dropdownFadeIn 0.15s ease-out;
+}
+
+.theme-dropdown .theme-option {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--text-main);
+    transition: var(--transition);
+    text-align: left;
+    font-family: inherit;
+}
+.theme-dropdown .theme-option:hover {
+    background-color: var(--accent-light);
+    color: var(--accent-color);
+}
+.theme-dropdown .theme-option.active {
+    color: var(--accent-color);
+    font-weight: bold;
+}

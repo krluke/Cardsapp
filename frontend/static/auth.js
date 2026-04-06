@@ -199,6 +199,9 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     if (window.lucide) lucide.createIcons();
+    if (typeof changeLanguage === 'function') {
+        changeLanguage(localStorage.getItem('selectedLang') || 'ja');
+    }
 });
 
 // --- モーダル制御 ---
