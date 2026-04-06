@@ -67,11 +67,11 @@ function checkLoginState() {
         if (els.addBtn) els.addBtn.classList.add('hidden');
         if (els.myGrid) els.myGrid.classList.add('hidden');
         if (els.menuUser) els.menuUser.classList.add('hidden');
-        if (els.globalGrid) els.globalGrid.classList.add('hidden');
         if (els.guestMsg) els.guestMsg.classList.remove('hidden');
         if (els.menuGuest) els.menuGuest.classList.remove('hidden');
-        if (els.globalGuestMsg) els.globalGuestMsg.classList.remove('hidden');
         if (els.accountIcon) els.accountIcon.style.color = "currentColor";
+        if (els.globalGrid) els.globalGrid.classList.remove('hidden');
+        if (currentTab === 'global-folders') loadFolders();
     }
     if (window.lucide) lucide.createIcons();
 }
@@ -201,15 +201,17 @@ function handleSearch() {
 // --- サーバーからデータを取得 ---
 async function loadFolders() {
     const sessionStr = localStorage.getItem('user_session');
-    if (!sessionStr) return;
-    const session = JSON.parse(sessionStr);
+    const session = sessionStr ? JSON.parse(sessionStr) : null;
+
+    // 未ログインかつマイフォルダタブなら何もしない
+    if (!session && currentTab === 'my-folders') return;
 
     try {
         const queryParams = new URLSearchParams({
             tab: currentTab,
             q: currentSearch,
             page: currentPage,
-            userEmail: session.id
+            userEmail: session ? session.id : ''
         });
 
         const response = await fetch(`/api/folders?${queryParams.toString()}`);
