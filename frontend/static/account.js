@@ -1,8 +1,15 @@
 // --- static/account.js ---
 
-// static/account.js の冒頭部分
 document.addEventListener('DOMContentLoaded', async () => {
     lucide.createIcons();
+
+    function t(key) {
+        const lang = localStorage.getItem('selectedLang') || 'ja';
+        if (typeof translations !== 'undefined' && translations[lang] && translations[lang][key]) {
+            return translations[lang][key];
+        }
+        return key;
+    }
 
     const sessionStr = localStorage.getItem('user_session');
     if (!sessionStr) {
@@ -11,12 +18,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     const session = JSON.parse(sessionStr);
-    // session.id か session.email のどちらか入っている方を使う
     const userEmail = session.id || session.email;
 
     if (!userEmail) {
         console.error("Email not found in session");
-        document.getElementById('display-username').innerText = "セッションエラー";
+        document.getElementById('display-username').innerText = t('session_error');
         return;
     }
 
@@ -35,7 +41,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     } catch (e) {
         console.error(e);
-        document.getElementById('display-username').innerText = "読み込み失敗";
+        document.getElementById('display-username').innerText = t('load_failed');
     }
 });
 

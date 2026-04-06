@@ -89,7 +89,7 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 function goToHome() { 
-    if(confirm('編集内容を破棄してホームに戻りますか？')) {
+    if(confirm(t('confirm_discard_exit'))) {
         window.location.href = '/';
     }
 }
@@ -156,13 +156,13 @@ function rebindEvents(container) {
         if (textContent) {
             textContent.onfocus = () => {
                 selectText(el);
-                if (textContent.innerText.trim() === "テキストを入力") {
+                if (textContent.innerText.trim() === t('placeholder_text_input')) {
                     textContent.innerText = "";
                 }
             };
             textContent.onblur = () => {
                 if (textContent.innerText.trim() === "") {
-                    textContent.innerText = "テキストを入力";
+                    textContent.innerText = t('placeholder_text_input');
                 }
             };
             textContent.onmousedown = (ev) => ev.stopPropagation(); 
@@ -269,7 +269,7 @@ async function deleteCurrentCard() {
 
     // データベース保存前の新規カード
     if (!currentCardData.id) {
-        if (confirm('このカードを破棄しますか？')) {
+        if (confirm(t('confirm_discard_card'))) {
             cards.splice(currentCardIndex, 1);
             if (cards.length === 0) {
                 cards = [{ front: "", back: "" }];
@@ -284,7 +284,7 @@ async function deleteCurrentCard() {
     }
 
     // 保存済みカードの削除
-    if (!confirm('本当に削除しますか？')) return;
+    if (!confirm(t('confirm_delete_card'))) return;
 
     const sessionStr = localStorage.getItem('user_session');
     if (!sessionStr) return;
@@ -304,14 +304,14 @@ async function deleteCurrentCard() {
             } else if (currentCardIndex >= cards.length) {
                 currentCardIndex--;
             }
-            alert('カードを削除しました');
+            alert(t('alert_card_deleted'));
             renderCard();
         } else {
-            alert('カードの削除に失敗しました');
+            alert(t('alert_card_delete_failed'));
         }
     } catch (e) {
         console.error("Delete Error:", e);
-        alert('通信エラー');
+        alert(t('alert_comm_error'));
     }
 }
 
@@ -344,7 +344,7 @@ document.querySelectorAll('.card-face').forEach(face => {
         
         // 1. 名前とラベルの作成
         textBoxCounter++;
-        const boxName = `テキストボックス ${textBoxCounter}`;
+        const boxName = `${t('label_textbox')} ${textBoxCounter}`;
         textWrapper.setAttribute('data-name', boxName);
 
         const labelEl = document.createElement('div');
@@ -359,7 +359,7 @@ document.querySelectorAll('.card-face').forEach(face => {
         // 3. ボタンと中身の作成
         const textContent = document.createElement('div');
         textContent.contentEditable = "true";
-        textContent.innerText = "テキストを入力";
+        textContent.innerText = t('placeholder_text_input');
         textContent.className = 'text-content';
         
         const dragHandle = document.createElement('div');
@@ -579,7 +579,7 @@ function saveTemplate() {
             const textContent = el.querySelector('.text-content');
             if (textContent) {
                 // ここを「テキストを入力」に統一します
-                textContent.innerText = 'テキストを入力'; 
+                textContent.innerText = t('placeholder_text_input'); 
             }
             el.classList.remove('is-selected'); 
         });
@@ -588,7 +588,7 @@ function saveTemplate() {
     resetTextContent(frontClone);
     resetTextContent(backClone);
 
-    const templateName = prompt('テンプレート名を入力', '新しいテンプレート');
+    const templateName = prompt(t('prompt_template_name'), t('new_template'));
     if (!templateName) return;
 
     let templates = JSON.parse(localStorage.getItem('card_templates') || '[]');
@@ -602,7 +602,7 @@ function saveTemplate() {
     });
     localStorage.setItem('card_templates', JSON.stringify(templates));
     renderTemplateList();
-    alert('テンプレートを保存しました');
+    alert(t('alert_template_saved'));
 }
 
 // ==========================================
@@ -637,7 +637,7 @@ function renderTemplateList() {
         const editBtn = document.createElement('button');
         editBtn.className = 'template-item-edit';
         editBtn.innerHTML = `<i data-lucide="edit-2"></i>`;
-        editBtn.title = "名前を変更";
+        editBtn.title = t('tooltip_rename');
         editBtn.onclick = (e) => {
             e.stopPropagation();
             renameTemplate(t.id);
@@ -647,7 +647,7 @@ function renderTemplateList() {
         const delBtn = document.createElement('button');
         delBtn.className = 'template-item-delete';
         delBtn.innerHTML = `<i data-lucide="x"></i>`;
-        delBtn.title = "テンプレートを削除";
+        delBtn.title = t('tooltip_delete_template');
         delBtn.onclick = (e) => {
             e.stopPropagation();
             deleteTemplate(t.id);
@@ -671,7 +671,7 @@ function renameTemplate(templateId) {
     
     if (!target) return;
 
-    const newName = prompt('新しい名前を入力', target.name);
+    const newName = prompt(t('prompt_new_name'), target.name);
     
     if (newName !== null && newName.trim() !== "") {
         target.name = newName.trim();
@@ -682,7 +682,7 @@ function renameTemplate(templateId) {
 
 // テンプレート削除用関数
 function deleteTemplate(templateId) {
-    if (!confirm('このテンプレートを削除しますか？')) return;
+    if (!confirm(t('confirm_delete_template'))) return;
 
     let templates = JSON.parse(localStorage.getItem('card_templates') || '[]');
     // 指定したID以外のテンプレートを残す（＝削除）
@@ -699,7 +699,7 @@ function loadTemplate(templateId) {
     const target = templates.find(t => t.id === templateId);
     
     if (target) {
-        if (!confirm('テンプレート「' + target.name + '」を適用しますか？')) return;
+        if (!confirm(t('confirm_apply_template') + target.name + t('confirm_apply_template_end'))) return;
         
         const frontEl = document.getElementById('card-front');
         const backEl = document.getElementById('card-back');
@@ -726,7 +726,7 @@ function loadTemplate(templateId) {
         textboxes.forEach(box => {
             const textContentEl = box.querySelector('.text-content');
             if (textContentEl) {
-                textContentEl.innerText = 'テキストを入力'; // デフォルト文字にリセット
+                textContentEl.innerText = t('placeholder_text_input'); // デフォルト文字にリセット
             }
 
             // ✨ ラベル（名前）の復元処理
@@ -734,7 +734,7 @@ function loadTemplate(templateId) {
             let boxName = box.getAttribute('data-name');
 
             if (!boxName) {
-                boxName = `テキストボックス ${index + 1}`;
+                boxName = `${t('label_textbox')} ${index + 1}`;
                 box.setAttribute('data-name', boxName);
             }
             // もしテンプレートのHTMLからラベル要素が欠落していたら、新しく作ってくっつける
@@ -769,7 +769,7 @@ async function saveCardSet() {
     saveCurrentCardState(); 
     const sessionStr = localStorage.getItem('user_session');
     if (!sessionStr) {
-        alert('保存するにはログインしてください');
+        alert(t('alert_login_to_save'));
         return false;
     }
     const session = JSON.parse(sessionStr);
@@ -790,16 +790,16 @@ async function saveCardSet() {
         });
 
         if (response.ok) {
-            alert('カードを保存しました');
+            alert(t('alert_card_saved'));
             return true;
         } else {
             const data = await response.json();
-            alert('保存に失敗しました: ' + (data.message || ''));
+            alert(t('alert_save_failed') + ': ' + (data.message || ''));
             return false;
         }
     } catch (e) {
         console.error("Save Error:", e);
-        alert('ネットワークエラー');
+        alert(t('network_error'));
         return false;
     }
 }
@@ -817,7 +817,7 @@ async function loadSavedCards(folderId) {
         const url = `/api/cards/load/${folderId}${session ? `?userEmail=${encodeURIComponent(session.id)}` : ''}`;
         const response = await fetch(url);
         if (!response.ok) {
-            alert('読み込みに失敗しました');
+            alert(t('alert_load_failed'));
             return;
         }
 
@@ -832,7 +832,7 @@ async function loadSavedCards(folderId) {
         }
     } catch (e) {
         console.error("Load Error:", e);
-        alert('通信エラー');
+        alert(t('alert_comm_error'));
     }
 }
 
@@ -873,7 +873,7 @@ function renderTextList() {
         const textContentEl = box.querySelector('.text-content');
         if (!box.id) box.id = 'box-' + Math.random().toString(36).substr(2, 9);
         
-        const boxName = box.getAttribute('data-name') || '名称未設定';
+        const boxName = box.getAttribute('data-name') || t('unnamed_textbox');
 
         if (!textContentEl) return;
 
@@ -898,11 +898,11 @@ function renderTextList() {
         const input = document.createElement('textarea');
         input.value = textContentEl.innerText;
         input.className = 'content-edit-input'; // CSSを当てるためのクラスを追加
-        input.placeholder = "テキストを入力";   // 空の時に薄く表示される文字
+        input.placeholder = t('placeholder_text_input');   // 空の時に薄く表示される文字
 
         // ✨ 追加：クリック（フォーカス）した時に「テキストを入力」なら一瞬で消す
         input.addEventListener('focus', (e) => {
-            if (e.target.value.trim() === 'テキストを入力') {
+            if (e.target.value.trim() === t('placeholder_text_input')) {
                 e.target.value = '';             // パネル側の文字を空にする
                 textContentEl.innerText = '';    // カード側の文字も空にする
                 if (typeof saveCurrentCardState === 'function') saveCurrentCardState();
@@ -1102,7 +1102,7 @@ function addImageToCard(url) {
 
     const imgEl = document.createElement('img');
     imgEl.src = url.trim();
-    imgEl.alt = "カード画像";
+    imgEl.alt = t('alt_card_image');
     imgEl.draggable = false; // ブラウザのデフォルトドラッグ防止
     
     // ✨ 画像が読み込まれたら本来の縦横比を計算して設定する
@@ -1122,7 +1122,7 @@ function addImageToCard(url) {
     };
 
     imgEl.onerror = () => {
-        alert('画像の読み込みに失敗しました');
+        alert(t('alert_image_load_failed'));
         wrapper.remove();
     };
 
@@ -1151,7 +1151,7 @@ function getServerHTML(html) {
 }
 function restoreUIElements(container) {
     container.querySelectorAll('.draggable-text').forEach(box => {
-        const boxName = box.getAttribute('data-name') || 'テキストボックス';
+        const boxName = box.getAttribute('data-name') || t('label_textbox');
         if (!box.querySelector('.textbox-label')) {
             const label = document.createElement('div');
             label.className = 'textbox-label';

@@ -4,6 +4,14 @@ let currentTab = 'my-folders';
 let currentPage = 1;
 let currentSearch = '';
 
+function t(key) {
+    const lang = localStorage.getItem('selectedLang') || 'ja';
+    if (typeof translations !== 'undefined' && translations[lang] && translations[lang][key]) {
+        return translations[lang][key];
+    }
+    return key;
+}
+
 function getCsrfToken() {
     const session = JSON.parse(localStorage.getItem('user_session') || '{}');
     return session.csrfToken || null;
@@ -144,7 +152,7 @@ function switchTab(tabName) {
 
 // --- フォルダ新規作成 ---
 async function createNewFolderUI() {
-    const title = prompt('フォルダ名を入力', '無題のフォルダ');
+    const title = prompt(t('prompt_folder_name'), t('untitled_folder'));
     if (!title) return; 
 
     const session = JSON.parse(localStorage.getItem('user_session'));
@@ -158,9 +166,9 @@ async function createNewFolderUI() {
         if (res.ok) {
             loadFolders(); 
         } else {
-            alert('フォルダの作成に失敗しました');
+            alert(t('alert_folder_create_failed'));
         }
-    } catch (e) { alert('通信エラー'); }
+    } catch (e) { alert(t('alert_comm_error')); }
 }
 
 // --- フォルダ設定（編集・削除）機能 ---
@@ -194,13 +202,13 @@ async function saveFolderSettings() {
             loadFolders();
         } else {
             const data = await res.json();
-            alert('保存に失敗しました' + (data.message ? ': ' + data.message : ''));
+            alert(t('alert_save_failed') + (data.message ? ': ' + data.message : ''));
         }
-    } catch (e) { alert('通信エラー'); }
+    } catch (e) { alert(t('alert_comm_error')); }
 }
 
 async function confirmDeleteFolder() {
-    if (!confirm('本当に削除しますか？')) return;
+    if (!confirm(t('confirm_delete_folder'))) return;
     const sessionStr = localStorage.getItem('user_session');
     if (!sessionStr) return;
     const session = JSON.parse(sessionStr);
@@ -216,9 +224,9 @@ async function confirmDeleteFolder() {
             loadFolders();
         } else {
             const data = await res.json();
-            alert('削除に失敗しました' + (data.message ? ': ' + data.message : ''));
+            alert(t('alert_delete_failed') + (data.message ? ': ' + data.message : ''));
         }
-    } catch (e) { alert('通信エラー'); }
+    } catch (e) { alert(t('alert_comm_error')); }
 }
 
 // --- UI操作系 ---
@@ -270,7 +278,7 @@ async function loadFolders() {
         });
 
         const response = await fetch(`/api/folders?${queryParams.toString()}`);
-        if (!response.ok) throw new Error("通信エラー");
+        if (!response.ok) throw new Error(t('alert_comm_error'));
 
         const data = await response.json();
         
@@ -278,7 +286,7 @@ async function loadFolders() {
         renderPagination(data.totalPages, data.currentPage); 
 
     } catch (e) {
-        console.error("読み込み失敗:", e);
+        console.error("Load failed:", e);
     }
 }
 
@@ -292,7 +300,7 @@ function renderFolderGrid(folders) {
     grid.classList.remove('hidden');
 
     if (folders.length === 0) {
-        grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #666; padding: 20px;">該当するフォルダがありません。</p>';
+        grid.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 20px;">${t('no_folders')}</p>`;
         return;
     }
 
@@ -340,7 +348,7 @@ function renderFolderGrid(folders) {
             ${settingsHtml}
             <div class="folder-icon"><i data-lucide="${iconType}"></i></div>
             <h3>${folder.title}</h3>
-            <p>${currentTab === 'my-folders' ? 'ID: ' + folder.id : '作成者: ' + (folder.username || '不明')}</p>
+            <p>${currentTab === 'my-folders' ? t('label_id') + folder.id : t('label_creator') + (folder.username || t('unknown_user'))}</p>
             ${statsHtml}
         `;
         grid.appendChild(tile);
@@ -399,7 +407,7 @@ async function toggleAction(event, folderId, actionType) {
     event.stopPropagation();
     const sessionStr = localStorage.getItem('user_session');
     if (!sessionStr) {
-        alert('ログインしてください');
+        alert(t('alert_login_required'));
         return;
     }
     const session = JSON.parse(sessionStr);
