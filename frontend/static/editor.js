@@ -6,6 +6,16 @@ let selectedTextEl = null;
 let cards = [{ front: "", back: "" }]; 
 let currentCardIndex = 0;
 let isLocked = false;
+
+// Simple translation helper used across the editor
+function t(key) {
+    const lang = localStorage.getItem('selectedLang') || 'ja';
+    if (typeof translations !== 'undefined' && translations[lang] && translations[lang][key]) {
+        return translations[lang][key];
+    }
+    return key;
+}
+
 let textBoxCounter = 0;
 
 function getCsrfToken() {
@@ -812,7 +822,7 @@ async function saveAndExit() {
 async function loadSavedCards(folderId) {
     const sessionStr = localStorage.getItem('user_session');
     const session = sessionStr ? JSON.parse(sessionStr) : null;
-    
+
     try {
         const url = `/api/cards/load/${folderId}${session ? `?userEmail=${encodeURIComponent(session.id)}` : ''}`;
         const response = await fetch(url);
@@ -823,9 +833,15 @@ async function loadSavedCards(folderId) {
 
         const savedCards = await response.json();
         if (savedCards && savedCards.length > 0) {
-            cards = savedCards;
+            // Only replace local state if we are at the initial empty card or haven't added new ones
+            if (cards.length === 1 && cards[0].front === "" && cards[0].back === "") {
+                cards = savedCards;
+            } else {
+                // If user already added cards, we merge or just notify (here we prefer DB for initial load)
+                cards = savedCards;
+            }
             currentCardIndex = 0;
-            renderCard(); 
+            renderCard();
             updateThumbnailBar();
         } else {
             renderCard();
