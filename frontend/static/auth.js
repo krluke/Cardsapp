@@ -207,6 +207,7 @@ window.addEventListener('DOMContentLoaded', () => {
     if (session && session.isLoggedIn) {
         if (authBtn) {
             authBtn.innerHTML = `<i data-lucide="user-check"></i> <span style="margin-left:8px;font-weight:bold;">${session.username}</span>`;
+            authBtn.classList.add('account-capsule');
         }
         if (dropdown) {
             dropdown.innerHTML = `
@@ -222,6 +223,7 @@ window.addEventListener('DOMContentLoaded', () => {
     } else {
         if (authBtn) {
             authBtn.innerHTML = `<i data-lucide="user"></i>`;
+            authBtn.classList.remove('account-capsule');
         }
         if (dropdown) {
             dropdown.innerHTML = `
