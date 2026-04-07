@@ -1,70 +1,56 @@
 // --- static/account.js ---
 
-document.addEventListener('DOMContentLoaded', async () => {
-    lucide.createIcons();
-
-    function t(key) {
-        const lang = localStorage.getItem('selectedLang') || 'ja';
-        if (typeof translations !== 'undefined' && translations[lang] && translations[lang][key]) {
-            return translations[lang][key];
-        }
-        return key;
-    }
-
+async function loadUserStats() {
     const sessionStr = localStorage.getItem('user_session');
-    if (!sessionStr) {
-        window.location.href = "/";
-        return;
-    }
+    if (!sessionStr) return;
 
     const session = JSON.parse(sessionStr);
     const userEmail = session.id || session.email;
-
-    if (!userEmail) {
-        console.error("Email not found in session");
-        document.getElementById('display-username').innerText = t('session_error');
-        return;
-    }
+    if (!userEmail) return;
 
     try {
         const response = await fetch(`/api/user/stats?email=${encodeURIComponent(userEmail)}&authEmail=${encodeURIComponent(userEmail)}`);
         const data = await response.json();
 
         if (response.ok) {
-            let totalCards = data.cardsCount;
-            let pendingTotal = 0;
+            const foldersCount = data.foldersCount || 0;
+            const likesCount = data.likesCount || 0;
+            const favoritesCount = data.favoritesCount || 0;
 
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                if (key.startsWith('pending_delta_')) {
-                    const val = parseInt(localStorage.getItem(key), 10);
-                    if (!isNaN(val)) {
-                        pendingTotal += val;
-                        console.log('Pending delta found:', key, '=', val);
-                    }
-                }
-            }
+            const usernameEl = document.getElementById('display-username');
+            const emailEl = document.getElementById('display-email');
+            const foldersEl = document.getElementById('stat-cards');
+            const likesEl = document.getElementById('stat-likes');
+            const favoritesEl = document.getElementById('stat-favorites');
 
-            console.log('DB cards:', data.cardsCount, 'Pending:', pendingTotal, 'Total:', totalCards + pendingTotal);
-            totalCards += pendingTotal;
-
-            document.getElementById('display-username').innerText = data.username;
-            document.getElementById('display-email').innerText = data.email;
-            document.getElementById('stat-cards').innerText = totalCards;
-            document.getElementById('stat-likes').innerText = formatCount(data.likesCount);
-            document.getElementById('stat-favorites').innerText = formatCount(data.favoritesCount);
-        } else {
-            throw new Error(data.error);
+            if (usernameEl) usernameEl.innerText = data.username;
+            if (emailEl) emailEl.innerText = data.email;
+            if (foldersEl) foldersEl.innerText = foldersCount;
+            if (likesEl) likesEl.innerText = formatCount(likesCount);
+            if (favoritesEl) favoritesEl.innerText = formatCount(favoritesCount);
         }
     } catch (e) {
-        console.error(e);
-        document.getElementById('display-username').innerText = t('load_failed');
+        console.error('Failed to load user stats:', e);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+    lucide.createIcons();
+    await loadUserStats();
+});
+
+document.addEventListener('visibilitychange', async () => {
+    if (!document.hidden) {
+        await loadUserStats();
     }
 });
 
-// 数値フォーマット関数（index.jsで使ったものと同じ）
+window.addEventListener('focus', async () => {
+    await loadUserStats();
+});
+
 function formatCount(num) {
-    if (!num) return 0;
+    if (!num || num === 0) return 0;
     if (num >= 1000) {
         return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
     }

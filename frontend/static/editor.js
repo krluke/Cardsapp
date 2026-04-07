@@ -53,9 +53,11 @@ function t(key) {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-    const pathParts = window.location.pathname.split('/');
-    const folderId = pathParts[pathParts.length - 1];
-    window.CURRENT_FOLDER_ID = folderId;
+    // Only set from URL if not already defined by the template
+    if (!window.CURRENT_FOLDER_ID) {
+        const pathParts = window.location.pathname.split('/').filter(Boolean);
+        window.CURRENT_FOLDER_ID = pathParts[pathParts.length - 1] || '';
+    }
     // 文字色・図形色のリアルタイム変更
     const textColorPicker = document.getElementById('text-color-picker');
     if (textColorPicker) {

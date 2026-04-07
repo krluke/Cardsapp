@@ -334,10 +334,10 @@ def get_user_stats(request):
             )
 
             c.execute(
-                "SELECT COUNT(*) as count FROM cards WHERE folder_id IN (SELECT id FROM folders WHERE user_email = %s)",
+                "SELECT COUNT(*) as count FROM folders WHERE user_email = %s",
                 (user_email,),
             )
-            cards_count = dictfetchone(c)["count"]
+            folders_count = dictfetchone(c)["count"]
 
             c.execute(
                 "SELECT COUNT(*) as count FROM folder_likes WHERE folder_id IN (SELECT id FROM folders WHERE user_email = %s)",
@@ -355,7 +355,7 @@ def get_user_stats(request):
             {
                 "username": username,
                 "email": user_email,
-                "cardsCount": cards_count,
+                "foldersCount": folders_count,
                 "likesCount": likes_count,
                 "favoritesCount": favorites_count,
             }
