@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Flashcard application with Python Flask API (`backend/app.py`), vanilla JS frontend, MySQL 8.0, and Docker Compose (Nginx + Flask + MySQL).
+Flashcard application with Python Django API (`backend/api/`), vanilla JS frontend, MySQL 8.0, and Docker Compose (Nginx + Django + MySQL).
 
 ## Commands
 
@@ -17,7 +17,11 @@ docker-compose down               # Stop services
 ### Backend
 ```bash
 pip install -r backend/requirements.txt  # Install deps
-cd backend && python app.py              # Run dev server
+cd backend && python manage.py runserver # Run dev server
+
+# Migrations
+python manage.py makemigrations
+python manage.py migrate --noinput
 
 # Linting
 flake8 backend/ --count --select=E9,F63,F7,F82 --show-source --statistics
@@ -46,7 +50,7 @@ docker exec -it my-mysql-db mysql -u flashcard_user -pflashcards_db
 - **Format**: 4 spaces, 120 char max line, blank lines between sections
 - **Naming**: `snake_case` for vars/functions, `SCREAMING_SNAKE_CASE` for constants, `PascalCase` for classes
 - **Types**: Dynamic typing; add type hints incrementally
-- **DB**: Use `with conn.cursor() as c:`, `conn.commit()` after writes, `pymysql.cursors.DictCursor`, close in `finally`
+- **DB**: Use Django's `django.db.connection` cursor, `commit()` after writes, `dictfetchall()`/`dictfetchone()` for results
 - **Errors**: try/except around DB ops, return JSON errors with proper status codes (400/401/403/429/500)
 - **Security**: Parameterized queries (`%s`), sanitize with `bleach`, hash passwords with werkzeug, env vars for secrets
 
@@ -76,7 +80,7 @@ docker exec -it my-mysql-db mysql -u flashcard_user -pflashcards_db
 ## File Structure
 
 ```
-├── backend/app.py, requirements.txt, Dockerfile
+├── backend/manage.py, requirements.txt, Dockerfile, cardsapp/, api/
 ├── frontend/static/*.js, *.css | templates/*.html | nginx/default.conf
 ├── docker-compose.yml, .env.example, README.md
 ```
