@@ -14,7 +14,6 @@ services:
     ports:
       - "3306:3306"
     volumes:
-      # NAS内の「db_data」フォルダにデータを永続化
       - ./db_data:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "flashcard_user", "-p${MYSQL_PASSWORD}"]
@@ -23,24 +22,24 @@ services:
       retries: 20
       start_period: 30s
 
-  # --- Python バックエンド ---
+  # --- Django バックエンド ---
   backend:
     build: ./backend
     container_name: my-backend
     restart: always
-    # 他のデバイスからアクセスする場合、127.0.0.1: は外すのがéma.gener一般です
     ports:
       - "5000:5000"
     env_file:
       - .env
     environment:
-      - DB_HOST=db # service名「db」で通信可能
+      - DB_HOST=db
       - DB_USER=flashcard_user
       - DB_PASSWORD=flashcard_pass
       - DB_NAME=flashcards_db
       - GMAIL_USER=${GMAIL_USER:-fromserver.noreply@gmail.com}
       - GMAIL_PASS=${GMAIL_PASS}
       - ADMIN_API_KEY=${ADMIN_API_KEY}
+      - DEBUG=True
     volumes:
       - ./backend:/app
       - ./frontend:/frontend
