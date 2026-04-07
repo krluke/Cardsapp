@@ -403,6 +403,25 @@ def create_folder(request):
 
 
 @xframe_options_exempt
+def list_folders(request):
+    user_email = request.GET.get("userEmail")
+    if not user_email:
+        return JsonResponse({"message": "ユーザー情報が必要です"}, status=400)
+
+    try:
+        with connection.cursor() as c:
+            c.execute(
+                "SELECT id, title, visibility, likes FROM folders WHERE user_email = %s",
+                (user_email,),
+            )
+            folders = dictfetchall(c)
+        return JsonResponse(folders, safe=False)
+    except Exception as e:
+        logger.error(f"list_folders error: {e}")
+        return JsonResponse({"message": "フォルダ一覧の取得に失敗しました"}, status=500)
+
+
+@xframe_options_exempt
 def get_folders(request):
     try:
         tab = request.GET.get("tab", "my-folders")
