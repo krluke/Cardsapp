@@ -91,7 +91,7 @@ const translations = {
         "changing_password":    "アカウントのパスワードを変更します。",
         "password_change":      "パスワードを変更する",
 
-        "stat_cards":            "カード",
+        "stat_folders":          "フォルダ",
         "stat_likes":          "いいね",
         "stat_favorites":        "お気に入り",
 
@@ -248,7 +248,7 @@ const translations = {
         "changing_password":    "change the account password.",
         "password_change":      "change password",
 
-        "stat_cards":            "Cards",
+        "stat_folders":          "Folders",
         "stat_likes":          "Likes",
         "stat_favorites":        "Favorites",
 
