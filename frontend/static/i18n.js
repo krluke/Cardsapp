@@ -314,8 +314,26 @@ const translations = {
         "session_error":            "Session error",
         "load_failed":              "Load failed",
 
-     }
-}
+    }
+};
+
+// --- 2. 言語切り替え関数 ---
+function changeLanguage(lang) {
+    localStorage.setItem('selectedLang', lang);
+
+    // data-i18n属性：テキストコンテンツ・placeholderの書き換え
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        const text = translations[lang]?.[key];
+        if (!text) return;
+
+        if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+            el.placeholder = text;
+        } else {
+            el.textContent = text;
+        }
+    });
+
 
 // --- Initialize translations on page load (with proper language detection) ---
 // This will run after translations object is defined
