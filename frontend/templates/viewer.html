@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+{% load static %}
 <html lang="ja">
 <head>
     <script>
@@ -9,11 +10,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- ★ data-i18n で動的にタイトルを切り替え -->
     <title data-i18n="viewer_title">カードビューワー</title>
-    <link rel="stylesheet" href="/static/style.css">
+<link rel="stylesheet" href="{% static 'style.css' %}">
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- ★ i18n.jsを最初に読む（DOMContentLoaded内で翻訳適用） -->
-    <script src="/static/i18n.js"></script>
-    <script src="/static/viewer.js"></script>
+    <script src="{% static 'i18n.js' %}"></script>
+    <script src="{% static 'viewer.js' %}"></script>
     <!-- ★ アイコン描画 -->
     <script>lucide.createIcons();</script>
 </body>
