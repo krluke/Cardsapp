@@ -637,6 +637,10 @@ def save_cards(request):
         cards_data = data.get("cards")
         login_id = data.get("userEmail")
 
+        logger.error(
+            f"SAVE DEBUG - folder_id: {folder_id}, login_id: {login_id}, cards_count: {len(cards_data) if cards_data else 0}"
+        )
+
         if not login_id or not folder_id:
             return JsonResponse({"message": "ユーザー情報が必要です"}, status=400)
 
@@ -664,6 +668,9 @@ def save_cards(request):
                 )
 
             connection.commit()
+            logger.error(
+                f"SAVE DEBUG - committed {len(cards_data)} cards for folder {folder_id}"
+            )
 
         return JsonResponse({"message": "セーブ完了！"})
     except Exception as e:
