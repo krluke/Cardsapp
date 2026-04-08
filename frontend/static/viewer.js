@@ -1,4 +1,4 @@
-let cards = [{ front: "", back: "" }]; 
+let cards = []; 
 let currentCardIndex = 0;
 
 function goToHome() { window.location.href = '/'; }
@@ -26,12 +26,18 @@ function renderCard() {
 }
 // --- 1. 編集機能の完全無効化（修正版） ---
 function disableEditing(container) {
+    // Exit early if container doesn't exist
+    if (!container) return;
+    
     // 編集用のUIパーツをHTMLから完全削除
     const editUI = container.querySelectorAll('.delete-btn, .drag-handle, .resize-handle, .textbox-label');
     editUI.forEach(el => el.remove());
 
     // テキストボックスと画像ボックスの装飾・状態をリセット
     container.querySelectorAll('.draggable-text, .draggable-image').forEach(el => {
+        // Exit early if element doesn't exist
+        if (!el) return;
+        
         el.classList.remove('is-selected'); 
         el.removeAttribute('data-name');    
         el.style.resize = "none"; // ✨ JS側でも念のためリサイズを無効化
@@ -39,6 +45,9 @@ function disableEditing(container) {
 
     // テキストの編集を不可にする
     container.querySelectorAll('.text-content').forEach(el => {
+        // Exit early if element doesn't exist
+        if (!el) return;
+        
         el.removeAttribute('contenteditable'); 
         el.style.cursor = "text"; 
         el.style.resize = "none"; // ✨ JS側でも念のためリサイズを無効化
@@ -132,6 +141,9 @@ window.addEventListener('keydown', (e) => {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
     const cardInner = document.getElementById('current-card');
+    // Exit early if cardInner element doesn't exist
+    if (!cardInner) return;
+    
     const isFlipped = cardInner.classList.contains('is-flipped');
 
     if (e.key === 'ArrowRight') {

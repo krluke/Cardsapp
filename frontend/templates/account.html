@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+{% load static %}
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
@@ -8,10 +9,10 @@
         const savedTheme = localStorage.getItem("app-theme") || "light";
         document.documentElement.setAttribute("data-theme", savedTheme);
     </script>
-    <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="{% static 'styles.css' %}">
     <script src="https://unpkg.com/lucide@latest"></script>
-    <link rel="stylesheet" href="/static/account.css">
-    <script src="/static/i18n.js"></script>
+    <link rel="stylesheet" href="{% static 'account.css' %}">
+    <script src="{% static 'i18n.js' %}"></script>
 </head>
 <body>
 
@@ -53,11 +54,8 @@
     </div>
 </div>
 
-<script>
-    document.addEventListener("DOMContentLoaded", () => {
-        lucide.createIcons();
-    });
-</script>
-    <script src="/static/account.js"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+    <script>lucide.createIcons();</script>
+    <script src="{% static 'account.js' %}"></script>
 </body>
 </html>

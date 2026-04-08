@@ -56,3 +56,9 @@ jobs:
           docker-compose down
           # 2. 新しくビルドして起動する（--force-recreate をつけるとより確実）
           docker-compose up -d --build --force-recreate
+
+      - name: Collect static files for Nginx
+        run: |
+          cd ~/server-project
+          # Run collectstatic in a temporary container and copy staticfiles to host
+          docker run --rm -v $(pwd)/backend/staticfiles:/app/staticfiles -v $(pwd)/backend:/app $(docker-compose images -q backend) python manage.py collectstatic --noinput
