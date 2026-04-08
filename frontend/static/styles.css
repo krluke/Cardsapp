@@ -56,35 +56,65 @@
 }
 
 /* ==========================================
-   📐 3. ベーススタイル
-   ========================================== */
+    📐 3. ベーススタイル
+    ========================================== */
+* {
+    box-sizing: border-box;
+}
 body {
     margin: 0;
     font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
     background-color: var(--bg-canvas);
     color: var(--text-main);
+    min-width: 320px;
+    overflow-x: hidden;
 }
 .hidden { display: none !important; }
 .mb-1 { margin-bottom: 1rem; }
 .mr-2 { margin-right: 1rem; }
 .mt-1 { margin-top: 0.5rem; }
-.page-container { padding: 2rem; max-width: 1200px; margin: 0 auto; }
-.w-full { width: 100%; justify-content: center; }
+/* Responsive page container */
+.page-container {
+    padding: 1rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+}
+@media (min-width: 640px) {
+    .page-container {
+        padding: 2rem;
+    }
+}
+.w-full { width: 100%; justify-content: center; box-sizing: border-box; }
 
 /* ==========================================
-   🏷 4. ヘッダー・ボタン共通
-   ========================================== */
+    🏷 4. ヘッダー・ボタン共通
+    ========================================== */
 .navbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem 2.5rem;
+    padding: 1rem;
     background: var(--bg-surface);
     border-bottom: 1px solid var(--border-color);
     box-shadow: var(--shadow-sm);
+    flex-wrap: wrap;
+    gap: 0.5rem;
 }
-.logo { margin: 0; font-size: 1.5rem; color: var(--accent-color); font-weight: bold; letter-spacing: 0.5px; }
-.nav-actions { display: flex; gap: 1rem; align-items: center; position: relative; }
+.logo { margin: 0; font-size: 1.25rem; color: var(--accent-color); font-weight: bold; letter-spacing: 0.5px; }
+.nav-actions { display: flex; gap: 0.5rem; align-items: center; position: relative; }
+
+@media (min-width: 640px) {
+    .navbar {
+        padding: 1rem 2rem;
+    }
+    .logo {
+        font-size: 1.5rem;
+    }
+    .nav-actions {
+        gap: 1rem;
+    }
+}
 
 /* ボタン類 */
 button { font-family: inherit; transition: var(--transition); }
@@ -135,7 +165,18 @@ button { font-family: inherit; transition: var(--transition); }
 .tab-btn:hover { color: var(--text-main); }
 .tab-btn.active { color: var(--accent-color); border-bottom: 3px solid var(--accent-color); }
 
-.folder-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1.5rem; }
+.folder-grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); 
+    gap: 1rem; 
+}
+
+@media (min-width: 640px) {
+    .folder-grid {
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 1.5rem;
+    }
+}
 
 .folder-tile {
     background: var(--bg-surface); padding: 3rem 1.5rem 1.5rem;
@@ -170,9 +211,15 @@ button { font-family: inherit; transition: var(--transition); }
     display: flex; justify-content: center; align-items: center; z-index: 1000;
 }
 .auth-box {
-    background: var(--bg-surface); padding: 2.5rem; border-radius: var(--radius-lg);
-    width: 100%; max-width: 400px; position: relative;
+    background: var(--bg-surface); padding: 1.5rem; border-radius: var(--radius-lg);
+    width: 90%;
+    max-width: 400px; position: relative;
     box-shadow: var(--shadow-lg); border: 1px solid var(--border-color);
+}
+@media (min-width: 640px) {
+    .auth-box {
+        padding: 2.5rem;
+    }
 }
 .auth-title { margin-top: 0; margin-bottom: 1.5rem; font-size: 1.4rem; color: var(--text-main); }
 
@@ -320,13 +367,13 @@ button.dropdown-item {
     font-family: inherit;
 }
 /* ==========================================
-   🔍 9. 検索バー・ページネーション
-   ========================================== */
+    🔍 9. 検索バー・ページネーション
+    ========================================== */
 .search-and-pagination-container { margin: 20px 0; text-align: center; }
-.search-bar-wrapper { margin-bottom: 15px; display: flex; justify-content: center; gap: 8px; }
+.search-bar-wrapper { margin-bottom: 15px; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
 .search-bar-wrapper input {
     padding: 10px 16px;
-    width: 60%;
+    width: 100%;
     max-width: 400px;
     border: 1px solid var(--border-color);
     border-radius: 20px;
@@ -355,6 +402,18 @@ button.dropdown-item {
     color: var(--accent-color);
 }
 .pagination-controls { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
+
+/* Page container responsive */
+.page-container {
+    padding: 1rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+@media (min-width: 640px) {
+    .page-container {
+        padding: 2rem;
+    }
+}
 
 /* ==========================================
    💬 10. 空状態メッセージ
