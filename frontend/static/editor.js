@@ -812,6 +812,8 @@ async function saveCardSet() {
     const userEmail = session.id || session.email;
 
     console.log('Save debug - folderId:', folderId, 'userEmail:', userEmail, 'session:', session);
+    console.log('Save debug - cards count:', cards.length);
+    console.log('Save debug - first card front:', cards[0] ? getServerHTML(cards[0].front || '') : 'empty');
 
     if (!folderId || !userEmail) {
         alert(t('alert_save_failed') + ': folderId=' + folderId + ', userEmail=' + userEmail);
