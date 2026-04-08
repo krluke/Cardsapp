@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-{% load static %}
 <html lang="ja">
 <head>
     <script>
@@ -9,9 +8,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="editor_title">カードエディタ</title>
-    <link rel="stylesheet" href="{% static 'editor.css' %}">
+    <link rel="stylesheet" href="/static/editor.css">
     <script src="https://unpkg.com/lucide@0.475.0"></script>
-    <script src="{% static 'i18n.js' %}"></script>
+    <script src="/static/i18n.js"></script>
 </head>
 <body class="editor-body">
     <div class="editor-toolbar">
@@ -158,7 +157,7 @@
     <script>
         window.CURRENT_FOLDER_ID = "{{ folder_id }}" || window.location.pathname.split('/').filter(Boolean).pop();
     </script>
-    <script src="{% static 'editor.js' %}"></script>
+    <script src="/static/editor.js"></script>
     <!-- ★ アイコン描画（最後に呼ぶ） -->
     <script>lucide.createIcons();</script>
 </body>
