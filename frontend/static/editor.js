@@ -87,6 +87,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     renderTemplateList(); // テンプレート一覧の初期描画
 
+    const folderId = window.CURRENT_FOLDER_ID;
     if (folderId && folderId !== 'editor') {
         loadSavedCards(folderId);
     } else {
