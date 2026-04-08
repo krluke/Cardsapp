@@ -260,3 +260,30 @@ body {
     overflow: hidden !important; 
     outline: none !important;
 }
+
+
+/* ==========================================
+   👁 ビューワーページ
+   ========================================== */
+.viewer-body {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.viewer-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+}
+
+.viewer-hint {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin: 0;
+    letter-spacing: 0.02em;
+}
