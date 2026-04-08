@@ -173,7 +173,12 @@ async function createNewFolderUI() {
             loadFolders(); 
         } else {
             const data = await res.json();
-            alert(data.message || t('alert_folder_create_failed'));
+            const msg = data.message || '';
+            if (msg.includes('同じ名前のフォルダ') || msg.includes('already exists')) {
+                alert(t('alert_duplicate_folder_name'));
+            } else {
+                alert(data.message || t('alert_folder_create_failed'));
+            }
         }
     } catch (e) { alert(t('alert_comm_error')); }
 }
