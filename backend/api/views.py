@@ -663,6 +663,8 @@ def save_cards(request):
                     (folder_id, idx, front_html, back_html, front_bg, back_bg),
                 )
 
+            connection.commit()
+
         return JsonResponse({"message": "セーブ完了！"})
     except Exception as e:
         logger.error(f"Save Error: {e}")
