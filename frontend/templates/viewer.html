@@ -8,13 +8,76 @@
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- ★ data-i18n で動的にタイトルを切り替え -->
     <title data-i18n="viewer_title">カードビューワー</title>
-<link rel="stylesheet" href="{% static 'style.css' %}">
+    <link rel="stylesheet" href="{% static 'style.css' %}">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="{% static 'i18n.js' %}"></script>
+</head>
+<body class="viewer-body">
+
+    <!-- ナビゲーションバー（サイト共通） -->
+    <header class="navbar">
+        <h1 class="logo">CardsApp</h1>
+        <div class="nav-actions">
+            <span class="viewer-header-text" data-i18n="viewing_mode"
+                  style="color: var(--text-muted); font-size: 14px; font-weight: bold;">
+                閲覧モード
+            </span>
+            <button onclick="goToHome()"
+                    class="secondary-btn shadow-btn"
+                    data-i18n-title="btn_home"
+                    title="ホームに戻る">
+                <i data-lucide="home"></i>
+                <span data-i18n="btn_back_home">ホームに戻る</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- メインコンテンツ -->
+    <main class="viewer-main">
+
+        <!-- カードコンテナ -->
+        <div class="card-container">
+
+            <!-- 前へボタン -->
+            <button onclick="prevCard()"
+                    class="nav-btn shadow-btn"
+                    data-i18n-title="btn_prev_card"
+                    title="前のカード (←キー)">
+                <i data-lucide="chevron-left"></i>
+            </button>
+
+            <!-- フラッシュカード本体 -->
+            <div class="flashcard-scene" onclick="flipCard(event)">
+                <div class="flashcard" id="current-card">
+                    <div class="card-face card-front" id="card-front"></div>
+                    <div class="card-face card-back"  id="card-back"></div>
+                </div>
+            </div>
+
+            <!-- 右側：カウンター＋次へボタン -->
+            <div class="nav-right-group">
+                <div class="card-counter" id="card-counter">1 / 1</div>
+                <button onclick="nextCard()"
+                        class="nav-btn shadow-btn"
+                        data-i18n-title="btn_next_card"
+                        title="次のカード (→キー)">
+                    <i data-lucide="chevron-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- ヒントテキスト -->
+        <p class="viewer-hint" data-i18n="viewer_hint">
+            クリックまたはスペースキーでカードを裏返す
+        </p>
+
+    </main>
+
+    <script>
+        window.CURRENT_FOLDER_ID = "{{ folder_id|default:'' }}";
+    </script>
     <script src="{% static 'viewer.js' %}"></script>
-    <!-- ★ アイコン描画 -->
     <script>lucide.createIcons();</script>
 </body>
 </html>

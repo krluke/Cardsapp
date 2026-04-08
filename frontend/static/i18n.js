@@ -148,6 +148,8 @@ const translations = {
         "alt_card_image":           "カード画像",
         "unnamed_textbox":          "名称未設定",
         // viewer.js
+        "btn_back_home":  "ホームに戻る",
+        "viewer_hint":    "クリックまたはスペースキーでカードを裏返す",
         "alert_data_load_failed":   "データの読み込みに失敗しました",
         // change_password.js
         "alert_not_logged_in":      "ログインしていません。ログイン画面に戻ります。",
@@ -306,6 +308,8 @@ const translations = {
         "unnamed_textbox":          "Unnamed",
         // viewer.js
         "alert_data_load_failed":   "Failed to load data",
+        "btn_back_home":  "Back to Home",
+        "viewer_hint":    "Click or press Space to flip the card",
         // change_password.js
         "alert_not_logged_in":      "Not logged in. Returning to login screen.",
         "password_mismatch":        "New passwords do not match.",
