@@ -93,11 +93,20 @@ button, select, input {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 12px 20px;
+    padding: 12px;
     background: var(--bg-surface);
     border-bottom: 1px solid var(--border-color);
     box-shadow: var(--shadow-sm);
     margin-bottom: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+@media (min-width: 640px) {
+    .editor-toolbar {
+        padding: 12px 20px;
+        justify-content: flex-start;
+    }
 }
 
 /* 共通ボタンスタイル */
@@ -249,9 +258,18 @@ input[type="color"].custom-color-picker::-moz-color-swatch {
 }
 
 .flashcard-scene {
-    width: 600px;
-    height: 400px;
-    perspective: 1200px; /* 少し奥行きを強調 */
+    width: 90vw;
+    max-width: 600px;
+    height: 60vw;
+    max-height: 400px;
+    perspective: 1200px;
+}
+
+@media (min-width: 640px) {
+    .flashcard-scene {
+        width: 600px;
+        height: 400px;
+    }
 }
 
 .flashcard {
@@ -389,13 +407,20 @@ input[type="color"].custom-color-picker::-moz-color-swatch {
    📂 7. 右側パネル（エクセル風一覧）
    ========================================== */
 .text-list-panel {
-    position: fixed; right: -380px; top: 0; width: 360px; height: 100vh;
+    position: fixed; right: -100%; top: 0; width: 100%; max-width: 360px; height: 100vh;
     background: var(--bg-surface); box-shadow: -4px 0 24px rgba(0,0,0,0.06);
     transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 2000; display: flex; flex-direction: column;
     border-left: 1px solid var(--border-color);
 }
 .text-list-panel.is-open { right: 0; }
+
+@media (min-width: 640px) {
+    .text-list-panel {
+        width: 360px;
+        right: -360px;
+    }
+}
 
 .panel-header {
     display: flex; justify-content: space-between; align-items: center;

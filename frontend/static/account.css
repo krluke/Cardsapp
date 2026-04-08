@@ -11,13 +11,22 @@ body {
 
 .account-container {
   max-width: 600px;
-  margin: 40px auto;
-  padding: 30px;
+  margin: 20px auto;
+  padding: 20px;
   background: var(--bg-surface, #fff); 
   border-radius: 12px;
   box-shadow: 0 4px 6px rgba(0,0,0,0.1);
   border: 1px solid var(--border-color, #ddd);
-  transition: background-color 0.3s, border-color 0.3s; /* 箱の色もふんわり変える */
+  transition: background-color 0.3s, border-color 0.3s;
+  width: 95%;
+  box-sizing: border-box;
+}
+
+@media (min-width: 640px) {
+  .account-container {
+    margin: 40px auto;
+    padding: 30px;
+  }
 }
 
 /* ✨ 見出しの文字色をテーマに連動させる */
@@ -72,6 +81,15 @@ h2, h3 {
   grid-template-columns: repeat(3, 1fr);
   gap: 15px;
   text-align: center;
+}
+
+@media (max-width: 480px) {
+  .stat-grid {
+    grid-template-columns: 1fr;
+  }
+  .stat-box {
+    padding: 15px;
+  }
 }
 
 .stat-box {
