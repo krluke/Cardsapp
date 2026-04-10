@@ -11,4 +11,4 @@ COPY . .
 
 RUN python manage.py collectstatic --noinput
 
-CMD ["sh", "-c", "python manage.py migrate --noinput 2>/dev/null || true && gunicorn cardsapp.wsgi:application --bind 0.0.0.0:5000 --workers 3 --timeout 120"]
+CMD ["sh", "-c", "python manage.py migrate --noinput 2>/dev/null || true && python manage.py collectstatic --noinput && gunicorn cardsapp.wsgi:application --bind 0.0.0.0:5000 --workers 3 --timeout 120"]
