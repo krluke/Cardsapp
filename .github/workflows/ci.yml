@@ -47,7 +47,8 @@ jobs:
       - name: コードを最新にする
         run: |
           cd ~/server-project
-          git pull origin main
+          git fetch origin
+          git reset --hard origin/main
 
       - name: Dockerコンテナを更新して再起動
         run: |
