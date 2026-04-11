@@ -913,7 +913,7 @@ def load_cards(request, folder_id):
                 (folder_id,),
             )
             rows = dictfetchall(c)
-        
+
         cards = []
         for row in rows:
             front = row.get("front_content", "")

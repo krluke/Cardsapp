@@ -35,6 +35,16 @@ function t(key) {
       visibility_shared: "特定の人のみ (準備中)",
       btn_save: "保存",
       btn_delete: "削除",
+      error_folder_exists: "同じ名前のフォルダが既に存在します",
+      error_create_folder: "フォルダの作成中にエラーが発生しました",
+      error_save: "保存中にエラーが発生しました",
+      error_delete: "削除中にエラーが発生しました",
+      confirm_delete_folder: "このフォルダを削除してもよろしいですか？",
+      success_import: "インポートが完了しました！",
+      error_import: "無効なファイル形式です",
+      success_export: "エクスポートが完了しました",
+      error_export: "エクスポートに失敗しました",
+      no_public_folders: "公開されているフォルダはありません",
       login_title: "ログイン",
       placeholder_login_id: "メール または ユーザー名",
       placeholder_password: "パスワード",
@@ -73,6 +83,16 @@ function t(key) {
       visibility_shared: "Specific people (coming soon)",
       btn_save: "Save",
       btn_delete: "Delete",
+      error_folder_exists: "A folder with the same name already exists",
+      error_create_folder: "Error creating folder",
+      error_save: "Error saving",
+      error_delete: "Error deleting folder",
+      confirm_delete_folder: "Are you sure you want to delete this folder?",
+      success_import: "Import successful!",
+      error_import: "Invalid file format",
+      success_export: "Export successful",
+      error_export: "Export failed",
+      no_public_folders: "No public folders yet",
       login_title: "Login",
       placeholder_login_id: "Email or Username",
       placeholder_password: "Password",
@@ -169,15 +189,13 @@ function HomePage() {
   }
 
   const loadFolders = async () => {
-    // マイフォルダでログインしていない場合はフェッチしない（グローバルは未ログインでも可とする）
-    if (!user && activeTab === 'my-folders') return
-
-    const endpoint = activeTab === 'my-folders' ? '/folders' : '/folders/global'
+    if (!user) return
+    const endpoint = '/folders'
     const params = new URLSearchParams({ 
       page, 
       search: searchInput,
       tab: activeTab,
-      userEmail: user ? (user.email || user.id) : ''
+      userEmail: user.email || user.id
     })
     try {
       const res = await fetch(`${API_BASE}${endpoint}?${params}`)
@@ -460,6 +478,12 @@ function HomePage() {
           <div className="empty-state">
             <p>{t('guest_message')}</p>
             <button className="primary-btn" onClick={() => setShowAuthModal(true)}>{t('guest_login_btn')}</button>
+          </div>
+        )}
+
+        {activeTab === 'global-folders' && folders.length === 0 && user && (
+          <div className="empty-state">
+            <p>{t('no_public_folders')}</p>
           </div>
         )}
 
