@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Search, X } from 'lucide-react';
+import sanitizeHtml from 'sanitize-html';
 
 export function GlobalSearchModal({ isOpen, onClose, onSelectCard, userEmail }) {
   const [query, setQuery] = useState('');
@@ -53,7 +54,7 @@ export function GlobalSearchModal({ isOpen, onClose, onSelectCard, userEmail }) 
               onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
             >
               <div style={{ fontSize: '12px', color: 'var(--accent-color)', fontWeight: 'bold' }}>{res.folder_title}</div>
-              <div style={{ fontSize: '14px', marginTop: '4px' }}>{res.front_content.replace(/<[^>]*>?/gm, '').substring(0, 100)}...</div>
+              <div style={{ fontSize: '14px', marginTop: '4px' }}>{sanitizeHtml(res.front_content || '', { allowedTags: [], allowedAttributes: {} }).substring(0, 100)}...</div>
             </div>
           ))}
         </div>
