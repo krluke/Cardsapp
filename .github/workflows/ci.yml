@@ -53,9 +53,10 @@ jobs:
       - name: Dockerコンテナを更新して再起動
         run: |
           cd ~/server-project
-          # 1. 一度コンテナを完全に停止・削除して掃除する
           docker-compose down --remove-orphans
-          # 2. 新しくビルドして起動する（--force-recreate をつけるとより確実）
+          # Clear BuildKit cache to resolve snapshot issues
+          docker buildx prune -af
+          # Build and start fresh
           docker-compose up -d --build --force-recreate
 
       - name: Collect static files for Nginx
