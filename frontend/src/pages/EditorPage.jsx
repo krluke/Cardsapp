@@ -380,39 +380,94 @@ export default function EditorPage() {
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
     
-    doc.querySelectorAll('.draggable-text, [style*="position: absolute"]').forEach((el, idx) => {
-      const style = el.getAttribute('style') || '';
-      const isText = !el.querySelector('img');
-      if (isText) {
-        const textEl = el.querySelector('.text-content') || el;
+    // Check if it's old Polotno format (uses pixels instead of %)
+    const hasPxFormat = html.includes('left:') && html.includes('px') && !html.includes('position:absolute');
+    
+    if (hasPxFormat) {
+      // Old Polotno format - parse text elements
+      doc.querySelectorAll('.draggable-text, [data-name]').forEach((el, idx) => {
+        const style = el.getAttribute('style') || '';
+        const textEl = el.querySelector('.text-content');
+        const content = textEl ? textEl.textContent : el.textContent;
+        
+        if (!content || content.trim() === '') return;
+        
+        const leftMatch = style.match(/left:\s*(\d+)px/);
+        const topMatch = style.match(/top:\s*(\d+)px/);
+        const widthMatch = style.match(/width:\s*(\d+)px/);
+        const fontSizeMatch = style.match(/font-size:\s*(\d+)px/);
+        
         elements.push({
           id: `text-${Date.now()}-${idx}`,
           type: 'text',
-          content: textEl.innerText || '',
-          left: parseInt(style.match(/left:\s*(\d+)%/)?.[1] || '10'),
-          top: parseInt(style.match(/top:\s*(\d+)%/)?.[1] || '20'),
-          width: parseInt(style.match(/width:\s*(\d+)%/)?.[1] || '80'),
-          fontSize: parseInt(style.match(/font-size:\s*(\d+)px/)?.[1] || '16'),
-          fontFamily: style.match(/font-family:\s*([^;]+)/)?.[1] || 'sans-serif',
-          fontWeight: style.match(/font-weight:\s*(\w+)/)?.[1] || 'normal',
+          content: content.trim(),
+          left: leftMatch ? Math.round((parseInt(leftMatch[1]) / 800) * 100) : 10,
+          top: topMatch ? Math.round((parseInt(topMatch[1]) / 600) * 100) : 20,
+          width: widthMatch ? Math.round((parseInt(widthMatch[1]) / 800) * 100) : 40,
+          fontSize: parseInt(fontSizeMatch?.[1] || '16'),
+          fontFamily: 'sans-serif',
+          fontWeight: 'normal',
           color: '#000000'
         });
-      }
-    });
-    
-    doc.querySelectorAll('img').forEach((img, idx) => {
-      const parent = img.closest('[style*="position"]') || img.parentElement;
-      const style = parent?.getAttribute('style') || '';
-      elements.push({
-        id: `img-${Date.now()}-${idx}`,
-        type: 'image',
-        src: img.src,
-        left: parseInt(style.match(/left:\s*(\d+)%/)?.[1] || '20'),
-        top: parseInt(style.match(/top:\s*(\d+)%/)?.[1] || '20'),
-        width: parseInt(style.match(/width:\s*(\d+)%/)?.[1] || '50'),
-        height: parseInt(style.match(/height:\s*(\d+)%/)?.[1] || '30')
       });
-    });
+      
+      // Parse images
+      doc.querySelectorAll('.draggable-image').forEach((el, idx) => {
+        const img = el.querySelector('img');
+        if (!img) return;
+        
+        const style = el.getAttribute('style') || '';
+        const leftMatch = style.match(/left:\s*(\d+)px/);
+        const topMatch = style.match(/top:\s*(\d+)px/);
+        const widthMatch = style.match(/width:\s*(\d+)px/);
+        const heightMatch = style.match(/height:\s*(\d+)px/);
+        
+        elements.push({
+          id: `img-${Date.now()}-${idx}`,
+          type: 'image',
+          src: img.src,
+          left: leftMatch ? Math.round((parseInt(leftMatch[1]) / 800) * 100) : 20,
+          top: topMatch ? Math.round((parseInt(topMatch[1]) / 600) * 100) : 20,
+          width: widthMatch ? Math.round((parseInt(widthMatch[1]) / 800) * 100) : 50,
+          height: heightMatch ? Math.round((parseInt(heightMatch[1]) / 600) * 100) : 30
+        });
+      });
+    } else {
+      // New format with percentages
+      doc.querySelectorAll('.draggable-text, [style*="position: absolute"]').forEach((el, idx) => {
+        const style = el.getAttribute('style') || '';
+        const isText = !el.querySelector('img');
+        if (isText) {
+          const textEl = el.querySelector('.text-content') || el;
+          elements.push({
+            id: `text-${Date.now()}-${idx}`,
+            type: 'text',
+            content: textEl.innerText || '',
+            left: parseInt(style.match(/left:\s*(\d+)%/)?.[1] || '10'),
+            top: parseInt(style.match(/top:\s*(\d+)%/)?.[1] || '20'),
+            width: parseInt(style.match(/width:\s*(\d+)%/)?.[1] || '80'),
+            fontSize: parseInt(style.match(/font-size:\s*(\d+)px/)?.[1] || '16'),
+            fontFamily: style.match(/font-family:\s*([^;]+)/)?.[1] || 'sans-serif',
+            fontWeight: style.match(/font-weight:\s*(\w+)/)?.[1] || 'normal',
+            color: '#000000'
+          });
+        }
+      });
+      
+      doc.querySelectorAll('img').forEach((img, idx) => {
+        const parent = img.closest('[style*="position"]') || img.parentElement;
+        const style = parent?.getAttribute('style') || '';
+        elements.push({
+          id: `img-${Date.now()}-${idx}`,
+          type: 'image',
+          src: img.src,
+          left: parseInt(style.match(/left:\s*(\d+)%/)?.[1] || '20'),
+          top: parseInt(style.match(/top:\s*(\d+)%/)?.[1] || '20'),
+          width: parseInt(style.match(/width:\s*(\d+)%/)?.[1] || '50'),
+          height: parseInt(style.match(/height:\s*(\d+)%/)?.[1] || '30')
+        });
+      });
+    }
     return elements;
   };
 
