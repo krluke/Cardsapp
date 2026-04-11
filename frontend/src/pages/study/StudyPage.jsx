@@ -120,7 +120,7 @@ export default function StudyPage() {
 
   const speak = (e, content) => {
     e.stopPropagation();
-    const text = content.replace(/<[^>]*>/g, '').trim();
+    const text = content.replace(/[<>]/g, '').trim();
     if (!text) return;
     
     const utterance = new SpeechSynthesisUtterance(text);
