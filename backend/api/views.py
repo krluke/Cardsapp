@@ -912,15 +912,15 @@ def load_cards(request, folder_id):
                 "SELECT front_content, back_content, front_bg, back_bg, tags FROM cards WHERE folder_id = %s ORDER BY order_index",
                 (folder_id,),
             )
-             rows = dictfetchall(c)
-        
+            rows = dictfetchall(c)
+
         cards = []
-         for row in rows:
-             front = row.get("front_content", "")
-             back = row.get("back_content", "")
-             front_bg = row.get("front_bg", "")
-             back_bg = row.get("back_bg", "")
-             tags = row.get("tags", "")
+        for row in rows:
+            front = row.get("front_content", "")
+            back = row.get("back_content", "")
+            front_bg = row.get("front_bg", "")
+            back_bg = row.get("back_bg", "")
+            tags = row.get("tags", "")
 
              if front and front.startswith('"') and front.endswith('"'):
                  try:
