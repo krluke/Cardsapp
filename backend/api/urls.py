@@ -17,7 +17,16 @@ urlpatterns = [
     path("folders/update", views.update_folder, name="update_folder"),
     path("folders/delete", views.delete_folder, name="delete_folder"),
     path("folders/toggle-action", views.toggle_action, name="toggle_action"),
+    # Search
+    path("search", views.global_search, name="global_search"),
+    # Import/Export
+    path("folders/export", views.export_folder, name="export_folder"),
+    path("folders/import", views.import_folder, name="import_folder"),
+    # Study
+    path("study/cards", views.get_study_cards, name="get_study_cards"),
+    path("study/update", views.update_srs, name="update_srs"),
     # Cards
+    path("cards/upload", views.upload_image, name="upload_image"),
     path("cards/save", views.save_cards, name="save_cards"),
     path("cards/load/<int:folder_id>", views.load_cards, name="load_cards"),
     path("cards/delete", views.delete_card, name="delete_card"),
