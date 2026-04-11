@@ -500,7 +500,7 @@ function HomePage() {
               </div>
               <h3 style={{margin: 0, fontSize: '1rem'}}>{folder.title}</h3>
               <p style={{margin: '0.5rem 0 0', fontSize: '0.8rem', color: 'var(--text-muted)'}}>
-                {folder.cardCount || 0} cards
+                {activeTab === 'global-folders' && folder.username ? `${folder.username} • ` : ''}{folder.card_count || folder.cardCount || 0} cards
               </p>
             </div>
           ))}
