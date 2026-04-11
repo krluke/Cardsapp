@@ -45,6 +45,7 @@ function t(key) {
       error_import: "無効なファイル形式です",
       success_export: "エクスポートが完了しました",
       error_export: "エクスポートに失敗しました",
+      no_public_folders: "公開されているフォルダはありません",
       login_title: "ログイン",
       placeholder_login_id: "メール または ユーザー名",
       placeholder_password: "パスワード",
@@ -92,6 +93,7 @@ function t(key) {
       error_import: "Invalid file format",
       success_export: "Export successful",
       error_export: "Export failed",
+      no_public_folders: "No public folders yet",
       login_title: "Login",
       placeholder_login_id: "Email or Username",
       placeholder_password: "Password",
@@ -189,7 +191,7 @@ function HomePage() {
 
   const loadFolders = async () => {
     if (!user) return
-    const endpoint = activeTab === 'my-folders' ? '/folders' : '/folders/global'
+    const endpoint = '/folders'
     const params = new URLSearchParams({ 
       page, 
       search: searchInput,
@@ -486,6 +488,12 @@ function HomePage() {
           <div className="empty-state">
             <p>{t('guest_message')}</p>
             <button className="primary-btn" onClick={() => setShowAuthModal(true)}>{t('guest_login_btn')}</button>
+          </div>
+        )}
+
+        {activeTab === 'global-folders' && folders.length === 0 && user && (
+          <div className="empty-state">
+            <p>{t('no_public_folders')}</p>
           </div>
         )}
 
