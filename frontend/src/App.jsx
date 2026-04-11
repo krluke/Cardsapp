@@ -145,6 +145,23 @@ function HomePage() {
     loadFolders()
   }, [activeTab, page, searchInput, user])
 
+  useEffect(() => {
+    // Periodic polling - refresh every 15 seconds
+    const interval = setInterval(() => {
+      loadFolders()
+    }, 15000)
+    return () => clearInterval(interval)
+  }, [activeTab, page, searchInput, user])
+
+  useEffect(() => {
+    // Focus-based refresh - when user returns to the tab
+    const handleFocus = () => {
+      loadFolders()
+    }
+    window.addEventListener('focus', handleFocus)
+    return () => window.removeEventListener('focus', handleFocus)
+  }, [activeTab, page, searchInput, user])
+
   const getCsrfToken = () => {
     const session = JSON.parse(localStorage.getItem('session') || '{}')
     return session.csrfToken || ''
