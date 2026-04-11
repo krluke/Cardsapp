@@ -5,6 +5,7 @@ import EditorPage from './pages/EditorPage'
 import ViewerPage from './pages/ViewerPage'
 import StudyPage from './pages/study/StudyPage'
 import { GlobalSearchModal } from './components/GlobalSearchModal'
+import { useModal, Modal } from './components/Modal'
 import './i18n'
 
 const API_BASE = '/api'
@@ -149,6 +150,7 @@ function HomePage() {
   const [showSettingsModal, setShowSettingsModal] = useState(false)
   const [editingFolder, setEditingFolder] = useState(null)
   const [showSearchModal, setShowSearchModal] = useState(false)
+  const { modalState, showAlert, showConfirm, showPrompt, closeModal, handleConfirm, handlePromptSubmit } = useModal()
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('app-theme') || 'light'
@@ -276,7 +278,7 @@ function HomePage() {
   }
 
   const createNewFolder = async () => {
-    const title = prompt(t('placeholder_folder_name'), 'Untitled')
+    const title = await showPrompt('Untitled', t('placeholder_folder_name'))
     if (!title || !user) return
     
     try {
@@ -285,8 +287,17 @@ function HomePage() {
         headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': getCsrfToken() },
         body: JSON.stringify({ userEmail: user.email || user.id, title }),
       })
-      if (res.ok) loadFolders()
-    } catch (e) { alert('Error creating folder') }
+      const data = await res.json()
+      if (res.ok) {
+        loadFolders()
+      } else {
+        if (data.message?.includes('同じ名前') || data.message?.includes('already exists')) {
+          showAlert(t('error_folder_exists'))
+        } else {
+          showAlert(data.message || t('error_create_folder'))
+        }
+      }
+    } catch (e) { showAlert(t('error_create_folder')) }
   }
 
   const selectTheme = (newTheme) => {
@@ -324,7 +335,7 @@ function HomePage() {
         setShowSettingsModal(false)
         loadFolders()
       }
-    } catch (e) { alert('Error saving') }
+    } catch (e) { showAlert(t('error_save')) }
   }
 
   const exportFolder = async () => {
@@ -338,7 +349,7 @@ function HomePage() {
       a.href = url;
       a.download = `${editingFolder.title}.json`;
       a.click();
-    } catch (e) { alert('Export failed') }
+    } catch (e) { showAlert(t('error_export')) }
   }
 
   const importFolder = async () => {
@@ -358,10 +369,10 @@ function HomePage() {
             body: JSON.stringify({ folderData, userEmail: user.email || user.id }),
           });
           if (res.ok) {
-            alert('Import successful!');
+            showAlert(t('success_import'))
             loadFolders();
           }
-        } catch (e) { alert('Invalid file format') }
+        } catch (e) { showAlert(t('error_import')) }
       };
       reader.readAsText(file);
     };
@@ -369,7 +380,8 @@ function HomePage() {
   }
 
   const deleteFolder = async () => {
-    if (!editingFolder || !user || !confirm('Delete this folder?')) return
+    const confirmed = await showConfirm(t('confirm_delete_folder'), t('confirm_delete_folder'))
+    if (!confirmed || !editingFolder || !user) return
     try {
       const res = await fetch(`${API_BASE}/folders/delete`, {
         method: 'POST',
@@ -380,7 +392,7 @@ function HomePage() {
         setShowSettingsModal(false)
         loadFolders()
       }
-    } catch (e) { alert('Error deleting') }
+    } catch (e) { showAlert(t('error_delete')) }
   }
 
   return (
@@ -581,14 +593,15 @@ function HomePage() {
            onClose={() => setShowSearchModal(false)} 
            userEmail={user?.email || user?.id}
            onSelectCard={(res) => {
-             setShowSearchModal(false);
-             navigate(`/editor/${res.folder_id}`);
-           }}
-         />
-       )}
-     </div>
-   )
-}
+              setShowSearchModal(false);
+              navigate(`/editor/${res.folder_id}`);
+            }}
+          />
+        )}
+        <Modal state={modalState} onClose={closeModal} onConfirm={handleConfirm} onSubmit={handlePromptSubmit} />
+      </div>
+    )
+  }
 
 function AccountPage() {
   return <div className="page-container"><h1>Account Page</h1><p>Coming soon...</p></div>
