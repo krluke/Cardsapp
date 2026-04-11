@@ -139,29 +139,56 @@ function HomePage() {
     
     const session = JSON.parse(localStorage.getItem('session') || '{}')
     if (session.user) setUser(session.user)
-    }, [])
+  }, [])
 
-     useEffect(() => {
-       loadFolders()
-     }, [activeTab, page, searchInput, user])
- 
-   const loadFolders = async () => {
-     const endpoint = activeTab === 'my-folders' ? '/folders' : '/folders/global'
-     const params = new URLSearchParams({ 
-       page, 
-       search: searchInput,
-       tab: activeTab,
-       userEmail: user ? (user.email || user.id) : ''
-     })
-     try {
-       const res = await fetch(`${API_BASE}${endpoint}?${params}`)
-       const data = await res.json()
-       if (data.folders) {
-         setFolders(data.folders || [])
-         setTotalPages(data.totalPages || 1)
-       }
-     } catch (e) { console.error(e) }
-   }
+  // --- Gitコンフリクト修正部分：両方の機能（自動更新と未ログイン対応）を統合 ---
+  useEffect(() => {
+    loadFolders()
+  }, [activeTab, page, searchInput, user])
+
+  useEffect(() => {
+    // 15秒ごとの定期ポーリング
+    const interval = setInterval(() => {
+      loadFolders()
+    }, 15000)
+    return () => clearInterval(interval)
+  }, [activeTab, page, searchInput, user])
+
+  useEffect(() => {
+    // タブに戻ってきた時のフォーカス更新
+    const handleFocus = () => {
+      loadFolders()
+    }
+    window.addEventListener('focus', handleFocus)
+    return () => window.removeEventListener('focus', handleFocus)
+  }, [activeTab, page, searchInput, user])
+
+  const getCsrfToken = () => {
+    const session = JSON.parse(localStorage.getItem('session') || '{}')
+    return session.csrfToken || ''
+  }
+
+  const loadFolders = async () => {
+    // マイフォルダでログインしていない場合はフェッチしない（グローバルは未ログインでも可とする）
+    if (!user && activeTab === 'my-folders') return
+
+    const endpoint = activeTab === 'my-folders' ? '/folders' : '/folders/global'
+    const params = new URLSearchParams({ 
+      page, 
+      search: searchInput,
+      tab: activeTab,
+      userEmail: user ? (user.email || user.id) : ''
+    })
+    try {
+      const res = await fetch(`${API_BASE}${endpoint}?${params}`)
+      const data = await res.json()
+      if (data.folders) {
+        setFolders(data.folders || [])
+        setTotalPages(data.totalPages || 1)
+      }
+    } catch (e) { console.error(e) }
+  }
+  // -------------------------------------------------------------------------
 
   const handleLogin = async (e) => {
     e.preventDefault()

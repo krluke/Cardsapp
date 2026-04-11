@@ -473,6 +473,7 @@ def get_folders(request):
                 SELECT f.id, f.title, f.visibility,
                        COALESCE(u.username, f.user_email) AS username,
                        (SELECT COUNT(*) FROM folder_likes WHERE folder_id = f.id) as like_count,
+                       (SELECT COUNT(*) FROM cards WHERE folder_id = f.id) as card_count,
                        EXISTS(SELECT 1 FROM folder_likes WHERE folder_id = f.id AND user_email = %s) as is_liked,
                        EXISTS(SELECT 1 FROM folder_favorites WHERE folder_id = f.id AND user_email = %s) as is_favorite
                 FROM folders f
