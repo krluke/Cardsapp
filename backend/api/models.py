@@ -37,6 +37,10 @@ class Card(models.Model):
     back_content = models.TextField()
     front_bg = models.CharField(max_length=50, default="", db_column="front_bg")
     back_bg = models.CharField(max_length=50, default="", db_column="back_bg")
+    # SRS (Spaced Repetition System) fields
+    srs_interval = models.IntegerField(default=0)  # days until next review
+    srs_ease = models.FloatField(default=2.5)      # ease factor
+    srs_next_review = models.DateTimeField(null=True, blank=True)  # next review date
 
     class Meta:
         db_table = "cards"
