@@ -235,6 +235,19 @@
 }
 
 .folder-settings-icon { right: 10px; }
+.folder-actions {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  gap: 4px;
+  z-index: 10;
+}
+.folder-actions .folder-settings-icon {
+  position: relative;
+  top: 0;
+  right: 0;
+}
 .tile-action-btn.settings-icon { left: 10px; }
 .tile-action-btn.delete-icon { right: 10px; }
 

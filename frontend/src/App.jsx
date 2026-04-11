@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { X, FolderPlus, Palette, Globe, User, LogOut, LogIn, Settings, Trash2, Search, ChevronLeft, ChevronRight } from 'lucide-react'
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import { X, FolderPlus, Palette, Globe, User, LogOut, LogIn, Settings, Trash2, Search, ChevronLeft, ChevronRight, BookOpen } from 'lucide-react'
+import EditorPage from './pages/EditorPage'
+import ViewerPage from './pages/ViewerPage'
+import StudyPage from './pages/study/StudyPage'
+import { GlobalSearchModal } from './components/GlobalSearchModal'
 import './i18n'
 
 const API_BASE = '/api'
@@ -98,12 +102,14 @@ export default function App() {
         <Route path="/change-password" element={<ChangePasswordPage />} />
         <Route path="/editor/:folderId" element={<EditorPage />} />
         <Route path="/viewer/:folderId" element={<ViewerPage />} />
+        <Route path="/study/:folderId" element={<StudyPage />} />
       </Routes>
     </BrowserRouter>
   )
 }
 
 function HomePage() {
+  const navigate = useNavigate()
   const [user, setUser] = useState(null)
   const [activeTab, setActiveTab] = useState('my-folders')
   const [showAuthModal, setShowAuthModal] = useState(false)
@@ -122,6 +128,7 @@ function HomePage() {
   const [lang, setLang] = useState('ja')
   const [showSettingsModal, setShowSettingsModal] = useState(false)
   const [editingFolder, setEditingFolder] = useState(null)
+  const [showSearchModal, setShowSearchModal] = useState(false)
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('app-theme') || 'light'
@@ -136,7 +143,7 @@ function HomePage() {
 
   useEffect(() => {
     loadFolders()
-  }, [activeTab, page, searchInput])
+  }, [activeTab, page, searchInput, user])
 
   const getCsrfToken = () => {
     const session = JSON.parse(localStorage.getItem('session') || '{}')
@@ -144,14 +151,20 @@ function HomePage() {
   }
 
   const loadFolders = async () => {
-    const endpoint = activeTab === 'my-folders' ? '/api/folders/list' : '/api/folders/global'
-    const params = new URLSearchParams({ page, search: searchInput })
+    if (!user) return
+    const endpoint = activeTab === 'my-folders' ? '/folders' : '/folders/global'
+    const params = new URLSearchParams({ 
+      page, 
+      search: searchInput,
+      tab: activeTab,
+      userEmail: user.email || user.id
+    })
     try {
       const res = await fetch(`${API_BASE}${endpoint}?${params}`)
       const data = await res.json()
-      if (data.data) {
-        setFolders(data.data.folders || [])
-        setTotalPages(data.data.totalPages || 1)
+      if (data.folders) {
+        setFolders(data.folders || [])
+        setTotalPages(data.totalPages || 1)
       }
     } catch (e) { console.error(e) }
   }
@@ -167,7 +180,13 @@ function HomePage() {
       })
       const data = await res.json()
       if (!res.ok) {
-        setMessage({ type: 'error', text: data.message || 'Login failed' })
+        const lang = localStorage.getItem('app-lang') || 'ja'
+        const translations = {
+          ja: { 'IDまたはパスワードが間違っています': 'IDまたはパスワードが間違っています', 'Network error': 'ネットワークエラー' },
+          en: { 'IDまたはパスワードが間違っています': 'Invalid ID or password', 'ネットワークエラー': 'Network error' }
+        }
+        const translatedMsg = translations[lang]?.[data.message] || data.message || 'Login failed'
+        setMessage({ type: 'error', text: translatedMsg })
         return
       }
       const session = {
@@ -225,7 +244,7 @@ function HomePage() {
       const res = await fetch(`${API_BASE}/folders/create`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': getCsrfToken() },
-        body: JSON.stringify({ userEmail: user.id, title }),
+        body: JSON.stringify({ userEmail: user.email || user.id, title }),
       })
       if (res.ok) loadFolders()
     } catch (e) { alert('Error creating folder') }
@@ -250,7 +269,7 @@ function HomePage() {
   }
 
   const saveFolderSettings = async () => {
-    if (!editingFolder) return
+    if (!editingFolder || !user) return
     try {
       const res = await fetch(`${API_BASE}/folders/update`, {
         method: 'POST',
@@ -259,6 +278,7 @@ function HomePage() {
           folderId: editingFolder.id,
           title: editingFolder.title,
           visibility: editingFolder.visibility,
+          userEmail: user.email || user.id,
         }),
       })
       if (res.ok) {
@@ -268,13 +288,54 @@ function HomePage() {
     } catch (e) { alert('Error saving') }
   }
 
+  const exportFolder = async () => {
+    if (!editingFolder || !user) return
+    try {
+      const res = await fetch(`${API_BASE}/folders/export?folderId=${editingFolder.id}&userEmail=${user.email || user.id}`);
+      const data = await res.json();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${editingFolder.title}.json`;
+      a.click();
+    } catch (e) { alert('Export failed') }
+  }
+
+  const importFolder = async () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        try {
+          const folderData = JSON.parse(event.target.result);
+          const res = await fetch(`${API_BASE}/folders/import`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': getCsrfToken() },
+            body: JSON.stringify({ folderData, userEmail: user.email || user.id }),
+          });
+          if (res.ok) {
+            alert('Import successful!');
+            loadFolders();
+          }
+        } catch (e) { alert('Invalid file format') }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  }
+
   const deleteFolder = async () => {
-    if (!editingFolder || !confirm('Delete this folder?')) return
+    if (!editingFolder || !user || !confirm('Delete this folder?')) return
     try {
       const res = await fetch(`${API_BASE}/folders/delete`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': getCsrfToken() },
-        body: JSON.stringify({ folderId: editingFolder.id }),
+        body: JSON.stringify({ folderId: editingFolder.id, userEmail: user.email || user.id }),
       })
       if (res.ok) {
         setShowSettingsModal(false)
@@ -294,7 +355,9 @@ function HomePage() {
               <FolderPlus size={20} /> {t('btn_create_folder')}
             </button>
           )}
-
+          <button className="icon-btn shadow-btn" onClick={() => setShowSearchModal(true)}>
+            <Search size={20} />
+          </button>
           <div className="theme-menu">
             <button className="theme-btn" onClick={() => { setThemeMenuOpen(!themeMenuOpen); setLangMenuOpen(false); setAuthMenuOpen(false) }}>
               <Palette size={15} />
@@ -381,10 +444,15 @@ function HomePage() {
 
         <div className="folder-grid">
           {folders.map(folder => (
-            <div key={folder.id} className="folder-tile" onClick={() => window.location.href = `/editor/${folder.id}`}>
-              <button className="folder-settings-icon" onClick={(e) => { e.stopPropagation(); openFolderSettings(folder) }}>
-                <Settings size={16} />
-              </button>
+            <div key={folder.id} className="folder-tile" onClick={() => navigate(`/editor/${folder.id}`)}>
+              <div className="folder-actions" onClick={e => e.stopPropagation()}>
+                <button className="folder-settings-icon" onClick={() => navigate(`/study/${folder.id}`)} title="Study">
+                  <BookOpen size={16} />
+                </button>
+                <button className="folder-settings-icon" onClick={(e) => { e.stopPropagation(); openFolderSettings(folder) }}>
+                  <Settings size={16} />
+                </button>
+              </div>
               <h3 style={{margin: 0, fontSize: '1rem'}}>{folder.title}</h3>
               <p style={{margin: '0.5rem 0 0', fontSize: '0.8rem', color: 'var(--text-muted)'}}>
                 {folder.cardCount || 0} cards
@@ -427,32 +495,49 @@ function HomePage() {
         </div>
       )}
 
-      {showSettingsModal && editingFolder && (
-        <div className="modal" onClick={() => setShowSettingsModal(false)}>
-          <div className="auth-box" onClick={e => e.stopPropagation()}>
-            <button className="close-btn" onClick={() => setShowSettingsModal(false)}><X size={20} /></button>
-            <h2 className="auth-title">{t('folder_settings_title')}</h2>
-            <div className="mb-1">
-              <label style={{fontSize: '14px', fontWeight: 'bold'}}>{t('label_folder_name')}</label>
-              <input className="input-field mt-1" value={editingFolder.title} onChange={e => setEditingFolder({...editingFolder, title: e.target.value})} />
-            </div>
-            <div className="mb-1">
-              <label style={{fontSize: '14px', fontWeight: 'bold'}}>{t('label_visibility')}</label>
-              <select className="input-field mt-1" value={editingFolder.visibility} onChange={e => setEditingFolder({...editingFolder, visibility: e.target.value})}>
-                <option value="private">{t('visibility_private')}</option>
-                <option value="public">{t('visibility_public')}</option>
-                <option value="shared" disabled>{t('visibility_shared')}</option>
-              </select>
-            </div>
-            <div style={{display:'flex', gap:'10px', marginTop:'20px'}}>
-              <button className="primary-btn" style={{flex:2}} onClick={saveFolderSettings}>{t('btn_save')}</button>
-              <button className="secondary-btn" style={{flex:1, backgroundColor:'#fee2e2', color:'#dc2626', border:'none'}} onClick={deleteFolder}>{t('btn_delete')}</button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  )
+       {showSettingsModal && editingFolder && (
+         <div className="modal" onClick={() => setShowSettingsModal(false)}>
+           <div className="auth-box" onClick={e => e.stopPropagation()}>
+             <button className="close-btn" onClick={() => setShowSettingsModal(false)}><X size={20} /></button>
+             <h2 className="auth-title">{t('folder_settings_title')}</h2>
+             <div className="mb-1">
+               <label style={{fontSize: '14px', fontWeight: 'bold'}}>{t('label_folder_name')}</label>
+               <input className="input-field mt-1" value={editingFolder.title} onChange={e => setEditingFolder({...editingFolder, title: e.target.value})} />
+             </div>
+             <div className="mb-1">
+               <label style={{fontSize: '14px', fontWeight: 'bold'}}>{t('label_visibility')}</label>
+               <select className="input-field mt-1" value={editingFolder.visibility} onChange={e => setEditingFolder({...editingFolder, visibility: e.target.value})}>
+                 <option value="private">{t('visibility_private')}</option>
+                 <option value="public">{t('visibility_public')}</option>
+                 <option value="shared" disabled>{t('visibility_shared')}</option>
+               </select>
+             </div>
+             <div style={{display:'flex', gap:'10px', marginTop:'20px', flexDirection: 'column'}}>
+               <div style={{display:'flex', gap:'10px'}}>
+                 <button className="primary-btn" style={{flex:2}} onClick={saveFolderSettings}>{t('btn_save')}</button>
+                 <button className="secondary-btn" style={{flex:1, backgroundColor:'#fee2e2', color:'#dc2626', border:'none'}} onClick={deleteFolder}>{t('btn_delete')}</button>
+               </div>
+               <div style={{display:'flex', gap:'10px'}}>
+                 <button className="secondary-btn" style={{flex:1}} onClick={exportFolder}>Export JSON</button>
+                 <button className="secondary-btn" style={{flex:1}} onClick={importFolder}>Import JSON</button>
+               </div>
+             </div>
+           </div>
+         </div>
+       )}
+       {showSearchModal && (
+         <GlobalSearchModal 
+           isOpen={showSearchModal} 
+           onClose={() => setShowSearchModal(false)} 
+           userEmail={user?.email || user?.id}
+           onSelectCard={(res) => {
+             setShowSearchModal(false);
+             navigate(`/editor/${res.folder_id}`);
+           }}
+         />
+       )}
+     </div>
+   )
 }
 
 function AccountPage() {
@@ -461,14 +546,4 @@ function AccountPage() {
 
 function ChangePasswordPage() {
   return <div className="page-container"><h1>Change Password</h1><p>Coming soon...</p></div>
-}
-
-function EditorPage({ params }) {
-  const folderId = window.location.pathname.split('/').pop()
-  return <div className="page-container"><h1>Editor</h1><p>Folder ID: {folderId}</p></div>
-}
-
-function ViewerPage({ params }) {
-  const folderId = window.location.pathname.split('/').pop()
-  return <div className="page-container"><h1>Viewer</h1><p>Folder ID: {folderId}</p></div>
 }
