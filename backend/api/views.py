@@ -910,7 +910,7 @@ def load_cards(request, folder_id):
                     {"message": "このフォルダにアクセスする権限がありません"},
                     status=403,
                 )
-            
+                
             c.execute(
                 "SELECT front_content, back_content, front_bg, back_bg, tags FROM cards WHERE folder_id = %s ORDER BY order_index",
                 (folder_id,),
