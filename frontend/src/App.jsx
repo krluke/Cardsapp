@@ -5,7 +5,6 @@ import EditorPage from './pages/EditorPage'
 import ViewerPage from './pages/ViewerPage'
 import StudyPage from './pages/study/StudyPage'
 import { GlobalSearchModal } from './components/GlobalSearchModal'
-import { useModal, Modal } from './components/Modal'
 import './i18n'
 
 const API_BASE = '/api'
@@ -36,15 +35,6 @@ function t(key) {
       visibility_shared: "特定の人のみ (準備中)",
       btn_save: "保存",
       btn_delete: "削除",
-      error_folder_exists: "同じ名前のフォルダが既に存在します",
-      error_create_folder: "フォルダの作成中にエラーが発生しました",
-      error_save: "保存中にエラーが発生しました",
-      error_delete: "削除中にエラーが発生しました",
-      confirm_delete_folder: "このフォルダを削除してもよろしいですか？",
-      success_import: "インポートが完了しました！",
-      error_import: "無効なファイル形式です",
-      success_export: "エクスポートが完了しました",
-      error_export: "エクスポートに失敗しました",
       login_title: "ログイン",
       placeholder_login_id: "メール または ユーザー名",
       placeholder_password: "パスワード",
@@ -83,15 +73,6 @@ function t(key) {
       visibility_shared: "Specific people (coming soon)",
       btn_save: "Save",
       btn_delete: "Delete",
-      error_folder_exists: "A folder with the same name already exists",
-      error_create_folder: "Error creating folder",
-      error_save: "Error saving",
-      error_delete: "Error deleting folder",
-      confirm_delete_folder: "Are you sure you want to delete this folder?",
-      success_import: "Import successful!",
-      error_import: "Invalid file format",
-      success_export: "Export successful",
-      error_export: "Export failed",
       login_title: "Login",
       placeholder_login_id: "Email or Username",
       placeholder_password: "Password",
@@ -148,7 +129,6 @@ function HomePage() {
   const [showSettingsModal, setShowSettingsModal] = useState(false)
   const [editingFolder, setEditingFolder] = useState(null)
   const [showSearchModal, setShowSearchModal] = useState(false)
-  const { modalState, showAlert, showConfirm, showPrompt, closeModal, handleConfirm, handlePromptSubmit } = useModal()
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('app-theme') || 'light'
@@ -161,12 +141,13 @@ function HomePage() {
     if (session.user) setUser(session.user)
   }, [])
 
+  // --- Gitコンフリクト修正部分：両方の機能（自動更新と未ログイン対応）を統合 ---
   useEffect(() => {
     loadFolders()
   }, [activeTab, page, searchInput, user])
 
   useEffect(() => {
-    // Periodic polling - refresh every 15 seconds
+    // 15秒ごとの定期ポーリング
     const interval = setInterval(() => {
       loadFolders()
     }, 15000)
@@ -174,7 +155,7 @@ function HomePage() {
   }, [activeTab, page, searchInput, user])
 
   useEffect(() => {
-    // Focus-based refresh - when user returns to the tab
+    // タブに戻ってきた時のフォーカス更新
     const handleFocus = () => {
       loadFolders()
     }
@@ -188,13 +169,15 @@ function HomePage() {
   }
 
   const loadFolders = async () => {
-    if (!user) return
+    // マイフォルダでログインしていない場合はフェッチしない（グローバルは未ログインでも可とする）
+    if (!user && activeTab === 'my-folders') return
+
     const endpoint = activeTab === 'my-folders' ? '/folders' : '/folders/global'
     const params = new URLSearchParams({ 
       page, 
       search: searchInput,
       tab: activeTab,
-      userEmail: user.email || user.id
+      userEmail: user ? (user.email || user.id) : ''
     })
     try {
       const res = await fetch(`${API_BASE}${endpoint}?${params}`)
@@ -205,6 +188,7 @@ function HomePage() {
       }
     } catch (e) { console.error(e) }
   }
+  // -------------------------------------------------------------------------
 
   const handleLogin = async (e) => {
     e.preventDefault()
@@ -274,7 +258,7 @@ function HomePage() {
   }
 
   const createNewFolder = async () => {
-    const title = await showPrompt('Untitled', t('placeholder_folder_name'))
+    const title = prompt(t('placeholder_folder_name'), 'Untitled')
     if (!title || !user) return
     
     try {
@@ -283,17 +267,8 @@ function HomePage() {
         headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': getCsrfToken() },
         body: JSON.stringify({ userEmail: user.email || user.id, title }),
       })
-      const data = await res.json()
-      if (res.ok) {
-        loadFolders()
-      } else {
-        if (data.message?.includes('同じ名前') || data.message?.includes('already exists')) {
-          showAlert(t('error_folder_exists'))
-        } else {
-          showAlert(data.message || t('error_create_folder'))
-        }
-      }
-    } catch (e) { showAlert(t('error_create_folder')) }
+      if (res.ok) loadFolders()
+    } catch (e) { alert('Error creating folder') }
   }
 
   const selectTheme = (newTheme) => {
@@ -331,7 +306,7 @@ function HomePage() {
         setShowSettingsModal(false)
         loadFolders()
       }
-    } catch (e) { showAlert(t('error_save')) }
+    } catch (e) { alert('Error saving') }
   }
 
   const exportFolder = async () => {
@@ -345,7 +320,7 @@ function HomePage() {
       a.href = url;
       a.download = `${editingFolder.title}.json`;
       a.click();
-    } catch (e) { showAlert(t('error_export')) }
+    } catch (e) { alert('Export failed') }
   }
 
   const importFolder = async () => {
@@ -365,10 +340,10 @@ function HomePage() {
             body: JSON.stringify({ folderData, userEmail: user.email || user.id }),
           });
           if (res.ok) {
-            showAlert(t('success_import'))
+            alert('Import successful!');
             loadFolders();
           }
-        } catch (e) { showAlert(t('error_import')) }
+        } catch (e) { alert('Invalid file format') }
       };
       reader.readAsText(file);
     };
@@ -376,8 +351,7 @@ function HomePage() {
   }
 
   const deleteFolder = async () => {
-    const confirmed = await showConfirm(t('confirm_delete_folder'), t('confirm_delete_folder'))
-    if (!confirmed || !editingFolder || !user) return
+    if (!editingFolder || !user || !confirm('Delete this folder?')) return
     try {
       const res = await fetch(`${API_BASE}/folders/delete`, {
         method: 'POST',
@@ -388,7 +362,7 @@ function HomePage() {
         setShowSettingsModal(false)
         loadFolders()
       }
-    } catch (e) { showAlert(t('error_delete')) }
+    } catch (e) { alert('Error deleting') }
   }
 
   return (
@@ -583,12 +557,11 @@ function HomePage() {
            }}
          />
        )}
-       <Modal state={modalState} onClose={closeModal} onConfirm={handleConfirm} onSubmit={handlePromptSubmit} />
      </div>
    )
- }
+}
 
- function AccountPage() {
+function AccountPage() {
   return <div className="page-container"><h1>Account Page</h1><p>Coming soon...</p></div>
 }
 
