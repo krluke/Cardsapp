@@ -145,23 +145,22 @@ function HomePage() {
        loadFolders()
      }, [activeTab, page, searchInput, user])
  
-     const loadFolders = async () => {
-       const endpoint = activeTab === 'my-folders' ? '/folders' : '/folders/global'
-       const params = new URLSearchParams({ 
-         page, 
-         search: searchInput,
-         tab: activeTab,
-         userEmail: user ? (user.email || user.id) : ''
-       })
-       try {
-         const res = await fetch(`${API_BASE}${endpoint}?${params}`)
-         const data = await res.json()
-         if (data.folders) {
-           setFolders(data.folders || [])
-           setTotalPages(data.totalPages || 1)
-         }
-       } catch (e) { console.error(e) }
-     }
+   const loadFolders = async () => {
+     const endpoint = activeTab === 'my-folders' ? '/folders' : '/folders/global'
+     const params = new URLSearchParams({ 
+       page, 
+       search: searchInput,
+       tab: activeTab,
+       userEmail: user ? (user.email || user.id) : ''
+     })
+     try {
+       const res = await fetch(`${API_BASE}${endpoint}?${params}`)
+       const data = await res.json()
+       if (data.folders) {
+         setFolders(data.folders || [])
+         setTotalPages(data.totalPages || 1)
+       }
+     } catch (e) { console.error(e) }
    }
 
   const handleLogin = async (e) => {
