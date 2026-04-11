@@ -35,7 +35,6 @@ function t(key) {
       visibility_shared: "特定の人のみ (準備中)",
       btn_save: "保存",
       btn_delete: "削除",
-<<<<<<< HEAD
       error_folder_exists: "同じ名前のフォルダが既に存在します",
       error_create_folder: "フォルダの作成中にエラーが発生しました",
       error_save: "保存中にエラーが発生しました",
@@ -46,8 +45,6 @@ function t(key) {
       success_export: "エクスポートが完了しました",
       error_export: "エクスポートに失敗しました",
       no_public_folders: "公開されているフォルダはありません",
-=======
->>>>>>> f9732f08b1d61276f0757976271032607e19bb6c
       login_title: "ログイン",
       placeholder_login_id: "メール または ユーザー名",
       placeholder_password: "パスワード",
@@ -86,7 +83,6 @@ function t(key) {
       visibility_shared: "Specific people (coming soon)",
       btn_save: "Save",
       btn_delete: "Delete",
-<<<<<<< HEAD
       error_folder_exists: "A folder with the same name already exists",
       error_create_folder: "Error creating folder",
       error_save: "Error saving",
@@ -97,8 +93,6 @@ function t(key) {
       success_export: "Export successful",
       error_export: "Export failed",
       no_public_folders: "No public folders yet",
-=======
->>>>>>> f9732f08b1d61276f0757976271032607e19bb6c
       login_title: "Login",
       placeholder_login_id: "Email or Username",
       placeholder_password: "Password",
