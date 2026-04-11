@@ -33,19 +33,30 @@ export default function StudyPage() {
       const res = await fetch(url);
       let data = await res.json();
       
-      if (mode === 'all') {
+      // Handle error responses
+      if (!res.ok || data.message) {
+        console.error('API Error:', data.message || 'Unknown error');
+        setCards([]);
+        setLoading(false);
+        return;
+      }
+      
+      if (mode === 'all' && Array.isArray(data)) {
         data = data.map((c, i) => ({ ...c, id: c.id || i + 1000 }));
       }
       
-      if (shuffle) {
+      if (shuffle && Array.isArray(data)) {
         data = [...data].sort(() => Math.random() - 0.5);
       }
       
-      setCards(data);
+      setCards(Array.isArray(data) ? data : []);
       setCurrentIndex(0);
       setIsFlipped(false);
       setFinished(false);
-    } catch (e) { console.error(e); }
+    } catch (e) { 
+      console.error(e); 
+      setCards([]);
+    }
     finally { setLoading(false); }
   }, [folderId, user]);
 
