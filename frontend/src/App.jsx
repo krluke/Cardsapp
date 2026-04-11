@@ -487,29 +487,29 @@ function HomePage() {
           </div>
         )}
 
-        <div className="folder-grid">
-          {folders.map(folder => {
-            const isOwner = activeTab === 'my-folders' || folder.username === user?.username;
-            return (
-              <div key={folder.id} className="folder-tile" onClick={() => navigate(`/editor/${folder.id}`)}>
-                <div className="folder-actions" onClick={e => e.stopPropagation()}>
-                  <button className="folder-settings-icon" onClick={() => navigate(`/study/${folder.id}`)} title="Study">
-                    <BookOpen size={16} />
-                  </button>
-                  {isOwner && (
-                    <button className="folder-settings-icon" onClick={(e) => { e.stopPropagation(); openFolderSettings(folder) }}>
-                      <Settings size={16} />
-                    </button>
-                  )}
-                </div>
-                <h3 style={{margin: 0, fontSize: '1rem'}}>{folder.title}</h3>
-                <p style={{margin: '0.5rem 0 0', fontSize: '0.8rem', color: 'var(--text-muted)'}}>
-                  {activeTab === 'global-folders' && folder.username ? `${folder.username} • ` : ''}{folder.card_count || folder.cardCount || 0} cards
-                </p>
-              </div>
-            );
-          })}
-        </div>
+         <div className="folder-grid">
+           {folders.map(folder => {
+             const isOwner = activeTab === 'my-folders' || folder.username === user?.username;
+             return (
+               <div key={folder.id} className="folder-tile" onClick={() => navigate(`/viewer/${folder.id}`)}>
+                 <div className="folder-actions" onClick={e => e.stopPropagation()}>
+                   <button className="folder-settings-icon" onClick={() => navigate(`/study/${folder.id}`)} title="Study">
+                     <BookOpen size={16} />
+                   </button>
+                   {isOwner && (
+                     <button className="folder-settings-icon" onClick={(e) => { e.stopPropagation(); openFolderSettings(folder) }}>
+                       <Settings size={16} />
+                     </button>
+                   )}
+                 </div>
+                 <h3 style={{margin: 0, fontSize: '1rem'}}>{folder.title}</h3>
+                 <p style={{margin: '0.5rem 0 0', fontSize: '0.8rem', color: 'var(--text-muted)'}}>
+                   {activeTab === 'global-folders' && folder.username ? `${folder.username} • ` : ''}{folder.card_count || folder.cardCount || 0} cards
+                 </p>
+               </div>
+             );
+           })}
+         </div>
       </main>
 
       {showAuthModal && (
