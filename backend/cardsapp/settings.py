@@ -57,10 +57,10 @@ WSGI_APPLICATION = "cardsapp.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": os.environ.get("DB_NAME", "flashcards_db"),
-        "USER": os.environ.get("DB_USER", "flashcard_user"),
-        "PASSWORD": os.environ.get("DB_PASSWORD", "flashcard_pass"),
-        "HOST": os.environ.get("DB_HOST", "db"),
+        "NAME": os.environ.get("DB_NAME"),
+        "USER": os.environ.get("DB_USER"),
+        "PASSWORD": os.environ.get("DB_PASSWORD"),
+        "HOST": os.environ.get("DB_HOST"),
         "PORT": "3306",
         "OPTIONS": {
             "charset": "utf8mb4",

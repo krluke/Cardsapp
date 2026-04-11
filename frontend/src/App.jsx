@@ -1,0 +1,474 @@
+import { useState, useEffect } from 'react'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { X, FolderPlus, Palette, Globe, User, LogOut, LogIn, Settings, Trash2, Search, ChevronLeft, ChevronRight } from 'lucide-react'
+import './i18n'
+
+const API_BASE = '/api'
+
+function t(key) {
+  const lang = localStorage.getItem('app-lang') || 'ja'
+  const translations = {
+    ja: {
+      btn_create_folder: "新規作成",
+      theme_sand: "サンド＆クリーム",
+      theme_dark: "ダークモード",
+      theme_blue: "青",
+      menu_login: "ログイン/登録",
+      menu_account_info: "アカウント情報",
+      menu_logout: "ログアウト",
+      tab_my_folders: "マイドライブ",
+      tab_global_folders: "公開カード",
+      search_placeholder: "フォルダーを検索...",
+      btn_search: "検索",
+      guest_message: "ログインするとフォルダを作成できます。",
+      guest_login_btn: "ログインする",
+      folder_settings_title: "フォルダ設定",
+      label_folder_name: "フォルダ名",
+      placeholder_folder_name: "フォルダ名",
+      label_visibility: "公開設定",
+      visibility_private: "プライベート (自分のみ)",
+      visibility_public: "パブリック (全体公開)",
+      visibility_shared: "特定の人のみ (準備中)",
+      btn_save: "保存",
+      btn_delete: "削除",
+      login_title: "ログイン",
+      placeholder_login_id: "メール または ユーザー名",
+      placeholder_password: "パスワード",
+      btn_login: "ログイン",
+      switch_to_signup_text: "アカウントがない？",
+      switch_to_signup_link: "新規登録",
+      signup_title: "新規登録",
+      placeholder_username: "ユーザー名",
+      placeholder_email: "メールアドレス",
+      btn_send_code: "送信",
+      placeholder_verify_code: "認証コード",
+      btn_signup: "登録",
+      switch_to_login_text: "作成済み？",
+      switch_to_login_link: "ログイン",
+    },
+    en: {
+      btn_create_folder: "New Folder",
+      theme_sand: "Sand & Cream",
+      theme_dark: "Dark Mode",
+      theme_blue: "Blue",
+      menu_login: "Login / Register",
+      menu_account_info: "Account Info",
+      menu_logout: "Logout",
+      tab_my_folders: "My Drive",
+      tab_global_folders: "Public Cards",
+      search_placeholder: "Search folders...",
+      btn_search: "Search",
+      guest_message: "Log in to create folders.",
+      guest_login_btn: "Login",
+      folder_settings_title: "Folder Settings",
+      label_folder_name: "Folder Name",
+      placeholder_folder_name: "Folder name",
+      label_visibility: "Visibility",
+      visibility_private: "Private (only me)",
+      visibility_public: "Public (everyone)",
+      visibility_shared: "Specific people (coming soon)",
+      btn_save: "Save",
+      btn_delete: "Delete",
+      login_title: "Login",
+      placeholder_login_id: "Email or Username",
+      placeholder_password: "Password",
+      btn_login: "Login",
+      switch_to_signup_text: "No account?",
+      switch_to_signup_link: "Sign up",
+      signup_title: "Sign Up",
+      placeholder_username: "Username",
+      placeholder_email: "Email",
+      btn_send_code: "Send",
+      placeholder_verify_code: "Verification code",
+      btn_signup: "Register",
+      switch_to_login_text: "Already have one?",
+      switch_to_login_link: "Login",
+    },
+  }
+  return translations[lang]?.[key] || key
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Navigate to="/home" replace />} />
+        <Route path="/home" element={<HomePage />} />
+        <Route path="/account" element={<AccountPage />} />
+        <Route path="/change-password" element={<ChangePasswordPage />} />
+        <Route path="/editor/:folderId" element={<EditorPage />} />
+        <Route path="/viewer/:folderId" element={<ViewerPage />} />
+      </Routes>
+    </BrowserRouter>
+  )
+}
+
+function HomePage() {
+  const [user, setUser] = useState(null)
+  const [activeTab, setActiveTab] = useState('my-folders')
+  const [showAuthModal, setShowAuthModal] = useState(false)
+  const [authView, setAuthView] = useState('login')
+  const [loginData, setLoginData] = useState({ id: '', password: '' })
+  const [signupData, setSignupData] = useState({ username: '', email: '', code: '', password: '' })
+  const [message, setMessage] = useState({ type: '', text: '' })
+  const [folders, setFolders] = useState([])
+  const [searchInput, setSearchInput] = useState('')
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [themeMenuOpen, setThemeMenuOpen] = useState(false)
+  const [langMenuOpen, setLangMenuOpen] = useState(false)
+  const [authMenuOpen, setAuthMenuOpen] = useState(false)
+  const [theme, setTheme] = useState('light')
+  const [lang, setLang] = useState('ja')
+  const [showSettingsModal, setShowSettingsModal] = useState(false)
+  const [editingFolder, setEditingFolder] = useState(null)
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('app-theme') || 'light'
+    const savedLang = localStorage.getItem('app-lang') || 'ja'
+    setTheme(savedTheme)
+    setLang(savedLang)
+    document.documentElement.setAttribute('data-theme', savedTheme)
+    
+    const session = JSON.parse(localStorage.getItem('session') || '{}')
+    if (session.user) setUser(session.user)
+  }, [])
+
+  useEffect(() => {
+    loadFolders()
+  }, [activeTab, page, searchInput])
+
+  const getCsrfToken = () => {
+    const session = JSON.parse(localStorage.getItem('session') || '{}')
+    return session.csrfToken || ''
+  }
+
+  const loadFolders = async () => {
+    const endpoint = activeTab === 'my-folders' ? '/api/folders/list' : '/api/folders/global'
+    const params = new URLSearchParams({ page, search: searchInput })
+    try {
+      const res = await fetch(`${API_BASE}${endpoint}?${params}`)
+      const data = await res.json()
+      if (data.data) {
+        setFolders(data.data.folders || [])
+        setTotalPages(data.data.totalPages || 1)
+      }
+    } catch (e) { console.error(e) }
+  }
+
+  const handleLogin = async (e) => {
+    e.preventDefault()
+    setMessage({ type: '', text: '' })
+    try {
+      const res = await fetch(`${API_BASE}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': getCsrfToken() },
+        body: JSON.stringify(loginData),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setMessage({ type: 'error', text: data.message || 'Login failed' })
+        return
+      }
+      const session = {
+        user: { id: data.email, username: data.username, email: data.email },
+        csrfToken: data.csrfToken,
+      }
+      localStorage.setItem('session', JSON.stringify(session))
+      setUser(session.user)
+      setShowAuthModal(false)
+      loadFolders()
+    } catch (err) {
+      setMessage({ type: 'error', text: 'Network error' })
+    }
+  }
+
+  const handleSignup = async (e) => {
+    e.preventDefault()
+    setMessage({ type: '', text: '' })
+    try {
+      const res = await fetch(`${API_BASE}/signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': getCsrfToken() },
+        body: JSON.stringify(signupData),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setMessage({ type: 'error', text: data.message || 'Signup failed' })
+        return
+      }
+      const session = {
+        user: { id: data.email, username: data.username, email: data.email },
+        csrfToken: data.csrfToken,
+      }
+      localStorage.setItem('session', JSON.stringify(session))
+      setUser(session.user)
+      setShowAuthModal(false)
+      loadFolders()
+    } catch (err) {
+      setMessage({ type: 'error', text: 'Network error' })
+    }
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem('session')
+    setUser(null)
+    setAuthMenuOpen(false)
+    loadFolders()
+  }
+
+  const createNewFolder = async () => {
+    const title = prompt(t('placeholder_folder_name'), 'Untitled')
+    if (!title || !user) return
+    
+    try {
+      const res = await fetch(`${API_BASE}/folders/create`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': getCsrfToken() },
+        body: JSON.stringify({ userEmail: user.id, title }),
+      })
+      if (res.ok) loadFolders()
+    } catch (e) { alert('Error creating folder') }
+  }
+
+  const selectTheme = (newTheme) => {
+    setTheme(newTheme)
+    localStorage.setItem('app-theme', newTheme)
+    document.documentElement.setAttribute('data-theme', newTheme)
+    setThemeMenuOpen(false)
+  }
+
+  const selectLanguage = (newLang) => {
+    setLang(newLang)
+    localStorage.setItem('app-lang', newLang)
+    setLangMenuOpen(false)
+  }
+
+  const openFolderSettings = (folder) => {
+    setEditingFolder(folder)
+    setShowSettingsModal(true)
+  }
+
+  const saveFolderSettings = async () => {
+    if (!editingFolder) return
+    try {
+      const res = await fetch(`${API_BASE}/folders/update`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': getCsrfToken() },
+        body: JSON.stringify({
+          folderId: editingFolder.id,
+          title: editingFolder.title,
+          visibility: editingFolder.visibility,
+        }),
+      })
+      if (res.ok) {
+        setShowSettingsModal(false)
+        loadFolders()
+      }
+    } catch (e) { alert('Error saving') }
+  }
+
+  const deleteFolder = async () => {
+    if (!editingFolder || !confirm('Delete this folder?')) return
+    try {
+      const res = await fetch(`${API_BASE}/folders/delete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': getCsrfToken() },
+        body: JSON.stringify({ folderId: editingFolder.id }),
+      })
+      if (res.ok) {
+        setShowSettingsModal(false)
+        loadFolders()
+      }
+    } catch (e) { alert('Error deleting') }
+  }
+
+  return (
+    <div className="min-h-screen">
+      <header className="navbar">
+        <h1 className="logo">CardsApp</h1>
+        
+        <div className="nav-actions">
+          {user && (
+            <button className="primary-btn shadow-btn" onClick={createNewFolder}>
+              <FolderPlus size={20} /> {t('btn_create_folder')}
+            </button>
+          )}
+
+          <div className="theme-menu">
+            <button className="theme-btn" onClick={() => { setThemeMenuOpen(!themeMenuOpen); setLangMenuOpen(false); setAuthMenuOpen(false) }}>
+              <Palette size={15} />
+            </button>
+            {themeMenuOpen && (
+              <div className="theme-dropdown">
+                <button className={`theme-option ${theme === 'light' ? 'active' : ''}`} onClick={() => selectTheme('light')}>
+                  <span className="theme-dots"><span style={{background:'#F4F0EB'}}></span><span style={{background:'#D97757'}}></span><span style={{background:'#E05252'}}></span></span>
+                  <span>{t('theme_sand')}</span>
+                </button>
+                <button className={`theme-option ${theme === 'dark' ? 'active' : ''}`} onClick={() => selectTheme('dark')}>
+                  <span className="theme-dots"><span style={{background:'#1E1B18'}}></span><span style={{background:'#D97757'}}></span><span style={{background:'#383430'}}></span></span>
+                  <span>{t('theme_dark')}</span>
+                </button>
+                <button className={`theme-option ${theme === 'blue' ? 'active' : ''}`} onClick={() => selectTheme('blue')}>
+                  <span className="theme-dots"><span style={{background:'#1B3A6B'}}></span><span style={{background:'#3B8BEB'}}></span><span style={{background:'#D94F6E'}}></span></span>
+                  <span>{t('theme_blue')}</span>
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div className="lang-menu">
+            <button className="lang-btn" onClick={() => { setLangMenuOpen(!langMenuOpen); setThemeMenuOpen(false); setAuthMenuOpen(false) }}>
+              <Globe size={15} />
+              <span>{lang.toUpperCase()}</span>
+            </button>
+            {langMenuOpen && (
+              <div className="lang-dropdown">
+                <button className={`lang-option ${lang === 'ja' ? 'active' : ''}`} onClick={() => selectLanguage('ja')}>🇯🇵 日本語</button>
+                <button className={`lang-option ${lang === 'en' ? 'active' : ''}`} onClick={() => selectLanguage('en')}>🇺🇸 English</button>
+              </div>
+            )}
+          </div>
+
+          <div className="account-menu">
+            <button className="icon-btn shadow-btn" onClick={() => { setAuthMenuOpen(!authMenuOpen); setThemeMenuOpen(false); setLangMenuOpen(false) }}>
+              <User size={20} />
+            </button>
+            {authMenuOpen && (
+              <div className="dropdown">
+                {!user ? (
+                  <button className="dropdown-item" onClick={() => { setShowAuthModal(true); setAuthMenuOpen(false) }}>
+                    <LogIn size={18} /> {t('menu_login')}
+                  </button>
+                ) : (
+                  <>
+                    <div className="menu-header"><span style={{fontWeight:'bold'}}>{user.username}</span></div>
+                    <a href="/account" className="dropdown-item"><User size={18} /> {t('menu_account_info')}</a>
+                    <div className="dropdown-divider"></div>
+                    <button className="dropdown-item logout-btn" onClick={handleLogout}><LogOut size={18} /> {t('menu_logout')}</button>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </header>
+
+      <main className="page-container">
+        <div className="tabs-container">
+          <button className={`tab-btn ${activeTab === 'my-folders' ? 'active' : ''}`} onClick={() => setActiveTab('my-folders')}>{t('tab_my_folders')}</button>
+          <button className={`tab-btn ${activeTab === 'global-folders' ? 'active' : ''}`} onClick={() => setActiveTab('global-folders')}>{t('tab_global_folders')}</button>
+        </div>
+
+        <div className="search-and-pagination-container">
+          <div className="search-bar-wrapper">
+            <input type="text" id="search-input" placeholder={t('search_placeholder')} value={searchInput} onChange={(e) => setSearchInput(e.target.value)} />
+            <button className="shadow-btn" onClick={loadFolders}>{t('btn_search')}</button>
+          </div>
+          <div className="pagination-controls">
+            <button disabled={page === 1} onClick={() => setPage(p => p - 1)}><ChevronLeft size={16} /></button>
+            <span>{page} / {totalPages}</span>
+            <button disabled={page === totalPages} onClick={() => setPage(p => p + 1)}><ChevronRight size={16} /></button>
+          </div>
+        </div>
+
+        {activeTab === 'my-folders' && !user && (
+          <div className="empty-state">
+            <p>{t('guest_message')}</p>
+            <button className="primary-btn" onClick={() => setShowAuthModal(true)}>{t('guest_login_btn')}</button>
+          </div>
+        )}
+
+        <div className="folder-grid">
+          {folders.map(folder => (
+            <div key={folder.id} className="folder-tile" onClick={() => window.location.href = `/editor/${folder.id}`}>
+              <button className="folder-settings-icon" onClick={(e) => { e.stopPropagation(); openFolderSettings(folder) }}>
+                <Settings size={16} />
+              </button>
+              <h3 style={{margin: 0, fontSize: '1rem'}}>{folder.title}</h3>
+              <p style={{margin: '0.5rem 0 0', fontSize: '0.8rem', color: 'var(--text-muted)'}}>
+                {folder.cardCount || 0} cards
+              </p>
+            </div>
+          ))}
+        </div>
+      </main>
+
+      {showAuthModal && (
+        <div className="modal" onClick={() => setShowAuthModal(false)}>
+          <div className="auth-box" onClick={e => e.stopPropagation()}>
+            <button className="close-btn" onClick={() => setShowAuthModal(false)}><X size={20} /></button>
+            
+            {authView === 'login' ? (
+              <form onSubmit={handleLogin}>
+                <h2 className="auth-title">{t('login_title')}</h2>
+                {message.text && <div className={`auth-message ${message.type}`}>{message.text}</div>}
+                <input className="input-field mb-1" placeholder={t('placeholder_login_id')} value={loginData.id} onChange={e => setLoginData({...loginData, id: e.target.value})} required />
+                <input type="password" className="input-field mb-1" placeholder={t('placeholder_password')} value={loginData.password} onChange={e => setLoginData({...loginData, password: e.target.value})} required />
+                <button type="submit" className="primary-btn w-full">{t('btn_login')}</button>
+                <p className="switch-auth-text">{t('switch_to_signup_text')} <span className="text-link" onClick={() => setAuthView('signup')}>{t('switch_to_signup_link')}</span></p>
+              </form>
+            ) : (
+              <form onSubmit={handleSignup}>
+                <h2 className="auth-title">{t('signup_title')}</h2>
+                {message.text && <div className={`auth-message ${message.type}`}>{message.text}</div>}
+                <input className="input-field mb-1" placeholder={t('placeholder_username')} value={signupData.username} onChange={e => setSignupData({...signupData, username: e.target.value})} required />
+                <div className="input-with-btn mb-1">
+                  <input type="email" className="input-field" placeholder={t('placeholder_email')} value={signupData.email} onChange={e => setSignupData({...signupData, email: e.target.value})} required />
+                  <button type="button" className="secondary-btn shadow-btn">{t('btn_send_code')}</button>
+                </div>
+                <input className="input-field mb-1" placeholder={t('placeholder_verify_code')} value={signupData.code} onChange={e => setSignupData({...signupData, code: e.target.value})} required />
+                <input type="password" className="input-field mb-1" placeholder={t('placeholder_password')} value={signupData.password} onChange={e => setSignupData({...signupData, password: e.target.value})} required />
+                <button type="submit" className="primary-btn w-full">{t('btn_signup')}</button>
+                <p className="switch-auth-text">{t('switch_to_login_text')} <span className="text-link" onClick={() => setAuthView('login')}>{t('switch_to_login_link')}</span></p>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
+      {showSettingsModal && editingFolder && (
+        <div className="modal" onClick={() => setShowSettingsModal(false)}>
+          <div className="auth-box" onClick={e => e.stopPropagation()}>
+            <button className="close-btn" onClick={() => setShowSettingsModal(false)}><X size={20} /></button>
+            <h2 className="auth-title">{t('folder_settings_title')}</h2>
+            <div className="mb-1">
+              <label style={{fontSize: '14px', fontWeight: 'bold'}}>{t('label_folder_name')}</label>
+              <input className="input-field mt-1" value={editingFolder.title} onChange={e => setEditingFolder({...editingFolder, title: e.target.value})} />
+            </div>
+            <div className="mb-1">
+              <label style={{fontSize: '14px', fontWeight: 'bold'}}>{t('label_visibility')}</label>
+              <select className="input-field mt-1" value={editingFolder.visibility} onChange={e => setEditingFolder({...editingFolder, visibility: e.target.value})}>
+                <option value="private">{t('visibility_private')}</option>
+                <option value="public">{t('visibility_public')}</option>
+                <option value="shared" disabled>{t('visibility_shared')}</option>
+              </select>
+            </div>
+            <div style={{display:'flex', gap:'10px', marginTop:'20px'}}>
+              <button className="primary-btn" style={{flex:2}} onClick={saveFolderSettings}>{t('btn_save')}</button>
+              <button className="secondary-btn" style={{flex:1, backgroundColor:'#fee2e2', color:'#dc2626', border:'none'}} onClick={deleteFolder}>{t('btn_delete')}</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function AccountPage() {
+  return <div className="page-container"><h1>Account Page</h1><p>Coming soon...</p></div>
+}
+
+function ChangePasswordPage() {
+  return <div className="page-container"><h1>Change Password</h1><p>Coming soon...</p></div>
+}
+
+function EditorPage({ params }) {
+  const folderId = window.location.pathname.split('/').pop()
+  return <div className="page-container"><h1>Editor</h1><p>Folder ID: {folderId}</p></div>
+}
+
+function ViewerPage({ params }) {
+  const folderId = window.location.pathname.split('/').pop()
+  return <div className="page-container"><h1>Viewer</h1><p>Folder ID: {folderId}</p></div>
+}

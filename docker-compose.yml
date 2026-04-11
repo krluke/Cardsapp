@@ -30,31 +30,31 @@ services:
     env_file:
       - .env
     environment:
-      - DB_HOST=db
+      - DB_HOST=${DB_HOST:-db}
       - DB_USER=flashcard_user
-      - DB_PASSWORD=flashcard_pass
-      - DB_NAME=flashcards_db
-      - GMAIL_USER=${GMAIL_USER:-fromserver.noreply@gmail.com}
+      - DB_PASSWORD=${MYSQL_PASSWORD}
+      - DB_NAME=${DB_NAME:-flashcards_db}
+      - GMAIL_USER=${GMAIL_USER}
       - GMAIL_PASS=${GMAIL_PASS}
       - ADMIN_API_KEY=${ADMIN_API_KEY}
       - DEBUG=True
     volumes:
       - ./backend:/app
-      - ./frontend:/frontend
     depends_on:
       db:
         condition: service_healthy
 
-  # --- Nginx フロントエンド ---
-  nginx:
-    image: nginx:alpine
+  # --- React フロントエンド ---
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
     container_name: my-frontend
     restart: always
     ports:
       - "8080:80"
-    volumes:
-      - ./frontend:/usr/share/nginx/html
-      - ./backend/staticfiles:/usr/share/nginx/html/static:ro
-      - ./frontend/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
       - backend
+
+volumes:
+  db_data:
