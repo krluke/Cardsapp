@@ -61,6 +61,11 @@ export default function StudyPage() {
   }, [folderId, user]);
 
   useEffect(() => {
+    const savedTheme = localStorage.getItem('app-theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  }, []);
+
+  useEffect(() => {
     if (!user) { navigate('/home'); return; }
     loadCards(studyMode, shuffled);
   }, [folderId, studyMode, shuffled]);
@@ -150,7 +155,10 @@ export default function StudyPage() {
   if (cards.length === 0) return (
     <div className="study-container">
       <h2>No cards to study! 🎉</h2>
-      <button className="primary-btn" onClick={() => navigate(`/editor/${folderId}`)}>Back to Editor</button>
+      <div className="finished-buttons">
+        <button className="primary-btn" onClick={() => navigate(`/editor/${folderId}`)}>Back to Editor</button>
+        <button className="secondary-btn" onClick={() => navigate('/home')}>Home</button>
+      </div>
     </div>
   );
 
@@ -170,6 +178,7 @@ export default function StudyPage() {
         <div className="finished-buttons">
           <button className="primary-btn" onClick={() => { setStats({ again: 0, hard: 0, good: 0, easy: 0, total: 0 }); loadCards(studyMode, shuffled); }}>Study Again</button>
           <button className="secondary-btn" onClick={() => navigate(`/editor/${folderId}`)}>Back to Editor</button>
+          <button className="secondary-btn" onClick={() => navigate('/home')}>Home</button>
         </div>
       </div>
     );

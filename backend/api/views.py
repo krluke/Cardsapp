@@ -746,7 +746,10 @@ def get_study_cards(request):
                 SELECT c.id, c.front_content, c.back_content, c.front_bg, c.back_bg
                 FROM cards c
                 JOIN folders f ON c.folder_id = f.id
-                WHERE f.id = %s AND f.user_email = %s AND c.srs_next_review <= NOW()
+                WHERE f.id = %s AND f.user_email = %s 
+                AND c.srs_next_review <= NOW()
+                AND (c.front_content IS NOT NULL AND c.front_content != '')
+                AND (c.back_content IS NOT NULL AND c.back_content != '')
                 ORDER BY c.srs_next_review ASC
                 """,
                 (folder_id, user_email),
