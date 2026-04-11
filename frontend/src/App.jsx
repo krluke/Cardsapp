@@ -139,35 +139,30 @@ function HomePage() {
     
     const session = JSON.parse(localStorage.getItem('session') || '{}')
     if (session.user) setUser(session.user)
-  }, [])
+    }, [])
 
-  useEffect(() => {
-    loadFolders()
-  }, [activeTab, page, searchInput, user])
-
-  const getCsrfToken = () => {
-    const session = JSON.parse(localStorage.getItem('session') || '{}')
-    return session.csrfToken || ''
-  }
-
-  const loadFolders = async () => {
-    if (!user) return
-    const endpoint = activeTab === 'my-folders' ? '/folders' : '/folders/global'
-    const params = new URLSearchParams({ 
-      page, 
-      search: searchInput,
-      tab: activeTab,
-      userEmail: user.email || user.id
-    })
-    try {
-      const res = await fetch(`${API_BASE}${endpoint}?${params}`)
-      const data = await res.json()
-      if (data.folders) {
-        setFolders(data.folders || [])
-        setTotalPages(data.totalPages || 1)
-      }
-    } catch (e) { console.error(e) }
-  }
+     useEffect(() => {
+       loadFolders()
+     }, [activeTab, page, searchInput, user])
+ 
+     const loadFolders = async () => {
+       const endpoint = activeTab === 'my-folders' ? '/folders' : '/folders/global'
+       const params = new URLSearchParams({ 
+         page, 
+         search: searchInput,
+         tab: activeTab,
+         userEmail: user ? (user.email || user.id) : ''
+       })
+       try {
+         const res = await fetch(`${API_BASE}${endpoint}?${params}`)
+         const data = await res.json()
+         if (data.folders) {
+           setFolders(data.folders || [])
+           setTotalPages(data.totalPages || 1)
+         }
+       } catch (e) { console.error(e) }
+     }
+   }
 
   const handleLogin = async (e) => {
     e.preventDefault()
