@@ -1,6 +1,5 @@
 name: Python CI/CD
 
-# mainブランチに向けてPRが出された時、またはPushされた時に動く
 on:
   push:
     branches: ["main"]
@@ -11,59 +10,57 @@ permissions:
   contents: read
 
 jobs:
-  # --- 1つ目のジョブ：テスト ---
   build-and-test:
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: ./backend
     steps:
-      - name: コードをダウンロード
-        uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v4 # Updated to v4
 
-      - name: Pythonの準備
-        uses: actions/setup-python@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5 # Updated to v5
         with:
           python-version: "3.10"
+          cache: 'pip' # Speeds up subsequent runs
 
-      - name: 必要なパッケージのインストール
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install flake8 pytest
 
-      - name: クリーンなコードかチェック (Flake8)
+      - name: Lint with Flake8
         run: |
           flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
 
-      - name: テストの実行 (Pytest)
+      - name: Run Tests
         run: |
           pytest || echo "No tests found, skipping"
 
-  # --- 2つ目のジョブ：デプロイ（build-and-testと同じ高さに下げます） ---
   deploy:
     needs: build-and-test
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: self-hosted # 自分のサーバーで実行
+    runs-on: self-hosted
 
     steps:
-      - name: コードを最新にする
+      - name: Update local code
         run: |
           cd ~/server-project
           git fetch origin
           git reset --hard origin/main
 
-      - name: Dockerコンテナを更新して再起動
+      - name: Restart Docker Containers
         run: |
           cd ~/server-project
           docker-compose down --remove-orphans
-          # Clear BuildKit cache to resolve snapshot issues
-          docker buildx prune -af
-          # Build and start fresh
+          # Only prune if you're consistently hitting storage limits
+          # docker buildx prune -f 
           docker-compose up -d --build --force-recreate
 
-      - name: Collect static files for Nginx
+      - name: Collect Static Files
         run: |
           cd ~/server-project
-          # Run collectstatic in a temporary container and copy staticfiles to host
-          docker run --rm -v $(pwd)/backend/staticfiles:/app/staticfiles -v $(pwd)/backend:/app $(docker-compose images -q backend) python manage.py collectstatic --noinput
+          # Execute directly inside the running container
+          docker-compose exec -T backend python manage.py collectstatic --noinput
