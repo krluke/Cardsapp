@@ -461,7 +461,8 @@ def get_folders(request):
         if tab == "my-folders":
             fetch_sql = f"""
                 SELECT f.id, f.title, f.visibility, f.likes,
-                       (SELECT COUNT(*) FROM folder_likes WHERE folder_id = f.id) as like_count
+                       (SELECT COUNT(*) FROM folder_likes WHERE folder_id = f.id) as like_count,
+                       (SELECT COUNT(*) FROM cards WHERE folder_id = f.id) as card_count
                 FROM folders f
                 {base_where}
                 ORDER BY {order_by}
