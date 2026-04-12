@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Search, X } from 'lucide-react';
-import sanitizeHtml from 'sanitize-html';
 
 export function GlobalSearchModal({ isOpen, onClose, onSelectCard, userEmail }) {
   const [query, setQuery] = useState('');

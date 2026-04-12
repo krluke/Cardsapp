@@ -503,7 +503,11 @@ function HomePage() {
            {folders.map(folder => {
              const isOwner = activeTab === 'my-folders' || folder.username === user?.username;
              return (
-               <div key={folder.id} className="folder-tile" onClick={() => navigate(`/editor/${folder.id}`)}>
+               <div key={folder.id} className="folder-tile" onClick={() => {
+                  const canEdit = user && (activeTab === 'my-folders' || folder.username === user.username);
+                  console.log('click:', activeTab, user?.username, folder.username, canEdit);
+                  navigate(canEdit ? `/editor/${folder.id}` : `/viewer/${folder.id}`);
+                }}>
                  <div className="folder-actions" onClick={e => e.stopPropagation()}>
                    <button className="folder-settings-icon" onClick={() => navigate(`/study/${folder.id}`)} title="Study">
                      <BookOpen size={16} />

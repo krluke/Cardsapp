@@ -187,19 +187,41 @@
 
 .thumbnail-sidebar {
   width: 70px;
+  min-width: 70px;
   background: var(--bg-surface);
   border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
   padding: 10px;
+  height: 100%;
+  overflow: hidden;
 }
 
-.thumbnail-list {
+.thumbnail-scroll {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   gap: 8px;
+  padding-right: 4px;
+}
+
+.thumbnail-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.thumbnail-scroll::-webkit-scrollbar-track {
+  background: var(--bg-canvas);
+}
+
+.thumbnail-scroll::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 2px;
+}
+
+.thumbnail-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-color);
 }
 
 .thumbnail {
