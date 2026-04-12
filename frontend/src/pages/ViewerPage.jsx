@@ -24,9 +24,11 @@ export default function ViewerPage() {
   const loadData = async () => {
     try {
       const login_id = JSON.parse(localStorage.getItem('session') || '{}').user?.email || ''
+      console.log('ViewerPage loadData:', { folderId, login_id })
       const cardsRes = await fetch(`${API_BASE}/cards/load/${folderId}?userEmail=${login_id}`)
       const cardsData = await cardsRes.json()
-      setCards(cardsData.cards || [])
+      console.log('cardsRes:', cardsRes.status, cardsData)
+      setCards(Array.isArray(cardsData) ? cardsData : [])
       
       const folderRes = await fetch(`${API_BASE}/folders?tab=my-folders&userEmail=${login_id}`)
       const folderData = await folderRes.json()
@@ -84,16 +86,12 @@ export default function ViewerPage() {
       <main className="viewer-main">
         <div className="flashcard-container" onClick={() => setFlipped(!flipped)}>
           <div className={`flashcard ${flipped ? 'flipped' : ''}`}>
-            <div className="flashcard-front">
-              <div className="flashcard-content">
-                {currentCard.front || 'Empty'}
-              </div>
+            <div className="flashcard-front" style={{ backgroundColor: currentCard.frontBg || '#ffffff' }}>
+              <div className="flashcard-content" dangerouslySetInnerHTML={{ __html: currentCard.front || '<p>Empty</p>' }} />
               <div className="flip-hint">Click to flip</div>
             </div>
-            <div className="flashcard-back">
-              <div className="flashcard-content">
-                {currentCard.back || 'Empty'}
-              </div>
+            <div className="flashcard-back" style={{ backgroundColor: currentCard.backBg || '#ffffff' }}>
+              <div className="flashcard-content" dangerouslySetInnerHTML={{ __html: currentCard.back || '<p>Empty</p>' }} />
               <div className="flip-hint">Click to flip</div>
             </div>
           </div>
