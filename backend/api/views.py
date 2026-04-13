@@ -628,16 +628,17 @@ def toggle_action(request):
 # SEARCH ENDPOINTS
 # ==========================================
 
+
 @xframe_options_exempt
 def global_search(request):
     query = request.GET.get("q", "")
     user_email = request.GET.get("userEmail", "")
     if not query:
         return JsonResponse({"results": []})
-    
+
     user_email = get_user_email_from_login_id(user_email)
     search_term = f"%{query}%"
-    
+
     try:
         with connection.cursor() as c:
             # Search in public folders or folders owned by the user
@@ -658,9 +659,11 @@ def global_search(request):
         logger.error(f"global_search error: {e}")
         return JsonResponse({"error": "Search failed"}, status=500)
 
+
 # ==========================================
 # IMPORT/EXPORT ENDPOINTS
 # ==========================================
+
 
 @csrf_exempt
 @require_http_methods(["GET"])
@@ -669,67 +672,89 @@ def export_folder(request):
     user_email = request.GET.get("userEmail")
     if not folder_id or not user_email:
         return JsonResponse({"error": "Missing parameters"}, status=400)
-    
+
     user_email = get_user_email_from_login_id(user_email)
-    
+
     try:
         with connection.cursor() as c:
-            c.execute("SELECT title, visibility FROM folders WHERE id = %s AND user_email = %s", (folder_id, user_email))
+            c.execute(
+                "SELECT title, visibility FROM folders WHERE id = %s AND user_email = %s",
+                (folder_id, user_email),
+            )
             folder = dictfetchone(c)
             if not folder:
                 return JsonResponse({"error": "Folder not found"}, status=404)
-            
-            c.execute("SELECT front_content, back_content, front_bg, back_bg, tags FROM cards WHERE folder_id = %s ORDER BY order_index", (folder_id,))
+
+            c.execute(
+                "SELECT front_content, back_content, front_bg, back_bg, tags FROM cards WHERE folder_id = %s ORDER BY order_index",
+                (folder_id,),
+            )
             cards = dictfetchall(c)
-            
+
         data = {
             "folder_title": folder["title"],
             "visibility": folder["visibility"],
-            "cards": cards
+            "cards": cards,
         }
         return JsonResponse(data)
     except Exception as e:
         logger.error(f"export_folder error: {e}")
         return JsonResponse({"error": "Export failed"}, status=500)
 
+
 @csrf_exempt
 @require_http_methods(["POST"])
 def import_folder(request):
     import json as json_mod
+
     data = json_mod.loads(request.body)
     folder_data = data.get("folderData")
     user_email = data.get("userEmail")
-    
+
     if not folder_data or not user_email:
         return JsonResponse({"error": "Missing data"}, status=400)
-    
+
     user_email = get_user_email_from_login_id(user_email)
-    
+
     try:
         with connection.cursor() as c:
             # Create new folder
             c.execute(
                 "INSERT INTO folders (user_email, title, visibility) VALUES (%s, %s, %s)",
-                (user_email, folder_data["folder_title"], folder_data.get("visibility", "private")),
+                (
+                    user_email,
+                    folder_data["folder_title"],
+                    folder_data.get("visibility", "private"),
+                ),
             )
             folder_id = c.lastrowid
-            
+
             # Import cards
             for idx, card in enumerate(folder_data["cards"]):
                 c.execute(
                     "INSERT INTO cards (folder_id, order_index, front_content, back_content, front_bg, back_bg, tags) VALUES (%s, %s, %s, %s, %s, %s, %s)",
-                    (folder_id, idx, card["front_content"], card["back_content"], card["front_bg"], card["back_bg"], card.get("tags", "")),
+                    (
+                        folder_id,
+                        idx,
+                        card["front_content"],
+                        card["back_content"],
+                        card["front_bg"],
+                        card["back_bg"],
+                        card.get("tags", ""),
+                    ),
                 )
-            connection.commit()
-            
+            # connection.commit()
+
         return JsonResponse({"message": "Import successful", "folderId": folder_id})
     except Exception as e:
         logger.error(f"import_folder error: {e}")
         return JsonResponse({"error": "Import failed"}, status=500)
 
+
 # ==========================================
 # STUDY ENDPOINTS
 # ==========================================
+
 
 @xframe_options_exempt
 def get_study_cards(request):
@@ -737,9 +762,9 @@ def get_study_cards(request):
     folder_id = request.GET.get("folderId")
     if not user_email or not folder_id:
         return JsonResponse({"error": "Missing parameters"}, status=400)
-    
+
     user_email = get_user_email_from_login_id(user_email)
-    
+
     try:
         with connection.cursor() as c:
             c.execute(
@@ -761,30 +786,34 @@ def get_study_cards(request):
         logger.error(f"get_study_cards error: {e}")
         return JsonResponse({"error": "Failed to fetch study cards"}, status=500)
 
+
 @csrf_exempt
 @require_http_methods(["POST"])
 def update_srs(request):
     import json as json_mod
+
     data = json_mod.loads(request.body)
     card_id = data.get("cardId")
-    quality = data.get("quality") # 0-5
+    quality = data.get("quality")  # 0-5
     user_email = data.get("userEmail")
-    
+
     if card_id is None or quality is None or not user_email:
         return JsonResponse({"error": "Missing parameters"}, status=400)
-    
+
     user_email = get_user_email_from_login_id(user_email)
-    
+
     try:
         with connection.cursor() as c:
-            c.execute("SELECT srs_interval, srs_ease FROM cards WHERE id = %s", (card_id,))
+            c.execute(
+                "SELECT srs_interval, srs_ease FROM cards WHERE id = %s", (card_id,)
+            )
             row = dictfetchone(c)
             if not row:
                 return JsonResponse({"error": "Card not found"}, status=404)
-            
+
             interval = row["srs_interval"] or 0
             ease = row["srs_ease"] or 2.5
-            
+
             # SM-2 Algorithm
             if quality >= 3:
                 if interval == 0:
@@ -797,35 +826,38 @@ def update_srs(request):
             else:
                 new_interval = 1
                 new_ease = ease
-            
+
             new_ease = max(1.3, new_ease)
-            
+
             # Calculate next review date
             # Simple: interval is in days
             from datetime import datetime, timedelta
+
             next_review = datetime.now() + timedelta(days=new_interval)
-            
+
             c.execute(
                 "UPDATE cards SET srs_interval = %s, srs_ease = %s, srs_next_review = %s WHERE id = %s",
                 (new_interval, new_ease, next_review, card_id),
             )
-            connection.commit()
-            
+            # connection.commit()
+
         return JsonResponse({"message": "SRS updated"})
     except Exception as e:
         logger.error(f"update_srs error: {e}")
         return JsonResponse({"error": "Failed to update SRS"}, status=500)
 
+
 # ==========================================
 # CARD ENDPOINTS
 # ==========================================
+
 
 @csrf_exempt
 @require_http_methods(["POST"])
 def upload_image(request):
     if not request.FILES.get("image"):
         return JsonResponse({"error": "No image provided"}, status=400)
-    
+
     try:
         image_file = request.FILES["image"]
         fs = FileSystemStorage()
@@ -875,11 +907,18 @@ def save_cards(request):
 
                 c.execute(
                     "INSERT INTO cards (folder_id, order_index, front_content, back_content, front_bg, back_bg, tags) VALUES (%s, %s, %s, %s, %s, %s, %s)",
-                    (folder_id, idx, front_html, back_html, front_bg, back_bg, card.get("tags", "")),
+                    (
+                        folder_id,
+                        idx,
+                        front_html,
+                        back_html,
+                        front_bg,
+                        back_bg,
+                        card.get("tags", ""),
+                    ),
                 )
 
-
-            connection.commit()
+            # connection.commit()
             logger.error(
                 f"SAVE DEBUG - committed {len(cards_data)} cards for folder {folder_id}"
             )
@@ -894,7 +933,7 @@ def save_cards(request):
 def load_cards(request, folder_id):
     login_id = request.GET.get("userEmail", "")
     user_email = get_user_email_from_login_id(login_id) if login_id else ""
-    
+
     try:
         with connection.cursor() as c:
             c.execute(
@@ -902,16 +941,16 @@ def load_cards(request, folder_id):
                 (folder_id,),
             )
             folder = dictfetchone(c)
-            
+
             if not folder:
                 return JsonResponse({"message": "フォルダが見つかりません"}, status=404)
-            
+
             if folder["visibility"] != "public" and folder["user_email"] != user_email:
                 return JsonResponse(
                     {"message": "このフォルダにアクセスする権限がありません"},
                     status=403,
                 )
-                
+
             c.execute(
                 "SELECT front_content, back_content, front_bg, back_bg, tags FROM cards WHERE folder_id = %s ORDER BY order_index",
                 (folder_id,),
@@ -938,7 +977,13 @@ def load_cards(request, folder_id):
                     pass
 
             cards.append(
-                {"front": front, "back": back, "frontBg": front_bg, "backBg": back_bg, "tags": tags}
+                {
+                    "front": front,
+                    "back": back,
+                    "frontBg": front_bg,
+                    "backBg": back_bg,
+                    "tags": tags,
+                }
             )
 
         return JsonResponse(cards, safe=False)
@@ -1032,3 +1077,23 @@ def editor(request, folder_id):
 
 def viewer(request, folder_id):
     return render(request, "viewer.html", {"folder_id": folder_id})
+
+
+@xframe_options_exempt
+def load_cards_fixed(request, folder_id):
+    login_id = request.GET.get("userEmail", "")
+    user_email = get_user_email_from_login_id(login_id) if login_id else ""
+    try:
+        with connection.cursor() as c:
+            c.execute(
+                "SELECT c.id, c.front_content as front, c.back_content as back, c.front_bg as frontBg, c.back_bg as backBg FROM cards c WHERE c.folder_id = %s",
+                (folder_id,),
+            )
+            cards = dictfetchall(c)
+        for idx, card in enumerate(cards):
+            if "id" not in card:
+                card["id"] = idx + 1
+        return JsonResponse(cards, safe=False)
+    except Exception as e:
+        logger.error(f"Load cards error: {e}")
+        return JsonResponse({"error": "Failed to load cards"}, status=500)
