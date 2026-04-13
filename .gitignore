@@ -30,6 +30,7 @@ Thumbs.db
 Thumbs.db
 
 # ログファイル
+*.sqlite3
 *.log
 
 backup_all.sql
