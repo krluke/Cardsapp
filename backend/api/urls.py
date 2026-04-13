@@ -9,6 +9,7 @@ urlpatterns = [
     # User
     path("user/change-password", views.change_password, name="change_password"),
     path("user/stats", views.get_user_stats, name="user_stats"),
+    path("user/profile", views.user_profile, name="user_profile"),
     # Folders
     path("folders/list", views.list_folders, name="list_folders"),
     path("folders/create", views.create_folder, name="create_folder"),

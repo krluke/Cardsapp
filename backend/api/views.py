@@ -363,12 +363,59 @@ def get_user_stats(request):
         )
     except Exception as e:
         logger.error(f"User stats error: {e}")
-        return JsonResponse({"error": "ユーザー統計の取得に失敗しました"}, status=500)
+    return JsonResponse({"error": "ユーザー統計の取得に失敗しました"}, status=500)
 
 
-# ==========================================
-# FOLDER ENDPOINTS
-# ==========================================
+@csrf_exempt
+@require_http_methods(["GET", "PUT"])  # noqa: E501
+def user_profile(request):
+    """GET returns profile info; PUT updates username.
+    Expected query params for GET: email, authEmail (both must match).
+    Expected JSON body for PUT: {"userEmail": ..., "username": ...}
+    """
+    if request.method == "GET":
+        user_email = request.GET.get("email")
+        auth_email = request.GET.get("authEmail", "")
+        if not user_email:
+            return JsonResponse({"error": "Email missing"}, status=400)
+        if user_email != auth_email:
+            return JsonResponse({"error": "Unauthorized"}, status=403)
+        try:
+            with connection.cursor() as c:
+                c.execute(
+                    "SELECT email, username FROM users WHERE email = %s", (user_email,)
+                )
+                row = dictfetchone(c)
+                if not row:
+                    return JsonResponse({"error": "User not found"}, status=404)
+                return JsonResponse(
+                    {"email": row["email"], "username": row["username"]}
+                )
+        except Exception as e:
+            logger.error(f"user_profile GET error: {e}")
+            return JsonResponse({"error": "Failed to fetch profile"}, status=500)
+    else:  # PUT
+        import json as json_mod
+
+        data = json_mod.loads(request.body)
+        user_email = data.get("userEmail")
+        new_username = data.get("username")
+        if not user_email or not new_username:
+            return JsonResponse({"error": "Missing parameters"}, status=400)
+        try:
+            with connection.cursor() as c:
+                c.execute(
+                    "UPDATE users SET username = %s WHERE email = %s",
+                    (new_username, user_email),
+                )
+            return JsonResponse({"message": "Profile updated"})
+        except Exception as e:
+            logger.error(f"user_profile PUT error: {e}")
+            return JsonResponse({"error": "Failed to update profile"}, status=500)
+
+    # ==========================================
+    # FOLDER ENDPOINTS
+    # ==========================================
 
 
 @csrf_exempt

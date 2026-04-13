@@ -608,7 +608,92 @@ function HomePage() {
   }
 
 function AccountPage() {
-  return <div className="page-container"><h1>Account Page</h1><p>Coming soon...</p></div>
+  const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+  const [username, setUsername] = useState('');
+  const [theme, setTheme] = useState(localStorage.getItem('app-theme') || 'light');
+  const [themeMenuOpen, setThemeMenuOpen] = useState(false);
+
+  // Load user from session
+  useEffect(() => {
+    const session = JSON.parse(localStorage.getItem('session') || '{}');
+    if (session.user) {
+      setUser(session.user);
+      setUsername(session.user.username || '');
+    } else {
+      // Not logged in – redirect to home (where login modal lives)
+      navigate('/home');
+    }
+  }, []);
+
+  const getCsrfToken = () => {
+    const session = JSON.parse(localStorage.getItem('session') || '{}');
+    return session.csrfToken || '';
+  };
+
+  const handleSave = async () => {
+    if (!user) return;
+    try {
+      const res = await fetch(`${API_BASE}/user/profile`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': getCsrfToken() },
+        body: JSON.stringify({ userEmail: user.email, username }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        // Update stored session so UI elsewhere reflects the new name
+        const session = JSON.parse(localStorage.getItem('session'));
+        session.user.username = username;
+        localStorage.setItem('session', JSON.stringify(session));
+        setUser(session.user);
+        alert('Profile updated');
+      } else {
+        alert(data.message || 'Update failed');
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Network error');
+    }
+  };
+
+  const selectTheme = (newTheme) => {
+    setTheme(newTheme);
+    localStorage.setItem('app-theme', newTheme);
+    document.documentElement.setAttribute('data-theme', newTheme);
+    setThemeMenuOpen(false);
+  };
+
+  return (
+    <div className="page-container">
+      <h1 className="page-title">Account</h1>
+      {user && (
+        <div className="account-form">
+          <div className="form-group">
+            <label>Email</label>
+            <input type="text" value={user.email} readOnly className="input-readonly" />
+          </div>
+          <div className="form-group">
+            <label>Username</label>
+            <input type="text" value={username} onChange={e => setUsername(e.target.value)} className="input" />
+          </div>
+          <button className="primary-btn" onClick={handleSave}>保存</button>
+        </div>
+      )}
+      <div className="theme-section mt-6">
+        <h2>{t('theme')}</h2>
+        <button className="theme-btn" onClick={() => setThemeMenuOpen(!themeMenuOpen)}>
+          Theme: {theme}
+        </button>
+        {themeMenuOpen && (
+          <div className="theme-dropdown mt-2">
+            <button className={`theme-option ${theme === 'light' ? 'active' : ''}`} onClick={() => selectTheme('light')}>Light</button>
+            <button className={`theme-option ${theme === 'dark' ? 'active' : ''}`} onClick={() => selectTheme('dark')}>Dark</button>
+            <button className={`theme-option ${theme === 'blue' ? 'active' : ''}`} onClick={() => selectTheme('blue')}>Blue</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 function ChangePasswordPage() {
