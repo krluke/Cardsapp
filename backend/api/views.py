@@ -773,7 +773,8 @@ def get_study_cards(request):
                 FROM cards c
                 JOIN folders f ON c.folder_id = f.id
                 WHERE f.id = %s AND f.user_email = %s 
-                AND c.srs_next_review <= NOW()
+                -- Include cards that have never been reviewed (NULL next review) so new cards appear in due mode
+                AND (c.srs_next_review IS NULL OR c.srs_next_review <= CURRENT_TIMESTAMP)
                 AND (c.front_content IS NOT NULL AND c.front_content != '')
                 AND (c.back_content IS NOT NULL AND c.back_content != '')
                 ORDER BY c.srs_next_review ASC
@@ -906,7 +907,7 @@ def save_cards(request):
                 back_bg = card.get("backBg", "")
 
                 c.execute(
-                    "INSERT INTO cards (folder_id, order_index, front_content, back_content, front_bg, back_bg, tags) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+                    "INSERT INTO cards (folder_id, order_index, front_content, back_content, front_bg, back_bg, tags, srs_interval, srs_ease, srs_next_review) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                     (
                         folder_id,
                         idx,
@@ -915,6 +916,9 @@ def save_cards(request):
                         front_bg,
                         back_bg,
                         card.get("tags", ""),
+                        0,  # default srs_interval
+                        2.5,  # default srs_ease
+                        None,  # srs_next_review NULL
                     ),
                 )
 
@@ -1010,9 +1014,11 @@ def delete_card(request):
         with connection.cursor() as c:
             c.execute(
                 """
-                DELETE c FROM cards c
-                JOIN folders f ON c.folder_id = f.id
-                WHERE c.id = %s AND f.user_email = %s
+                DELETE FROM cards
+                WHERE id = %s AND folder_id IN (
+                    SELECT id FROM folders WHERE user_email = %s
+                )
+
             """,
                 (card_id, user_email),
             )
