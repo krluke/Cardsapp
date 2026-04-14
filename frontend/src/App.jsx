@@ -250,8 +250,8 @@ function HomePage() {
       const data = await res.json()
       if (data.cards) {
         const filteredCards = (data.cards || []).filter(card => {
-          const frontContent = (card.front || '').replace(/<[^>]*>/g, '').trim()
-          const backContent = (card.back || '').replace(/<[^>]*>/g, '').trim()
+          const frontContent = (card.front || '').replace(/[<>]/g, '').trim()
+          const backContent = (card.back || '').replace(/[<>]/g, '').trim()
           return frontContent || backContent
         })
         setGlobalCards(filteredCards)
