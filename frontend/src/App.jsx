@@ -4,6 +4,7 @@ import { X, FolderPlus, Palette, Globe, User, LogOut, LogIn, Settings, Trash2, S
 import EditorPage from './pages/EditorPage'
 import ViewerPage from './pages/ViewerPage'
 import StudyPage from './pages/study/StudyPage'
+import AccountPage from './pages/AccountPage'
 import { GlobalSearchModal } from './components/GlobalSearchModal'
 import { useModal, Modal } from './components/Modal'
 import './i18n'
@@ -60,6 +61,11 @@ function t(key) {
       btn_signup: "登録",
       switch_to_login_text: "作成済み？",
       switch_to_login_link: "ログイン",
+      account_title: "アカウント情報",
+      account_username: "ユーザー名",
+      account_email: "メールアドレス",
+      account_total_cards: "保有カード数",
+      btn_back: "戻る",
     },
     en: {
       btn_create_folder: "New Folder",
@@ -108,6 +114,11 @@ function t(key) {
       btn_signup: "Register",
       switch_to_login_text: "Already have one?",
       switch_to_login_link: "Login",
+      account_title: "Account Info",
+      account_username: "Username",
+      account_email: "Email",
+      account_total_cards: "Total Cards",
+      btn_back: "Back",
     },
   }
   return translations[lang]?.[key] || key
@@ -606,10 +617,6 @@ function HomePage() {
       </div>
     )
   }
-
-function AccountPage() {
-  return <div className="page-container"><h1>Account Page</h1><p>Coming soon...</p></div>
-}
 
 function ChangePasswordPage() {
   return <div className="page-container"><h1>Change Password</h1><p>Coming soon...</p></div>
