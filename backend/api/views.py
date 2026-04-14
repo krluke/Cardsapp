@@ -1103,3 +1103,62 @@ def load_cards_fixed(request, folder_id):
     except Exception as e:
         logger.error(f"Load cards error: {e}")
         return JsonResponse({"error": "Failed to load cards"}, status=500)
+
+
+@xframe_options_exempt
+def get_public_cards(request):
+    try:
+        search_query = request.GET.get("search", "").strip()
+        page = int(request.GET.get("page", 1))
+        limit = 20
+        offset = (page - 1) * limit
+
+        where_clause = "WHERE f.visibility = 'public'"
+        params = []
+
+        if search_query:
+            where_clause += " AND (c.front_content LIKE %s OR c.back_content LIKE %s)"
+            search_pattern = f"%{search_query}%"
+            params = [search_pattern, search_pattern]
+
+        count_sql = f"""
+            SELECT COUNT(*) as count
+            FROM cards c
+            JOIN folders f ON c.folder_id = f.id
+            {where_clause}
+        """
+        with connection.cursor() as c:
+            c.execute(count_sql, tuple(params))
+            total_count = dictfetchone(c)["count"]
+        total_pages = math.ceil(total_count / limit) if total_count > 0 else 1
+
+        fetch_sql = f"""
+            SELECT c.id, c.front_content as front, c.back_content as back,
+                   c.front_bg as frontBg, c.back_bg as backBg,
+                   f.id as folder_id, f.title as folder_title,
+                   COALESCE(u.username, f.user_email) as folder_owner
+            FROM cards c
+            JOIN folders f ON c.folder_id = f.id
+            LEFT JOIN users u ON f.user_email = u.email OR f.user_email = u.username
+            {where_clause}
+            ORDER BY c.id DESC
+            LIMIT %s OFFSET %s
+        """
+        final_params = params + [limit, offset]
+
+        with connection.cursor() as c:
+            c.execute(fetch_sql, tuple(final_params))
+            cards = dictfetchall(c)
+
+        for idx, card in enumerate(cards):
+            if "id" not in card:
+                card["id"] = idx + 1
+
+        return JsonResponse({
+            "cards": cards,
+            "totalPages": total_pages,
+            "currentPage": page,
+        })
+    except Exception as e:
+        logger.error(f"Get public cards error: {e}")
+        return JsonResponse({"message": "Failed to load public cards"}, status=500)

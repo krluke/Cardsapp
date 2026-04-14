@@ -182,3 +182,116 @@
     border-right-color: var(--border);
   }
 }
+
+/* Global Cards Grid */
+.global-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.global-card-tile {
+  position: relative;
+  height: 200px;
+  perspective: 1000px;
+  cursor: pointer;
+}
+
+.global-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.4s ease;
+  transform-style: preserve-3d;
+}
+
+.global-card-inner.flipped {
+  transform: rotateY(180deg);
+}
+
+.global-card-front,
+.global-card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  border-radius: 8px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+}
+
+.global-card-back {
+  transform: rotateY(180deg);
+}
+
+.global-card-content {
+  flex: 1;
+  overflow: hidden;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.global-card-content p {
+  margin: 0;
+}
+
+.global-card-folder-info {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.global-card-add-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: var(--accent-color);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s, background 0.2s;
+  z-index: 10;
+}
+
+.global-card-add-btn:hover {
+  transform: scale(1.1);
+  background: var(--accent-hover);
+}
+
+/* Folder List Modal */
+.folder-list-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 1rem;
+}
+
+.folder-list-item {
+  padding: 0.75rem 1rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+  color: var(--text-main);
+  transition: background 0.2s;
+}
+
+.folder-list-item:hover {
+  background: var(--bg-surface-hover);
+}
