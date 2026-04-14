@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
-import { X, FolderPlus, Palette, Globe, User, LogOut, LogIn, Settings, Trash2, Search, ChevronLeft, ChevronRight, BookOpen } from 'lucide-react'
+import { X, FolderPlus, Palette, Globe, User, LogOut, LogIn, Settings, Trash2, Search, ChevronLeft, ChevronRight, BookOpen, Plus } from 'lucide-react'
 import EditorPage from './pages/EditorPage'
 import ViewerPage from './pages/ViewerPage'
 import StudyPage from './pages/study/StudyPage'
 import AccountPage from './pages/AccountPage'
 import { GlobalSearchModal } from './components/GlobalSearchModal'
+import { AddToFolderModal } from './components/AddToFolderModal'
 import { useModal, Modal } from './components/Modal'
 import './i18n'
 
@@ -66,6 +67,13 @@ function t(key) {
       account_email: "メールアドレス",
       account_total_cards: "保有カード数",
       btn_back: "戻る",
+      tab_global_cards: "公開カード一覧",
+      search_placeholder_cards: "カードを検索...",
+      no_public_cards: "公開されているカードはありません",
+      btn_add_to_folder: "フォルダに追加",
+      select_folder: "フォルダを選択",
+      success_add_card: "カードを追加しました",
+      error_add_card: "カードの追加に失敗しました",
     },
     en: {
       btn_create_folder: "New Folder",
@@ -119,6 +127,13 @@ function t(key) {
       account_email: "Email",
       account_total_cards: "Total Cards",
       btn_back: "Back",
+      tab_global_cards: "All Public Cards",
+      search_placeholder_cards: "Search cards...",
+      no_public_cards: "No public cards yet",
+      btn_add_to_folder: "Add to folder",
+      select_folder: "Select folder",
+      success_add_card: "Card added successfully",
+      error_add_card: "Failed to add card",
     },
   }
   return translations[lang]?.[key] || key
@@ -150,6 +165,7 @@ function HomePage() {
   const [signupData, setSignupData] = useState({ username: '', email: '', code: '', password: '' })
   const [message, setMessage] = useState({ type: '', text: '' })
   const [folders, setFolders] = useState([])
+  const [globalCards, setGlobalCards] = useState([])
   const [searchInput, setSearchInput] = useState('')
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
@@ -161,6 +177,9 @@ function HomePage() {
   const [showSettingsModal, setShowSettingsModal] = useState(false)
   const [editingFolder, setEditingFolder] = useState(null)
   const [showSearchModal, setShowSearchModal] = useState(false)
+  const [showAddToFolderModal, setShowAddToFolderModal] = useState(false)
+  const [selectedCard, setSelectedCard] = useState(null)
+  const [flippedCards, setFlippedCards] = useState({})
   const { modalState, showAlert, showConfirm, showPrompt, closeModal, handleConfirm, handlePromptSubmit } = useModal()
 
   useEffect(() => {
@@ -219,6 +238,28 @@ function HomePage() {
       }
     } catch (e) { console.error(e) }
   }
+
+  const loadGlobalCards = async () => {
+    if (!user) return
+    const params = new URLSearchParams({
+      page,
+      search: searchInput,
+    })
+    try {
+      const res = await fetch(`${API_BASE}/cards/public?${params}`)
+      const data = await res.json()
+      if (data.cards) {
+        setGlobalCards(data.cards || [])
+        setTotalPages(data.totalPages || 1)
+      }
+    } catch (e) { console.error(e) }
+  }
+
+  useEffect(() => {
+    if (activeTab === 'global-cards') {
+      loadGlobalCards()
+    }
+  }, [activeTab, page, searchInput, user])
   // -------------------------------------------------------------------------
 
   const handleLogin = async (e) => {
@@ -481,14 +522,15 @@ function HomePage() {
 
       <main className="page-container">
         <div className="tabs-container">
-          <button className={`tab-btn ${activeTab === 'my-folders' ? 'active' : ''}`} onClick={() => setActiveTab('my-folders')}>{t('tab_my_folders')}</button>
-          <button className={`tab-btn ${activeTab === 'global-folders' ? 'active' : ''}`} onClick={() => setActiveTab('global-folders')}>{t('tab_global_folders')}</button>
+          <button className={`tab-btn ${activeTab === 'my-folders' ? 'active' : ''}`} onClick={() => { setActiveTab('my-folders'); setPage(1) }}>{t('tab_my_folders')}</button>
+          <button className={`tab-btn ${activeTab === 'global-folders' ? 'active' : ''}`} onClick={() => { setActiveTab('global-folders'); setPage(1) }}>{t('tab_global_folders')}</button>
+          <button className={`tab-btn ${activeTab === 'global-cards' ? 'active' : ''}`} onClick={() => { setActiveTab('global-cards'); setPage(1) }}>{t('tab_global_cards')}</button>
         </div>
 
         <div className="search-and-pagination-container">
           <div className="search-bar-wrapper">
-            <input type="text" id="search-input" placeholder={t('search_placeholder')} value={searchInput} onChange={(e) => setSearchInput(e.target.value)} />
-            <button className="shadow-btn" onClick={loadFolders}>{t('btn_search')}</button>
+            <input type="text" id="search-input" placeholder={activeTab === 'global-cards' ? t('search_placeholder_cards') : t('search_placeholder')} value={searchInput} onChange={(e) => setSearchInput(e.target.value)} />
+            <button className="shadow-btn" onClick={activeTab === 'global-cards' ? loadGlobalCards : loadFolders}>{t('btn_search')}</button>
           </div>
           <div className="pagination-controls">
             <button disabled={page === 1} onClick={() => setPage(p => p - 1)}><ChevronLeft size={16} /></button>
@@ -510,33 +552,62 @@ function HomePage() {
           </div>
         )}
 
+        {activeTab === 'global-cards' && globalCards.length === 0 && user && (
+          <div className="empty-state">
+            <p>{t('no_public_cards')}</p>
+          </div>
+        )}
+
          <div className="folder-grid">
-           {folders.map(folder => {
-              const isOwner = activeTab === 'my-folders' || folder.username === user?.username;
-              return (
-                <div key={folder.id} className="folder-tile" onClick={() => {
-                   const canEdit = user && activeTab === 'my-folders';
-                   console.log('click:', activeTab, user?.username, folder.username, canEdit);
-                   navigate(canEdit ? `/editor/${folder.id}` : `/viewer/${folder.id}`);
-                }}>
-                 <div className="folder-actions" onClick={e => e.stopPropagation()}>
-                   <button className="folder-settings-icon" onClick={() => navigate(`/study/${folder.id}`)} title="Study">
-                     <BookOpen size={16} />
-                   </button>
-                   {isOwner && (
-                     <button className="folder-settings-icon" onClick={(e) => { e.stopPropagation(); openFolderSettings(folder) }}>
-                       <Settings size={16} />
+            {folders.map(folder => {
+               const isOwner = activeTab === 'my-folders' || folder.username === user?.username;
+               return (
+                 <div key={folder.id} className="folder-tile" onClick={() => {
+                    const canEdit = user && activeTab === 'my-folders';
+                    console.log('click:', activeTab, user?.username, folder.username, canEdit);
+                    navigate(canEdit ? `/editor/${folder.id}` : `/viewer/${folder.id}`);
+                 }}>
+                   <div className="folder-actions" onClick={e => e.stopPropagation()}>
+                     <button className="folder-settings-icon" onClick={() => navigate(`/study/${folder.id}`)} title="Study">
+                       <BookOpen size={16} />
                      </button>
-                   )}
-                 </div>
-                 <h3 style={{margin: 0, fontSize: '1rem'}}>{folder.title}</h3>
-                 <p style={{margin: '0.5rem 0 0', fontSize: '0.8rem', color: 'var(--text-muted)'}}>
-                   {activeTab === 'global-folders' && folder.username ? `${folder.username} • ` : ''}{folder.card_count || folder.cardCount || 0} cards
-                 </p>
-               </div>
-             );
-           })}
-         </div>
+                     {isOwner && (
+                       <button className="folder-settings-icon" onClick={(e) => { e.stopPropagation(); openFolderSettings(folder) }}>
+                         <Settings size={16} />
+                       </button>
+                     )}
+                   </div>
+                   <h3 style={{margin: 0, fontSize: '1rem'}}>{folder.title}</h3>
+                  <p style={{margin: '0.5rem 0 0', fontSize: '0.8rem', color: 'var(--text-muted)'}}>
+                    {activeTab === 'global-folders' && folder.username ? `${folder.username} • ` : ''}{folder.card_count || folder.cardCount || 0} cards
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+
+          {activeTab === 'global-cards' && (
+            <div className="global-cards-grid">
+              {globalCards.map(card => (
+                <div key={card.id} className="global-card-tile" onClick={() => setFlippedCards(prev => ({...prev, [card.id]: !prev[card.id]}))}>
+                  <div className={`global-card-inner ${flippedCards[card.id] ? 'flipped' : ''}`}>
+                    <div className="global-card-front" style={{ backgroundColor: card.frontBg || '#ffffff' }}>
+                      <div className="global-card-content" dangerouslySetInnerHTML={{ __html: card.front || '<p>Empty</p>' }} />
+                      <div className="global-card-folder-info">
+                        {card.folder_title} • {card.folder_owner}
+                      </div>
+                    </div>
+                    <div className="global-card-back" style={{ backgroundColor: card.backBg || '#ffffff' }}>
+                      <div className="global-card-content" dangerouslySetInnerHTML={{ __html: card.back || '<p>Empty</p>' }} />
+                    </div>
+                  </div>
+                  <button className="global-card-add-btn" onClick={(e) => { e.stopPropagation(); setSelectedCard(card); setShowAddToFolderModal(true) }} title={t('btn_add_to_folder')}>
+                    <Plus size={16} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
       </main>
 
       {showAuthModal && (
@@ -602,15 +673,24 @@ function HomePage() {
            </div>
          </div>
        )}
-       {showSearchModal && (
-         <GlobalSearchModal 
-           isOpen={showSearchModal} 
-           onClose={() => setShowSearchModal(false)} 
-           userEmail={user?.email || user?.id}
-           onSelectCard={(res) => {
-              setShowSearchModal(false);
-              navigate(`/editor/${res.folder_id}`);
+        {showSearchModal && (
+          <GlobalSearchModal 
+            isOpen={showSearchModal} 
+            onClose={() => setShowSearchModal(false)} 
+            userEmail={user?.email || user?.id}
+            onSelectCard={(res) => {
+               setShowSearchModal(false);
+               navigate(`/editor/${res.folder_id}`);
             }}
+          />
+        )}
+
+        {showAddToFolderModal && selectedCard && (
+          <AddToFolderModal
+            card={selectedCard}
+            userEmail={user?.email || user?.id}
+            onClose={() => { setShowAddToFolderModal(false); setSelectedCard(null) }}
+            onSuccess={(msg) => { setShowAddToFolderModal(false); setSelectedCard(null); showAlert(msg) }}
           />
         )}
         <Modal state={modalState} onClose={closeModal} onConfirm={handleConfirm} onSubmit={handlePromptSubmit} />

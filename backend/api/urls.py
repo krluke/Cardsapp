@@ -29,6 +29,7 @@ urlpatterns = [
     path("cards/upload", views.upload_image, name="upload_image"),
     path("cards/save", views.save_cards, name="save_cards"),
     path("cards/load/<int:folder_id>", views.load_cards_fixed, name="load_cards"),
+    path("cards/public", views.get_public_cards, name="get_public_cards"),
     path("cards/delete", views.delete_card, name="delete_card"),
     # Editor/Viewer pages
     path("editor/<int:folder_id>", views.editor, name="editor"),
