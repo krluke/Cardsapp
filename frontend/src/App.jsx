@@ -24,7 +24,7 @@ function t(key) {
       menu_account_info: "アカウント情報",
       menu_logout: "ログアウト",
       tab_my_folders: "マイドライブ",
-      tab_global_folders: "公開カード",
+      tab_global_folders: "公開フォルダ",
       search_placeholder: "フォルダーを検索...",
       btn_search: "検索",
       guest_message: "ログインするとフォルダを作成できます。",
@@ -84,7 +84,7 @@ function t(key) {
       menu_account_info: "Account Info",
       menu_logout: "Logout",
       tab_my_folders: "My Drive",
-      tab_global_folders: "Public Cards",
+      tab_global_folders: "Public Folders",
       search_placeholder: "Search folders...",
       btn_search: "Search",
       guest_message: "Log in to create folders.",
@@ -249,7 +249,12 @@ function HomePage() {
       const res = await fetch(`${API_BASE}/cards/public?${params}`)
       const data = await res.json()
       if (data.cards) {
-        setGlobalCards(data.cards || [])
+        const filteredCards = (data.cards || []).filter(card => {
+          const frontContent = (card.front || '').replace(/<[^>]*>/g, '').trim()
+          const backContent = (card.back || '').replace(/<[^>]*>/g, '').trim()
+          return frontContent || backContent
+        })
+        setGlobalCards(filteredCards)
         setTotalPages(data.totalPages || 1)
       }
     } catch (e) { console.error(e) }
@@ -558,7 +563,8 @@ function HomePage() {
           </div>
         )}
 
-         <div className="folder-grid">
+          {(activeTab === 'my-folders' || activeTab === 'global-folders') && (
+          <div className="folder-grid">
             {folders.map(folder => {
                const isOwner = activeTab === 'my-folders' || folder.username === user?.username;
                return (
@@ -578,13 +584,14 @@ function HomePage() {
                      )}
                    </div>
                    <h3 style={{margin: 0, fontSize: '1rem'}}>{folder.title}</h3>
-                  <p style={{margin: '0.5rem 0 0', fontSize: '0.8rem', color: 'var(--text-muted)'}}>
-                    {activeTab === 'global-folders' && folder.username ? `${folder.username} • ` : ''}{folder.card_count || folder.cardCount || 0} cards
-                  </p>
-                </div>
-              );
+                   <p style={{margin: '0.5rem 0 0', fontSize: '0.8rem', color: 'var(--text-muted)'}}>
+                     {activeTab === 'global-folders' && folder.username ? `${folder.username} • ` : ''}{folder.card_count || folder.cardCount || 0} cards
+                   </p>
+                 </div>
+               );
             })}
           </div>
+          )}
 
           {activeTab === 'global-cards' && (
             <div className="global-cards-grid">
