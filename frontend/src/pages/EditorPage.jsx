@@ -6,6 +6,7 @@ import './Editor.css';
 import { EditorToolbar } from './editor/EditorToolbar';
 import { EditorSidebar } from './editor/EditorSidebar';
 import { CardCanvas } from './editor/CardCanvas';
+import { FloatingTextToolbar } from './editor/FloatingTextToolbar';
 
 const API_BASE = '/api';
 
@@ -136,6 +137,10 @@ function editorReducer(state, action) {
       return { ...state, fontFamily: action.payload };
     case 'SET_TEXT_COLOR':
       return { ...state, textColor: action.payload };
+    case 'SET_TEXT_BG_COLOR':
+      return { ...state, textBoxBgColor: action.payload };
+    case 'SET_TEXT_HIGHLIGHT_COLOR':
+      return { ...state, textHighlightColor: action.payload };
     case 'UPDATE_ELEMENT': {
       const stateWithHistory = pushHistory(state);
       const { elementId, updates } = action.payload;
@@ -171,17 +176,35 @@ function editorReducer(state, action) {
     }
     case 'ADD_TEXT': {
       const stateWithHistory = pushHistory(state);
-      const { x, y, fontSize, textColor } = action.payload;
-      const newElement = { id: `text-${Date.now()}`, type: 'text', content: '', left: x, top: y, width: 40, fontSize, fontWeight: 'normal', fontFamily: 'sans-serif', color: textColor };
+      const { x, y, fontSize, textColor, bgColor, highlightColor } = action.payload;
+      const newElement = {
+        id: `text-${Date.now()}`,
+        type: 'text',
+        content: '',
+        left: x,
+        top: y,
+        width: 40,
+        height: 'auto',
+        fontSize,
+        fontWeight: 'normal',
+        fontFamily: 'sans-serif',
+        fontStyle: 'normal',
+        textDecoration: 'none',
+        textAlign: 'left',
+        color: textColor,
+        backgroundColor: bgColor || 'transparent',
+        highlightColor: highlightColor || 'transparent',
+        rotation: 0
+      };
       const newCards = [...stateWithHistory.cards];
       const card = { ...newCards[stateWithHistory.currentIndex] };
       const elements = stateWithHistory.isFlipped ? [...card.back] : [...card.front];
-      
+
       if (stateWithHistory.isFlipped) card.back = [...elements, newElement];
       else card.front = [...elements, newElement];
 
       newCards[stateWithHistory.currentIndex] = card;
-      return { ...stateWithHistory, cards: newCards, selectedElement: newElement.id };
+      return { ...stateWithHistory, cards: newCards, selectedElement: newElement.id, textToolActive: false };
     }
     case 'DUPLICATE_ELEMENT': {
       const stateWithHistory = pushHistory(state);
@@ -303,6 +326,8 @@ const initialState = {
   fontSize: 16,
   fontFamily: 'sans-serif',
   textColor: '#000000',
+  textBoxBgColor: 'transparent',
+  textHighlightColor: 'transparent',
 };
 
 export default function EditorPage() {
@@ -488,9 +513,19 @@ export default function EditorPage() {
   const currentBg = state.isFlipped ? currentCard?.backBg : currentCard?.frontBg;
   const currentTags = currentCard?.tags || '';
 
-  const addText = (x = 10, y = 20) => {
-    dispatch({ type: 'ADD_TEXT', payload: { x, y, fontSize: state.fontSize, textColor: state.textColor } });
-  };
+const addText = (x = 30, y = 40) => {
+  dispatch({
+    type: 'ADD_TEXT',
+    payload: {
+      x,
+      y,
+      fontSize: state.fontSize,
+      textColor: state.textColor,
+      bgColor: state.textBoxBgColor,
+      highlightColor: state.textHighlightColor
+    }
+  });
+};
 
   const addImage = () => {
     if (!state.imageUrl.trim()) return;
@@ -592,39 +627,53 @@ export default function EditorPage() {
 
   return (
     <div className="editor-container">
-      <EditorToolbar 
-        onGoHome={goToHome} 
-        onUndo={() => dispatch({ type: 'UNDO' })} 
-        onRedo={() => dispatch({ type: 'REDO' })} 
-        onAddText={addText} 
-        applyFormat={applyFormat} 
-        fontSize={state.fontSize} 
-        setFontSize={(val) => {
+      <EditorToolbar
+        onGoHome={goToHome}
+        onUndo={() => dispatch({ type: 'UNDO' })}
+        onRedo={() => dispatch({ type: 'REDO' })}
+        onAddText={addText}
+        currentBg={currentBg}
+        updateBgColor={updateBgColor}
+        imageUrl={state.imageUrl}
+        setImageUrl={(val) => dispatch({ type: 'SET_IMAGE_URL', payload: val })}
+        onAddImage={addImage}
+        onUploadImage={uploadImage}
+        showTemplateMenu={state.showTemplateMenu}
+        setShowTemplateMenu={(val) => dispatch({ type: 'SET_SHOW_TEMPLATE_MENU', payload: val })}
+        applyTemplate={(key) => dispatch({ type: 'APPLY_TEMPLATE', payload: { templateKey: key } })}
+        onSave={saveCards}
+        saving={state.saving}
+        selectedEl={selectedEl}
+        t={t}
+        onMoveElement={(direction) => dispatch({ type: 'MOVE_ELEMENT', payload: { elementId: state.selectedElement, direction } })}
+      />
+      <FloatingTextToolbar
+        element={selectedEl}
+        isVisible={isTextSelected}
+        onFormatChange={applyFormat}
+        onFontSizeChange={(val) => {
           dispatch({ type: 'SET_FONT_SIZE', payload: val });
           if (state.selectedElement) updateElement(state.selectedElement, { fontSize: val });
         }}
-        fontFamily={state.fontFamily}
-        setFontFamily={setFontFamily}
-        textColor={state.textColor} 
-        setTextColor={(val) => {
+        onFontFamilyChange={setFontFamily}
+        onTextColorChange={(val) => {
           dispatch({ type: 'SET_TEXT_COLOR', payload: val });
           if (state.selectedElement && isTextSelected) updateElement(state.selectedElement, { color: val });
         }}
-        currentBg={currentBg} 
-        updateBgColor={updateBgColor} 
-        imageUrl={state.imageUrl} 
-        setImageUrl={(val) => dispatch({ type: 'SET_IMAGE_URL', payload: val })} 
-        onAddImage={addImage} 
-        onUploadImage={uploadImage}
-        showTemplateMenu={state.showTemplateMenu} 
-        setShowTemplateMenu={(val) => dispatch({ type: 'SET_SHOW_TEMPLATE_MENU', payload: val })} 
-        applyTemplate={(key) => dispatch({ type: 'APPLY_TEMPLATE', payload: { templateKey: key } })} 
-        onSave={saveCards} 
-        saving={state.saving} 
-        isTextSelected={isTextSelected} 
-        selectedEl={selectedEl} 
+        onBackgroundColorChange={(val) => {
+          dispatch({ type: 'SET_TEXT_BG_COLOR', payload: val });
+          if (state.selectedElement && isTextSelected) updateElement(state.selectedElement, { backgroundColor: val });
+        }}
+        onHighlightColorChange={(val) => {
+          dispatch({ type: 'SET_TEXT_HIGHLIGHT_COLOR', payload: val });
+          if (state.selectedElement && isTextSelected) updateElement(state.selectedElement, { highlightColor: val });
+        }}
+        fontSize={state.fontSize}
+        fontFamily={state.fontFamily}
+        textColor={state.textColor}
+        backgroundColor={selectedEl?.backgroundColor || 'transparent'}
+        highlightColor={selectedEl?.highlightColor || 'transparent'}
         t={t}
-        onMoveElement={(direction) => dispatch({ type: 'MOVE_ELEMENT', payload: { elementId: state.selectedElement, direction } })}
       />
       <div className="editor-main">
         <EditorSidebar 
@@ -637,16 +686,15 @@ export default function EditorPage() {
           onAddCard={() => dispatch({ type: 'ADD_CARD' })} 
         />
         <div className="card-area">
-          <CardCanvas 
-            elements={currentElements} 
-            bgColor={currentBg} 
-            isSelected={state.selectedElement} 
-            onSelect={(id) => dispatch({ type: 'SET_SELECTED_ELEMENT', payload: id })} 
-            onAddText={addText} 
-            onUpdate={updateElement} 
-            onDelete={deleteElement} 
-            t={t}
-          />
+        <CardCanvas
+          elements={currentElements}
+          bgColor={currentBg}
+          isSelected={state.selectedElement}
+          onSelect={(id) => dispatch({ type: 'SET_SELECTED_ELEMENT', payload: id })}
+          onUpdate={updateElement}
+          onDelete={deleteElement}
+          t={t}
+        />
           <div className="card-nav">
             <button onClick={() => dispatch({ type: 'SET_CURRENT_INDEX', payload: Math.max(0, state.currentIndex - 1) })} disabled={state.currentIndex === 0}><ChevronLeft size={24} /></button>
             <span>{state.currentIndex + 1} / {state.cards.length}</span>

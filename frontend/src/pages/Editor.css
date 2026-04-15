@@ -331,6 +331,161 @@
   background: var(--danger-hover);
 }
 
+/* Floating Toolbar Styles */
+.floating-toolbar {
+  position: fixed;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  flex-wrap: wrap;
+}
+
+.floating-toolbar button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: var(--bg-surface);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 13px;
+  transition: var(--transition);
+}
+
+.floating-toolbar button:hover:not(:disabled) {
+  background: var(--bg-surface-hover);
+  border-color: var(--accent-color);
+}
+
+.floating-toolbar button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.floating-toolbar button.active {
+  background: var(--accent-light);
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+}
+
+.floating-toolbar select {
+  padding: 6px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  color: var(--text-main);
+  font-size: 13px;
+}
+
+/* Text box specific styles */
+.text-box-container {
+  position: absolute;
+  user-select: none;
+}
+
+.text-box-content {
+  cursor: text;
+  outline: none;
+}
+
+.text-box-edge {
+  position: absolute;
+  cursor: move;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  pointer-events: auto;
+}
+
+.text-box-edge:hover {
+  border-color: rgba(217, 119, 87, 0.5);
+}
+
+/* Corner handles */
+.corner-handle {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 102;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: transform 0.1s;
+}
+
+.corner-handle:hover {
+  transform: scale(1.1);
+}
+
+.corner-handle.move {
+  background: #3b82f6;
+  cursor: move;
+}
+
+.corner-handle.rotate {
+  background: #10b981;
+  cursor: grab;
+}
+
+.corner-handle.delete {
+  background: #ef4444;
+  cursor: pointer;
+}
+
+/* Resize handles */
+.resize-handle-right {
+  position: absolute;
+  top: 50%;
+  right: -6px;
+  width: 12px;
+  height: 24px;
+  background: #D97757;
+  border-radius: 3px;
+  cursor: e-resize;
+  z-index: 101;
+  transform: translateY(-50%);
+}
+
+.resize-handle-bottom {
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  width: 24px;
+  height: 12px;
+  background: #D97757;
+  border-radius: 3px;
+  cursor: s-resize;
+  z-index: 101;
+  transform: translateX(-50%);
+}
+
+/* Text box selection state */
+.text-box-selected {
+  z-index: 100;
+}
+
+/* Active text tool cursor */
+.card-canvas.text-tool-active {
+  cursor: crosshair;
+}
+
+.delete-element-btn:hover {
+  background: var(--danger-hover);
+}
+
 .draggable-image-element {
   user-select: none;
 }
