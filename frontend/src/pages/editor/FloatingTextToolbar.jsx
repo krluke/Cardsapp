@@ -8,12 +8,10 @@ export function FloatingTextToolbar({
   onFontFamilyChange,
   onTextColorChange,
   onBackgroundColorChange,
-  onHighlightColorChange,
   fontSize,
   fontFamily,
   textColor,
   backgroundColor,
-  highlightColor,
   t
 }) {
   if (!isVisible || !element) return null;
@@ -129,39 +127,29 @@ export function FloatingTextToolbar({
         <option value="72">72px</option>
       </select>
 
-      {/* Color Controls */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Text</span>
-          <input
-            type="color"
-            value={textColor}
-            onChange={(e) => onTextColorChange(e.target.value)}
-            title="Text Color"
-            style={{ width: '28px', height: '28px', padding: '0', border: '1px solid var(--border-color)', borderRadius: '4px', cursor: 'pointer' }}
-          />
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Fill</span>
-          <input
-            type="color"
-            value={backgroundColor === 'transparent' ? '#ffffff' : backgroundColor}
-            onChange={(e) => onBackgroundColorChange(e.target.value)}
-            title="Background Color"
-            style={{ width: '28px', height: '28px', padding: '0', border: '1px solid var(--border-color)', borderRadius: '4px', cursor: 'pointer' }}
-          />
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Highlight</span>
-          <input
-            type="color"
-            value={highlightColor === 'transparent' ? '#ffffff' : highlightColor}
-            onChange={(e) => onHighlightColorChange(e.target.value)}
-            title="Text Highlight Color"
-            style={{ width: '28px', height: '28px', padding: '0', border: '1px solid var(--border-color)', borderRadius: '4px', cursor: 'pointer' }}
-          />
-        </div>
-      </div>
+{/* Color Controls */}
+  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Text</span>
+      <input
+        type="color"
+        value={textColor}
+        onChange={(e) => onTextColorChange(e.target.value)}
+        title="Text Color"
+        style={{ width: '28px', height: '28px', padding: '0', border: '1px solid var(--border-color)', borderRadius: '4px', cursor: 'pointer' }}
+      />
+    </div>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Fill</span>
+      <input
+        type="color"
+        value={backgroundColor === 'transparent' ? '#ffffff' : backgroundColor}
+        onChange={(e) => onBackgroundColorChange(e.target.value)}
+        title="Background Color"
+        style={{ width: '28px', height: '28px', padding: '0', border: '1px solid var(--border-color)', borderRadius: '4px', cursor: 'pointer' }}
+      />
+    </div>
+  </div>
     </div>
   );
 }
