@@ -664,15 +664,10 @@ const addText = (x = 30, y = 40) => {
           dispatch({ type: 'SET_TEXT_BG_COLOR', payload: val });
           if (state.selectedElement && isTextSelected) updateElement(state.selectedElement, { backgroundColor: val });
         }}
-        onHighlightColorChange={(val) => {
-          dispatch({ type: 'SET_TEXT_HIGHLIGHT_COLOR', payload: val });
-          if (state.selectedElement && isTextSelected) updateElement(state.selectedElement, { highlightColor: val });
-        }}
         fontSize={state.fontSize}
         fontFamily={state.fontFamily}
         textColor={state.textColor}
         backgroundColor={selectedEl?.backgroundColor || 'transparent'}
-        highlightColor={selectedEl?.highlightColor || 'transparent'}
         t={t}
       />
       <div className="editor-main">

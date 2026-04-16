@@ -196,29 +196,43 @@ export function DraggableText({ element, isSelected, onSelect, onUpdate, onDelet
     padding: '8px',
     borderRadius: '4px',
     whiteSpace: 'pre-wrap',
-    wordBreak: 'break-word'
+    wordBreak: 'break-word',
+    cursor: 'text'
   };
 
-  const edgeStyle = {
+  const borderOverlayStyle = {
     position: 'absolute',
-    top: '-4px',
-    left: '-4px',
-    right: '-4px',
-    bottom: '-4px',
+    top: '-8px',
+    left: '-8px',
+    right: '-8px',
+    bottom: '-8px',
     border: isSelected && !isEditing ? '2px solid #D97757' : '2px solid transparent',
-    borderRadius: '6px',
-    cursor: isEditing ? 'text' : 'move',
-    pointerEvents: isEditing ? 'none' : 'auto'
+    borderRadius: '8px',
+    pointerEvents: 'none',
+    zIndex: 99
   };
 
   return (
     <div ref={elementRef} style={containerStyle}>
-      {/* Edge for dragging */}
-      {!isEditing && (
+      {/* Draggable border area - only triggers drag, doesn't block clicks on content */}
+      {isSelected && !isEditing && (
         <div
-          style={edgeStyle}
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            cursor: 'move',
+            zIndex: 50
+          }}
           onMouseDown={handleEdgeMouseDown}
         />
+      )}
+
+      {/* Border overlay for selection indicator */}
+      {!isEditing && (
+        <div style={borderOverlayStyle} />
       )}
 
       {/* Corner Handles */}
@@ -362,8 +376,7 @@ export function DraggableText({ element, isSelected, onSelect, onUpdate, onDelet
         suppressContentEditableWarning
         style={{
           ...contentStyle,
-          backgroundColor: element.backgroundColor || 'transparent',
-          cursor: isEditing ? 'text' : 'pointer'
+          backgroundColor: element.backgroundColor || 'transparent'
         }}
         onFocus={handleContentFocus}
         onBlur={handleContentBlur}
