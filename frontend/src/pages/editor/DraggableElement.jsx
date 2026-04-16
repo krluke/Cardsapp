@@ -56,31 +56,24 @@ export function DraggableText({ element, isSelected, onSelect, onUpdate, onDelet
     };
   };
 
-  const handleResizeStart = (e) => {
-    e.stopPropagation();
-    e.preventDefault();
-    onSelect(element.id);
-    setIsResizing(true);
-    const dims = getCanvasDimensions();
-    dragStartRef.current = {
-      x: e.clientX,
-      width: element.width || 40,
-      canvasWidth: dims.width
-    };
+const handleResizeStart = (e) => {
+  e.stopPropagation();
+  e.preventDefault();
+  onSelect(element.id);
+  setIsResizing(true);
+  const dims = getCanvasDimensions();
+  const currentWidth = element.width || 40;
+  const currentHeight = typeof element.height === 'number' ? element.height : 20;
+  dragStartRef.current = {
+    x: e.clientX,
+    y: e.clientY,
+    width: currentWidth,
+    height: currentHeight,
+    canvasWidth: dims.width,
+    canvasHeight: dims.height,
+    aspect: currentWidth / currentHeight
   };
-
-  const handleResizeHeightStart = (e) => {
-    e.stopPropagation();
-    e.preventDefault();
-    onSelect(element.id);
-    setIsResizingHeight(true);
-    const dims = getCanvasDimensions();
-    dragStartRef.current = {
-      y: e.clientY,
-      height: element.height || 20,
-      canvasHeight: dims.height
-    };
-  };
+};
 
   const handleRotateStart = (e) => {
     e.stopPropagation();
@@ -94,17 +87,12 @@ export function DraggableText({ element, isSelected, onSelect, onUpdate, onDelet
     };
   };
 
-  const handleContentFocus = (e) => {
-    setIsEditing(true);
-    if (e.target.innerText === t('placeholder_text_input')) {
-      e.target.innerText = '';
-    }
-    const range = document.createRange();
-    range.selectNodeContents(e.target);
-    const sel = window.getSelection();
-    sel.removeAllRanges();
-    sel.addRange(range);
-  };
+const handleContentFocus = (e) => {
+  setIsEditing(true);
+  if (e.target.innerText === t('placeholder_text_input')) {
+    e.target.innerText = '';
+  }
+};
 
   const handleContentBlur = (e) => {
     setIsEditing(false);
@@ -126,12 +114,16 @@ export function DraggableText({ element, isSelected, onSelect, onUpdate, onDelet
         const newLeft = Math.max(0, Math.min(90, dragStartRef.current.left + percentX));
         const newTop = Math.max(0, Math.min(90, dragStartRef.current.top + percentY));
         onUpdate(element.id, { left: newLeft, top: newTop });
-      } else if (isResizing) {
-        const dx = e.clientX - dragStartRef.current.x;
-        const percentX = (dx / dragStartRef.current.canvasWidth) * 100;
-        const newWidth = Math.max(10, Math.min(90, dragStartRef.current.width + percentX));
-        onUpdate(element.id, { width: newWidth });
-      } else if (isResizingHeight) {
+} else if (isResizing) {
+      const dx = e.clientX - dragStartRef.current.x;
+      const dy = e.clientY - dragStartRef.current.y;
+      const percentX = (dx / dragStartRef.current.canvasWidth) * 100;
+      const percentY = (dy / dragStartRef.current.canvasHeight) * 100;
+      const avgPercent = (percentX + percentY) / 2;
+      const newWidth = Math.max(10, Math.min(90, dragStartRef.current.width + avgPercent));
+      const newHeight = Math.max(10, Math.min(80, dragStartRef.current.height + avgPercent));
+      onUpdate(element.id, { width: newWidth, height: newHeight });
+    } else if (isResizingHeight) {
         const dy = e.clientY - dragStartRef.current.y;
         const percentY = (dy / dragStartRef.current.canvasHeight) * 100;
         const currentHeight = typeof dragStartRef.current.height === 'number' ? dragStartRef.current.height : 20;
@@ -160,12 +152,9 @@ export function DraggableText({ element, isSelected, onSelect, onUpdate, onDelet
     };
   }, [isDragging, isResizing, isResizingHeight, isRotating, element.id, onUpdate]);
 
-  const handleContentClick = (e) => {
-    e.stopPropagation();
-    if (!isEditing) {
-      onSelect(element.id);
-    }
-  };
+const handleContentClick = (e) => {
+  e.stopPropagation();
+};
 
   const containerStyle = {
     position: 'absolute',
@@ -177,7 +166,7 @@ export function DraggableText({ element, isSelected, onSelect, onUpdate, onDelet
     minHeight: '30px',
     transform: `rotate(${element.rotation || 0}deg)`,
     transformOrigin: 'center center',
-    cursor: isDragging ? 'grabbing' : isEditing ? 'text' : 'default',
+    cursor: isDragging ? 'grabbing' : 'default',
     zIndex: isSelected ? 100 : 1,
     userSelect: 'none'
   };
@@ -212,21 +201,23 @@ export function DraggableText({ element, isSelected, onSelect, onUpdate, onDelet
     zIndex: 99
   };
 
+  const borderDragAreaStyle = {
+    position: 'absolute',
+    top: '-8px',
+    left: '-8px',
+    right: '-8px',
+    bottom: '-8px',
+    cursor: 'move',
+    zIndex: 50
+  };
+
   return (
     <div ref={elementRef} style={containerStyle}>
-      {/* Draggable border area - only triggers drag, doesn't block clicks on content */}
+      {/* Border drag area - only for dragging, click passes through to content */}
       {isSelected && (
         <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            cursor: isEditing ? 'text' : 'move',
-            zIndex: 50
-          }}
-          onMouseDown={isEditing ? undefined : handleEdgeMouseDown}
+          style={borderDragAreaStyle}
+          onMouseDown={handleEdgeMouseDown}
         />
       )}
 
@@ -305,41 +296,23 @@ export function DraggableText({ element, isSelected, onSelect, onUpdate, onDelet
             <Trash2 size={14} color="white" />
           </div>
 
-          {/* Width resize handle - Right edge */}
-          <div
-            style={{
-              position: 'absolute',
-              top: '50%',
-              right: '-6px',
-              width: '12px',
-              height: '24px',
-              background: '#D97757',
-              borderRadius: '3px',
-              cursor: 'e-resize',
-              zIndex: 101,
-              transform: 'translateY(-50%)'
-            }}
-            onMouseDown={handleResizeStart}
-            title="Resize Width"
-          />
-
-          {/* Height resize handle - Bottom edge */}
-          <div
-            style={{
-              position: 'absolute',
-              bottom: '-6px',
-              left: '50%',
-              width: '24px',
-              height: '12px',
-              background: '#D97757',
-              borderRadius: '3px',
-              cursor: 's-resize',
-              zIndex: 101,
-              transform: 'translateX(-50%)'
-            }}
-            onMouseDown={handleResizeHeightStart}
-            title="Resize Height"
-          />
+{/* Combined resize handle - Bottom right corner */}
+  <div
+    style={{
+      position: 'absolute',
+      bottom: '-8px',
+      right: '-8px',
+      width: '20px',
+      height: '20px',
+      background: '#D97757',
+      borderRadius: '50%',
+      cursor: 'se-resize',
+      zIndex: 101,
+      boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+    }}
+    onMouseDown={handleResizeStart}
+    title="Resize"
+  />
 
           {/* TTS button */}
           <button
