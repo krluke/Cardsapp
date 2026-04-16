@@ -1,4 +1,4 @@
-import { Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, Type } from 'lucide-react';
+import { Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, Layers } from 'lucide-react';
 
 export function FloatingTextToolbar({
   element,
@@ -8,6 +8,7 @@ export function FloatingTextToolbar({
   onFontFamilyChange,
   onTextColorChange,
   onBackgroundColorChange,
+  onMoveElement,
   fontSize,
   fontFamily,
   textColor,
@@ -150,6 +151,24 @@ export function FloatingTextToolbar({
       />
     </div>
   </div>
-    </div>
+
+  {/* Layer Controls */}
+  <div style={{ display: 'flex', gap: '4px', borderLeft: '1px solid var(--border-color)', paddingLeft: '8px' }}>
+    <button
+      className="toolbar-btn"
+      onClick={() => onMoveElement('front')}
+      title="Bring to Front"
+    >
+      <Layers size={16} />
+    </button>
+    <button
+      className="toolbar-btn"
+      onClick={() => onMoveElement('back')}
+      title="Send to Back"
+    >
+      <Layers size={16} style={{ transform: 'rotate(180deg)' }} />
+    </button>
+  </div>
+</div>
   );
 }

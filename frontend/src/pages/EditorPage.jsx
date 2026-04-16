@@ -643,13 +643,12 @@ const addText = (x = 30, y = 40) => {
         applyTemplate={(key) => dispatch({ type: 'APPLY_TEMPLATE', payload: { templateKey: key } })}
         onSave={saveCards}
         saving={state.saving}
-        selectedEl={selectedEl}
         t={t}
-        onMoveElement={(direction) => dispatch({ type: 'MOVE_ELEMENT', payload: { elementId: state.selectedElement, direction } })}
       />
       <FloatingTextToolbar
         element={selectedEl}
         isVisible={isTextSelected}
+        onMoveElement={(direction) => dispatch({ type: 'MOVE_ELEMENT', payload: { elementId: state.selectedElement, direction } })}
         onFormatChange={applyFormat}
         onFontSizeChange={(val) => {
           dispatch({ type: 'SET_FONT_SIZE', payload: val });
