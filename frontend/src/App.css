@@ -35,7 +35,7 @@
 
   .framework,
   .vite {
-    position: absolute;
+    position: relative;
   }
 
   .framework {
@@ -57,7 +57,7 @@
 }
 
 #center {
-  display: flex;
+  display: block;
   flex-direction: column;
   gap: 25px;
   place-content: center;
@@ -71,7 +71,7 @@
 }
 
 #next-steps {
-  display: flex;
+  display: block;
   border-top: 1px solid var(--border);
   text-align: left;
 
@@ -107,7 +107,7 @@
 #next-steps ul {
   list-style: none;
   padding: 0;
-  display: flex;
+  display: block;
   gap: 8px;
   margin: 32px 0 0;
 
@@ -120,7 +120,7 @@
     font-size: 16px;
     border-radius: 6px;
     background: var(--social-bg);
-    display: flex;
+    display: block;
     padding: 6px 12px;
     align-items: center;
     gap: 8px;
@@ -168,7 +168,7 @@
   &::before,
   &::after {
     content: '';
-    position: absolute;
+    position: relative;
     top: -4.5px;
     border: 5px solid transparent;
   }
@@ -193,7 +193,7 @@
 
 .global-card-tile {
   position: relative;
-  height: 200px;
+  height: 160px;
   perspective: 1000px;
   cursor: pointer;
 }
@@ -210,19 +210,30 @@
   transform: rotateY(180deg);
 }
 
+.global-card-scaled {
+  position: relative;
+  top: 6px;
+  left: 6px;
+  right: 6px;
+  bottom: 20px;
+  transform: scale(0.32);
+  transform-origin: top left;
+  pointer-events: none;
+}
+
 .global-card-front,
 .global-card-back {
-  position: absolute;
+  position: relative;
   width: 100%;
-  height: 100%;
+height: 100%;
   backface-visibility: hidden;
   border-radius: 8px;
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
+  padding: 6px;
+  display: block;
   overflow: hidden;
   border: 1px solid var(--border-color);
   box-shadow: var(--shadow-sm);
+  box-sizing: border-box;
 }
 
 .global-card-back {
@@ -232,24 +243,56 @@
 .global-card-content {
   flex: 1;
   overflow: hidden;
-  font-size: 0.9rem;
+  font-size: 0.75rem;
   line-height: 1.4;
+  position: relative;
+  transform-origin: top left;
 }
 
 .global-card-content p {
   margin: 0;
 }
 
+.global-card-content > div {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.global-card-content .draggable-text,
+.global-card-content [class*="draggable"] {
+  position: absolute !important;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.global-card-content .draggable-text .text-content {
+  font-size: 0.55rem;
+  line-height: 1.1;
+  padding: 1px 2px;
+}
+
+.global-card-content img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
 .global-card-folder-info {
-  font-size: 0.75rem;
+  position: relative;
+  bottom: 4px;
+  left: 6px;
+  right: 6px;
+  font-size: 0.6rem;
   color: var(--text-muted);
-  margin-top: 0.5rem;
-  padding-top: 0.5rem;
+  text-align: center;
+  padding-top: 2px;
   border-top: 1px solid var(--border-color);
+  background: inherit;
 }
 
 .global-card-add-btn {
-  position: absolute;
+  position: relative;
   top: 8px;
   right: 8px;
   width: 28px;
@@ -259,7 +302,7 @@
   background: var(--accent-color);
   color: white;
   cursor: pointer;
-  display: flex;
+  display: block;
   align-items: center;
   justify-content: center;
   transition: transform 0.2s, background 0.2s;
@@ -273,7 +316,7 @@
 
 /* Folder List Modal */
 .folder-list-modal {
-  display: flex;
+  display: block;
   flex-direction: column;
   gap: 0.5rem;
   max-height: 300px;

@@ -220,14 +220,14 @@ function HomePage() {
     return session.csrfToken || ''
   }
 
-  const loadFolders = async () => {
-    if (!user) return
+const loadFolders = async () => {
+    if (activeTab === 'my-folders' && !user) return
     const endpoint = '/folders'
-    const params = new URLSearchParams({ 
-      page, 
+    const params = new URLSearchParams({
+      page,
       search: searchInput,
       tab: activeTab,
-      userEmail: user.email || user.id
+      userEmail: user?.email || user?.id || ''
     })
     try {
       const res = await fetch(`${API_BASE}${endpoint}?${params}`)
@@ -240,7 +240,6 @@ function HomePage() {
   }
 
   const loadGlobalCards = async () => {
-    if (!user) return
     const params = new URLSearchParams({
       page,
       search: searchInput,
@@ -330,8 +329,10 @@ function HomePage() {
   const handleLogout = () => {
     localStorage.removeItem('session')
     setUser(null)
+    setFolders([])
+    setGlobalCards([])
+    setActiveTab('my-folders')
     setAuthMenuOpen(false)
-    loadFolders()
   }
 
   const createNewFolder = async () => {
@@ -551,17 +552,17 @@ function HomePage() {
           </div>
         )}
 
-        {activeTab === 'global-folders' && folders.length === 0 && user && (
-          <div className="empty-state">
-            <p>{t('no_public_folders')}</p>
-          </div>
-        )}
+{activeTab === 'global-folders' && folders.length === 0 && (
+  <div className="empty-state">
+    <p>{t('no_public_folders')}</p>
+  </div>
+)}
 
-        {activeTab === 'global-cards' && globalCards.length === 0 && user && (
-          <div className="empty-state">
-            <p>{t('no_public_cards')}</p>
-          </div>
-        )}
+{activeTab === 'global-cards' && globalCards.length === 0 && (
+  <div className="empty-state">
+    <p>{t('no_public_cards')}</p>
+  </div>
+)}
 
           {(activeTab === 'my-folders' || activeTab === 'global-folders') && (
           <div className="folder-grid">
@@ -596,18 +597,22 @@ function HomePage() {
           {activeTab === 'global-cards' && (
             <div className="global-cards-grid">
               {globalCards.map(card => (
-                <div key={card.id} className="global-card-tile" onClick={() => setFlippedCards(prev => ({...prev, [card.id]: !prev[card.id]}))}>
-                  <div className={`global-card-inner ${flippedCards[card.id] ? 'flipped' : ''}`}>
-                    <div className="global-card-front" style={{ backgroundColor: card.frontBg || '#ffffff' }}>
-                      <div className="global-card-content" dangerouslySetInnerHTML={{ __html: card.front || '<p>Empty</p>' }} />
-                      <div className="global-card-folder-info">
-                        {card.folder_title} • {card.folder_owner}
-                      </div>
-                    </div>
-                    <div className="global-card-back" style={{ backgroundColor: card.backBg || '#ffffff' }}>
-                      <div className="global-card-content" dangerouslySetInnerHTML={{ __html: card.back || '<p>Empty</p>' }} />
-                    </div>
-                  </div>
+<div key={card.id} className="global-card-tile" onClick={() => setFlippedCards(prev => ({...prev, [card.id]: !prev[card.id]}))}>
+          <div className={`global-card-inner ${flippedCards[card.id] ? 'flipped' : ''}`}>
+          <div className="global-card-front" style={{ backgroundColor: card.frontBg || '#ffffff' }}>
+            <div className="global-card-scaled">
+              <div className="global-card-content" dangerouslySetInnerHTML={{ __html: card.front || '<p>Empty</p>' }} />
+            </div>
+            <div className="global-card-folder-info">
+              {card.folder_title} • {card.folder_owner}
+            </div>
+          </div>
+          <div className="global-card-back" style={{ backgroundColor: card.backBg || '#ffffff' }}>
+            <div className="global-card-scaled">
+              <div className="global-card-content" dangerouslySetInnerHTML={{ __html: card.back || '<p>Empty</p>' }} />
+            </div>
+          </div>
+          </div>
                   <button className="global-card-add-btn" onClick={(e) => { e.stopPropagation(); setSelectedCard(card); setShowAddToFolderModal(true) }} title={t('btn_add_to_folder')}>
                     <Plus size={16} />
                   </button>
