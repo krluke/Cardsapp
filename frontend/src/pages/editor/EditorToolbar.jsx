@@ -1,13 +1,13 @@
 import { 
   ArrowLeft, Save, Type, Image, Layout,
-  Copy, Undo, Redo, Layers, Upload
+  Copy, Undo, Redo, Upload
 } from 'lucide-react';
 
 export function EditorToolbar({ 
   onGoHome, onUndo, onRedo, onAddText,
   currentBg, updateBgColor, imageUrl, setImageUrl, onAddImage, 
   showTemplateMenu, setShowTemplateMenu, applyTemplate, onSave, saving, 
-  selectedEl, t, onMoveElement, onUploadImage
+  t, onUploadImage
 }) {
   return (
     <header className="editor-header">
@@ -27,10 +27,7 @@ export function EditorToolbar({
         <span>{t('btn_add_text')}</span>
       </button>
       
-      <div className="toolbar-group" style={{ display: 'flex', gap: '4px', borderRight: '1px solid var(--border-color)', paddingRight: '8px', marginRight: '8px' }}>
-        <button className="toolbar-btn" onClick={() => onMoveElement('front')} disabled={!selectedEl} title="Bring to Front"><Layers size={18} /></button>
-        <button className="toolbar-btn" onClick={() => onMoveElement('back')} disabled={!selectedEl} title="Send to Back"><Layers size={18} style={{ transform: 'rotate(180deg)' }} /></button>
-      </div>
+      
       
       <div className="color-picker-group"><label>{t('label_bg_color')}</label><input type="color" value={currentBg} onChange={(e) => updateBgColor(e.target.value)} /></div>
       

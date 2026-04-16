@@ -6,7 +6,6 @@ export function DraggableText({ element, isSelected, onSelect, onUpdate, onDelet
   const contentRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
-  const [isResizingHeight, setIsResizingHeight] = useState(false);
   const [isRotating, setIsRotating] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const dragStartRef = useRef({ x: 0, y: 0, left: 0, top: 0, width: 0, height: 0, rotation: 0, startAngle: 0 });
@@ -89,6 +88,7 @@ const handleResizeStart = (e) => {
 
 const handleContentFocus = (e) => {
   setIsEditing(true);
+  onSelect(element.id);
   if (e.target.innerText === t('placeholder_text_input')) {
     e.target.innerText = '';
   }
@@ -102,19 +102,19 @@ const handleContentFocus = (e) => {
     onUpdate(element.id, { content: e.target.innerText });
   };
 
-  useEffect(() => {
-    if (!isDragging && !isResizing && !isResizingHeight && !isRotating) return;
+useEffect(() => {
+  if (!isDragging && !isResizing && !isRotating) return;
 
-    const handleMouseMove = (e) => {
-      if (isDragging) {
-        const dx = e.clientX - dragStartRef.current.x;
-        const dy = e.clientY - dragStartRef.current.y;
-        const percentX = (dx / dragStartRef.current.canvasWidth) * 100;
-        const percentY = (dy / dragStartRef.current.canvasHeight) * 100;
-        const newLeft = Math.max(0, Math.min(90, dragStartRef.current.left + percentX));
-        const newTop = Math.max(0, Math.min(90, dragStartRef.current.top + percentY));
-        onUpdate(element.id, { left: newLeft, top: newTop });
-} else if (isResizing) {
+  const handleMouseMove = (e) => {
+    if (isDragging) {
+      const dx = e.clientX - dragStartRef.current.x;
+      const dy = e.clientY - dragStartRef.current.y;
+      const percentX = (dx / dragStartRef.current.canvasWidth) * 100;
+      const percentY = (dy / dragStartRef.current.canvasHeight) * 100;
+      const newLeft = Math.max(0, Math.min(90, dragStartRef.current.left + percentX));
+      const newTop = Math.max(0, Math.min(90, dragStartRef.current.top + percentY));
+      onUpdate(element.id, { left: newLeft, top: newTop });
+    } else if (isResizing) {
       const dx = e.clientX - dragStartRef.current.x;
       const dy = e.clientY - dragStartRef.current.y;
       const percentX = (dx / dragStartRef.current.canvasWidth) * 100;
@@ -123,37 +123,31 @@ const handleContentFocus = (e) => {
       const newWidth = Math.max(10, Math.min(90, dragStartRef.current.width + avgPercent));
       const newHeight = Math.max(10, Math.min(80, dragStartRef.current.height + avgPercent));
       onUpdate(element.id, { width: newWidth, height: newHeight });
-    } else if (isResizingHeight) {
-        const dy = e.clientY - dragStartRef.current.y;
-        const percentY = (dy / dragStartRef.current.canvasHeight) * 100;
-        const currentHeight = typeof dragStartRef.current.height === 'number' ? dragStartRef.current.height : 20;
-        const newHeight = Math.max(10, Math.min(80, currentHeight + percentY));
-        onUpdate(element.id, { height: newHeight });
-      } else if (isRotating) {
-        const currentAngle = getAngle(e.clientX, e.clientY);
-        const deltaAngle = currentAngle - dragStartRef.current.startAngle;
-        const newRotation = dragStartRef.current.rotation + deltaAngle;
-        onUpdate(element.id, { rotation: newRotation });
-      }
-    };
+    } else if (isRotating) {
+      const currentAngle = getAngle(e.clientX, e.clientY);
+      const deltaAngle = currentAngle - dragStartRef.current.startAngle;
+      const newRotation = dragStartRef.current.rotation + deltaAngle;
+      onUpdate(element.id, { rotation: newRotation });
+    }
+  };
 
-    const handleMouseUp = () => {
-      setIsDragging(false);
-      setIsResizing(false);
-      setIsResizingHeight(false);
-      setIsRotating(false);
-    };
+  const handleMouseUp = () => {
+    setIsDragging(false);
+    setIsResizing(false);
+    setIsRotating(false);
+  };
 
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [isDragging, isResizing, isResizingHeight, isRotating, element.id, onUpdate]);
+  window.addEventListener('mousemove', handleMouseMove);
+  window.addEventListener('mouseup', handleMouseUp);
+  return () => {
+    window.removeEventListener('mousemove', handleMouseMove);
+    window.removeEventListener('mouseup', handleMouseUp);
+  };
+}, [isDragging, isResizing, isRotating, element.id, onUpdate]);
 
 const handleContentClick = (e) => {
   e.stopPropagation();
+  onSelect(element.id);
 };
 
   const containerStyle = {
@@ -186,7 +180,8 @@ const handleContentClick = (e) => {
     borderRadius: '4px',
     whiteSpace: 'pre-wrap',
     wordBreak: 'break-word',
-    cursor: 'text'
+    cursor: 'text',
+    userSelect: 'text'
   };
 
   const borderOverlayStyle = {
@@ -201,26 +196,8 @@ const handleContentClick = (e) => {
     zIndex: 99
   };
 
-  const borderDragAreaStyle = {
-    position: 'absolute',
-    top: '-8px',
-    left: '-8px',
-    right: '-8px',
-    bottom: '-8px',
-    cursor: 'move',
-    zIndex: 50
-  };
-
   return (
     <div ref={elementRef} style={containerStyle}>
-      {/* Border drag area - only for dragging, click passes through to content */}
-      {isSelected && (
-        <div
-          style={borderDragAreaStyle}
-          onMouseDown={handleEdgeMouseDown}
-        />
-      )}
-
       {/* Border overlay for selection indicator */}
       <div style={borderOverlayStyle} />
 
