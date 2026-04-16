@@ -206,7 +206,7 @@ export function DraggableText({ element, isSelected, onSelect, onUpdate, onDelet
     left: '-8px',
     right: '-8px',
     bottom: '-8px',
-    border: isSelected && !isEditing ? '2px solid #D97757' : '2px solid transparent',
+    border: isSelected ? '2px solid #D97757' : '2px solid transparent',
     borderRadius: '8px',
     pointerEvents: 'none',
     zIndex: 99
@@ -215,7 +215,7 @@ export function DraggableText({ element, isSelected, onSelect, onUpdate, onDelet
   return (
     <div ref={elementRef} style={containerStyle}>
       {/* Draggable border area - only triggers drag, doesn't block clicks on content */}
-      {isSelected && !isEditing && (
+      {isSelected && (
         <div
           style={{
             position: 'absolute',
@@ -223,20 +223,18 @@ export function DraggableText({ element, isSelected, onSelect, onUpdate, onDelet
             left: 0,
             right: 0,
             bottom: 0,
-            cursor: 'move',
+            cursor: isEditing ? 'text' : 'move',
             zIndex: 50
           }}
-          onMouseDown={handleEdgeMouseDown}
+          onMouseDown={isEditing ? undefined : handleEdgeMouseDown}
         />
       )}
 
       {/* Border overlay for selection indicator */}
-      {!isEditing && (
-        <div style={borderOverlayStyle} />
-      )}
+      <div style={borderOverlayStyle} />
 
       {/* Corner Handles */}
-      {isSelected && !isEditing && (
+      {isSelected && (
         <>
           {/* Move handle - Top Left */}
           <div

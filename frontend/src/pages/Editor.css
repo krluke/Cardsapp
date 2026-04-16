@@ -285,7 +285,7 @@
   border: 1px solid var(--border-color);
   position: relative;
   overflow: hidden;
-  cursor: crosshair;
+  cursor: default;
 }
 
 .card-canvas .canvas-hint {
@@ -475,11 +475,6 @@
 /* Text box selection state */
 .text-box-selected {
   z-index: 100;
-}
-
-/* Active text tool cursor */
-.card-canvas.text-tool-active {
-  cursor: crosshair;
 }
 
 .delete-element-btn:hover {
