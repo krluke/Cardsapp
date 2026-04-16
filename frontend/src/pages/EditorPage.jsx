@@ -457,27 +457,34 @@ export default function EditorPage() {
           height: heightMatch ? Math.round((parseInt(heightMatch[1]) / 600) * 100) : 30
         });
       });
-    } else {
-      // New format with percentages
-      doc.querySelectorAll('.draggable-text, [style*="position: absolute"]').forEach((el, idx) => {
-        const style = el.getAttribute('style') || '';
-        const isText = !el.querySelector('img');
-        if (isText) {
-          const textEl = el.querySelector('.text-content') || el;
-          elements.push({
-            id: `text-${Date.now()}-${idx}`,
-            type: 'text',
-            content: textEl.innerText || '',
-            left: parseInt(style.match(/left:\s*(\d+)%/)?.[1] || '10'),
-            top: parseInt(style.match(/top:\s*(\d+)%/)?.[1] || '20'),
-            width: parseInt(style.match(/width:\s*(\d+)%/)?.[1] || '80'),
-            fontSize: parseInt(style.match(/font-size:\s*(\d+)px/)?.[1] || '16'),
-            fontFamily: style.match(/font-family:\s*([^;]+)/)?.[1] || 'sans-serif',
-            fontWeight: style.match(/font-weight:\s*(\w+)/)?.[1] || 'normal',
-            color: '#000000'
-          });
-        }
-      });
+} else {
+    // New format with percentages
+    doc.querySelectorAll('.draggable-text, [style*="position: absolute"]').forEach((el, idx) => {
+      const style = el.getAttribute('style') || '';
+      const isText = !el.querySelector('img');
+      if (isText) {
+        const textEl = el.querySelector('.text-content') || el;
+        const rotationMatch = style.match(/transform:rotate\((\d+)deg\)/);
+        elements.push({
+          id: `text-${Date.now()}-${idx}`,
+          type: 'text',
+          content: textEl.innerText || '',
+          left: parseInt(style.match(/left:\s*(\d+)%/)?.[1] || '10'),
+          top: parseInt(style.match(/top:\s*(\d+)%/)?.[1] || '20'),
+          width: parseInt(style.match(/width:\s*(\d+)%/)?.[1] || '40'),
+          height: style.match(/height:\s*(\d+)%/) ? parseInt(style.match(/height:\s*(\d+)%/)?.[1]) : 'auto',
+          fontSize: parseInt(style.match(/font-size:\s*(\d+)px/)?.[1] || '16'),
+          fontFamily: style.match(/font-family:\s*([^;]+)/)?.[1] || 'sans-serif',
+          fontWeight: style.match(/font-weight:\s*(\w+)/)?.[1] || 'normal',
+          fontStyle: style.match(/font-style:\s*(\w+)/)?.[1] || 'normal',
+          textDecoration: style.match(/text-decoration:\s*(\w+)/)?.[1] || 'none',
+          textAlign: style.match(/text-align:\s*(\w+)/)?.[1] || 'left',
+          color: style.match(/color:\s*(#[0-9a-fA-F]+)/)?.[1] || '#000000',
+          backgroundColor: style.match(/background-color:\s*([^;]+)/)?.[1] || 'transparent',
+          rotation: rotationMatch ? parseInt(rotationMatch[1]) : 0
+        });
+      }
+    });
       
       doc.querySelectorAll('img').forEach((img, idx) => {
         const parent = img.closest('[style*="position"]') || img.parentElement;
@@ -496,17 +503,17 @@ export default function EditorPage() {
     return elements;
   };
 
-  const serializeElements = (elements) => {
-    return elements.map(el => {
-      if (el.type === 'text') {
-        return `<div class="draggable-text" style="position:absolute;left:${el.left}%;top:${el.top}%;width:${el.width}%;font-size:${el.fontSize}px;font-family:${el.fontFamily};font-weight:${el.fontWeight};color:${el.color};"><div class="text-content">${el.content}</div></div>`;
-      }
-      if (el.type === 'image') {
-        return `<div class="draggable-image" style="position:absolute;left:${el.left}%;top:${el.top}%;width:${el.width}%;height:${el.height}%;"><img src="${el.src}" style="width:100%;height:100%;object-fit:contain;" /></div>`;
-      }
-      return '';
-    }).join('');
-  };
+const serializeElements = (elements) => {
+  return elements.map(el => {
+    if (el.type === 'text') {
+      return `<div class="draggable-text" style="position:absolute;left:${el.left}%;top:${el.top}%;width:${el.width}%;height:${el.height || 'auto'};font-size:${el.fontSize}px;font-family:${el.fontFamily};font-weight:${el.fontWeight};font-style:${el.fontStyle || 'normal'};text-decoration:${el.textDecoration || 'none'};text-align:${el.textAlign || 'left'};color:${el.color};background-color:${el.backgroundColor || 'transparent'};transform:rotate(${el.rotation || 0}deg);"><div class="text-content">${el.content}</div></div>`;
+    }
+    if (el.type === 'image') {
+      return `<div class="draggable-image" style="position:absolute;left:${el.left}%;top:${el.top}%;width:${el.width}%;height:${el.height}%;"><img src="${el.src}" style="width:100%;height:100%;object-fit:contain;" /></div>`;
+    }
+    return '';
+  }).join('');
+};
 
   const currentCard = state.cards[state.currentIndex];
   const currentElements = state.isFlipped ? currentCard?.back || [] : currentCard?.front || [];
