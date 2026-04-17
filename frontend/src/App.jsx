@@ -575,7 +575,7 @@ const loadFolders = async () => {
                     navigate(canEdit ? `/editor/${folder.id}` : `/viewer/${folder.id}`);
                  }}>
                    <div className="folder-actions" onClick={e => e.stopPropagation()}>
-                     <button className="folder-settings-icon" onClick={() => navigate(`/study/${folder.id}`)} title="Study">
+                     <button className="folder-settings-icon" onClick={() => navigate(`/study/${folder.id}`, { state: { canEdit: user && activeTab === 'my-folders' } })} title="Study">
                        <BookOpen size={16} />
                      </button>
                      {isOwner && (

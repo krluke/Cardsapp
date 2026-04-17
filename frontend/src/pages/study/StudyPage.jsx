@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, CheckCircle, XCircle, HelpCircle, RotateCcw, Volume2, Shuffle, BookOpen } from 'lucide-react';
 import './Study.css';
 
@@ -13,6 +13,8 @@ function getNextReviewText(quality, currentInterval) {
 export default function StudyPage() {
   const { folderId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const canEdit = location.state?.canEdit ?? false;
   const [cards, setCards] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
@@ -152,15 +154,15 @@ export default function StudyPage() {
   };
 
   if (loading) return <div className="study-container">Loading...</div>;
-  if (cards.length === 0) return (
-    <div className="study-container">
-      <h2>No cards to study! 🎉</h2>
-      <div className="finished-buttons">
-        <button className="primary-btn" onClick={() => navigate(`/editor/${folderId}`)}>Back to Editor</button>
-        <button className="secondary-btn" onClick={() => navigate('/home')}>Home</button>
-      </div>
+if (cards.length === 0) return (
+  <div className="study-container">
+    <h2>No cards to study! 🎉</h2>
+    <div className="finished-buttons">
+      <button className="primary-btn" onClick={() => navigate(canEdit ? `/editor/${folderId}` : `/viewer/${folderId}`)}>{canEdit ? 'Back to Editor' : 'Back to Viewer'}</button>
+      <button className="secondary-btn" onClick={() => navigate('/home')}>Home</button>
     </div>
-  );
+  </div>
+);
 
   if (finished) {
     const accuracy = stats.total > 0 ? Math.round(((stats.good + stats.easy) / stats.total) * 100) : 0;
@@ -177,7 +179,7 @@ export default function StudyPage() {
         </div>
         <div className="finished-buttons">
           <button className="primary-btn" onClick={() => { setStats({ again: 0, hard: 0, good: 0, easy: 0, total: 0 }); loadCards(studyMode, shuffled); }}>Study Again</button>
-          <button className="secondary-btn" onClick={() => navigate(`/editor/${folderId}`)}>Back to Editor</button>
+          <button className="secondary-btn" onClick={() => navigate(canEdit ? `/editor/${folderId}` : `/viewer/${folderId}`)}>{canEdit ? 'Back to Editor' : 'Back to Viewer'}</button>
           <button className="secondary-btn" onClick={() => navigate('/home')}>Home</button>
         </div>
       </div>
@@ -190,7 +192,7 @@ export default function StudyPage() {
   return (
     <div className="study-container">
       <header className="study-header">
-        <button className="toolbar-btn" onClick={() => navigate(`/editor/${folderId}`)}><ArrowLeft size={18} /> Back</button>
+        <button className="toolbar-btn" onClick={() => navigate(canEdit ? `/editor/${folderId}` : `/viewer/${folderId}`)}><ArrowLeft size={18} /> Back</button>
         <div className="study-mode-toggle">
           <button className={`mode-btn ${studyMode === 'due' ? 'active' : ''}`} onClick={() => setStudyMode('due')}>Due</button>
           <button className={`mode-btn ${studyMode === 'all' ? 'active' : ''}`} onClick={() => setStudyMode('all')}>All</button>
