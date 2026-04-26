@@ -11,6 +11,7 @@ from django.db import connection
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.clickjacking import xframe_options_exempt
+from django.views.decorators.csrf import csrf_exempt
 from django.core.files.storage import FileSystemStorage
 from werkzeug.security import generate_password_hash, check_password_hash
 import bleach
@@ -100,9 +101,9 @@ def get_user_email_from_login_id(login_id):
 
 # ==========================================
 # AUTH ENDPOINTS
-# ==========================================
+# ========================================== 
 
-
+@csrf_exempt
 @require_http_methods(["POST"])
 def login(request):
     client_ip = request.META.get("REMOTE_ADDR", "127.0.0.1")
@@ -163,6 +164,7 @@ def login(request):
     return JsonResponse({"message": "IDまたはパスワードが間違っています"}, status=401)
 
 
+@csrf_exempt
 @require_http_methods(["POST"])
 def signup(request):
     import json as json_mod
