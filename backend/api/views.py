@@ -10,7 +10,6 @@ from django.conf import settings
 from django.db import connection
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
-from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.core.files.storage import FileSystemStorage
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -104,7 +103,6 @@ def get_user_email_from_login_id(login_id):
 # ==========================================
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def login(request):
     client_ip = request.META.get("REMOTE_ADDR", "127.0.0.1")
@@ -165,7 +163,6 @@ def login(request):
     return JsonResponse({"message": "IDまたはパスワードが間違っています"}, status=401)
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def signup(request):
     import json as json_mod
@@ -212,7 +209,6 @@ def signup(request):
             )
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def send_code(request):
     import json as json_mod
@@ -276,7 +272,6 @@ def send_code(request):
 # ==========================================
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def change_password(request):
     import json as json_mod
@@ -371,7 +366,6 @@ def get_user_stats(request):
 # ==========================================
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def create_folder(request):
     import json as json_mod
@@ -527,7 +521,6 @@ def list_global_folders(request):
         return JsonResponse({"message": "公開データの取得に失敗しました"}, status=500)
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def update_folder(request):
     import json as json_mod
@@ -569,7 +562,6 @@ def update_folder(request):
     return JsonResponse({"message": "Success"})
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def delete_folder(request):
     import json as json_mod
@@ -596,7 +588,6 @@ def delete_folder(request):
     return JsonResponse({"message": "Deleted"})
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def toggle_action(request):
     import json as json_mod
@@ -686,7 +677,6 @@ def global_search(request):
 # ==========================================
 
 
-@csrf_exempt
 @require_http_methods(["GET"])
 def export_folder(request):
     folder_id = request.GET.get("folderId")
@@ -723,7 +713,6 @@ def export_folder(request):
         return JsonResponse({"error": "Export failed"}, status=500)
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def import_folder(request):
     import json as json_mod
@@ -809,7 +798,6 @@ def get_study_cards(request):
         return JsonResponse({"error": "Failed to fetch study cards"}, status=500)
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def update_srs(request):
     import json as json_mod
@@ -874,7 +862,6 @@ def update_srs(request):
 # ==========================================
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def upload_image(request):
     if not request.FILES.get("image"):
@@ -891,7 +878,6 @@ def upload_image(request):
         return JsonResponse({"error": "Upload failed"}, status=500)
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def save_cards(request):
     import json as json_mod
@@ -1017,7 +1003,6 @@ def load_cards(request, folder_id):
         return JsonResponse({"message": "データの読み込みに失敗しました"}, status=500)
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def delete_card(request):
     import json as json_mod
@@ -1059,7 +1044,6 @@ def delete_card(request):
 # ==========================================
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def admin_migrate_passwords(request):
     import json as json_mod
@@ -1112,6 +1096,16 @@ def load_cards_fixed(request, folder_id):
     user_email = get_user_email_from_login_id(login_id) if login_id else ""
     try:
         with connection.cursor() as c:
+            c.execute(
+                "SELECT user_email, visibility FROM folders WHERE id = %s",
+                (folder_id,),
+            )
+            folder = dictfetchone(c)
+            if not folder:
+                return JsonResponse({"message": "Folder not found"}, status=404)
+            if folder["visibility"] != "public" and folder["user_email"] != user_email:
+                return JsonResponse({"message": "Access denied"}, status=403)
+
             c.execute(
                 "SELECT c.id, c.front_content as front, c.back_content as back, c.front_bg as frontBg, c.back_bg as backBg FROM cards c WHERE c.folder_id = %s",
                 (folder_id,),
