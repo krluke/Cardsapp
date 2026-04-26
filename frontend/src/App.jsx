@@ -225,7 +225,7 @@ const loadFolders = async () => {
     const endpoint = '/folders'
     const params = new URLSearchParams({
       page,
-      search: searchInput,
+      q: searchInput,
       tab: activeTab,
       userEmail: user?.email || user?.id || ''
     })
@@ -335,15 +335,18 @@ const loadFolders = async () => {
     setAuthMenuOpen(false)
   }
 
-  const createNewFolder = async () => {
+const createNewFolder = async () => {
     const title = await showPrompt('Untitled', t('placeholder_folder_name'))
     if (!title || !user) return
-    
+
+    const userEmail = user.email || user.id
+    if (!userEmail) return
+
     try {
       const res = await fetch(`${API_BASE}/folders/create`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': getCsrfToken() },
-        body: JSON.stringify({ userEmail: user.email || user.id, title }),
+        body: JSON.stringify({ userEmail, title }),
       })
       const data = await res.json()
       if (res.ok) {
