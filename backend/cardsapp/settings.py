@@ -7,14 +7,20 @@ sys.path.insert(0, os.path.dirname(BASE_DIR))
 
 SECRET_KEY = os.environ.get("SECRET_KEY")
 if not SECRET_KEY:
-    raise ValueError("SECRET_KEY environment variable must be set")
+    if os.environ.get("DEBUG") == "True" or os.environ.get("RUNNING_IN_DOCKER"):
+        SECRET_KEY = "django-insecure-dev-key-for-build-time-only"
+    else:
+        raise ValueError("SECRET_KEY environment variable must be set")
 
 DEBUG = os.environ.get("DEBUG", "False") == "True"
 
 
 ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "").split(",")
 if not ALLOWED_HOSTS or ALLOWED_HOSTS == [""]:
-    raise ValueError("ALLOWED_HOSTS environment variable must be set")
+    if DEBUG or os.environ.get("RUNNING_IN_DOCKER"):
+        ALLOWED_HOSTS = ["localhost", "127.0.0.1", "backend", "frontend"]
+    else:
+        raise ValueError("ALLOWED_HOSTS environment variable must be set")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
