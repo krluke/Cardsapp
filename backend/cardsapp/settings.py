@@ -18,7 +18,7 @@ DEBUG = os.environ.get("DEBUG", "False") == "True"
 ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "").split(",")
 if not ALLOWED_HOSTS or ALLOWED_HOSTS == [""]:
     if DEBUG or os.environ.get("RUNNING_IN_DOCKER"):
-        ALLOWED_HOSTS = ["localhost", "127.0.0.1", "backend", "frontend"]
+        ALLOWED_HOSTS = ["localhost", "127.0.0.1", "backend", "frontend", "cardapp.qzz.io"]
     else:
         raise ValueError("ALLOWED_HOSTS environment variable must be set")
 

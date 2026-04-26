@@ -221,7 +221,10 @@ function HomePage() {
   }
 
 const loadFolders = async () => {
-    if (activeTab === 'my-folders' && !user) return
+    if (activeTab === 'my-folders' && !user) {
+      setFolders([])
+      return
+    }
     const endpoint = '/folders'
     const params = new URLSearchParams({
       page,
@@ -232,9 +235,11 @@ const loadFolders = async () => {
     try {
       const res = await fetch(`${API_BASE}${endpoint}?${params}`)
       const data = await res.json()
-      if (data.folders) {
+      if (data.folders !== undefined) {
         setFolders(data.folders || [])
         setTotalPages(data.totalPages || 1)
+      } else if (data.message) {
+        console.error('loadFolders error:', data.message)
       }
     } catch (e) { console.error(e) }
   }
@@ -270,9 +275,13 @@ const loadFolders = async () => {
     e.preventDefault()
     setMessage({ type: '', text: '' })
     try {
+      const csrfToken = getCsrfToken()
       const res = await fetch(`${API_BASE}/login`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': getCsrfToken() },
+        headers: { 
+          'Content-Type': 'application/json', 
+          'X-CSRF-Token': csrfToken || 'dummy-csrf-for-login'
+        },
         body: JSON.stringify(loginData),
       })
       const data = await res.json()
