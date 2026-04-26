@@ -5,14 +5,16 @@ import sys
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(BASE_DIR))
 
-SECRET_KEY = os.environ.get(
-    "SECRET_KEY", "django-insecure-dev-key-change-in-production"
-)
+SECRET_KEY = os.environ.get("SECRET_KEY")
+if not SECRET_KEY:
+    raise ValueError("SECRET_KEY environment variable must be set")
 
-DEBUG = os.environ.get("DEBUG", "True") == "True"
+DEBUG = os.environ.get("DEBUG", "False") == "True"
 
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "").split(",")
+if not ALLOWED_HOSTS or ALLOWED_HOSTS == [""]:
+    raise ValueError("ALLOWED_HOSTS environment variable must be set")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -35,6 +37,10 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
+CSRF_HEADER_NAME = "HTTP_X_CSRF_TOKEN"
+CSRF_COOKIE_NAME = "csrftoken"
+CSRF_USE_SESSIONS = True
 
 ROOT_URLCONF = "cardsapp.urls"
 
@@ -110,7 +116,13 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "https://cardapp.qzz.io",
+]
+CORS_ALLOW_CREDENTIALS = True
 
 GMAIL_USER = os.environ.get("GMAIL_USER")
 GMAIL_PASS = os.environ.get("GMAIL_PASS")

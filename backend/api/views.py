@@ -1,5 +1,5 @@
 import os
-import random
+import secrets
 import smtplib
 import math
 import json
@@ -10,7 +10,6 @@ from django.conf import settings
 from django.db import connection
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
-from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.core.files.storage import FileSystemStorage
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -104,7 +103,6 @@ def get_user_email_from_login_id(login_id):
 # ==========================================
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def login(request):
     client_ip = request.META.get("REMOTE_ADDR", "127.0.0.1")
@@ -165,7 +163,6 @@ def login(request):
     return JsonResponse({"message": "IDまたはパスワードが間違っています"}, status=401)
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def signup(request):
     import json as json_mod
@@ -212,7 +209,6 @@ def signup(request):
             )
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def send_code(request):
     import json as json_mod
@@ -248,7 +244,7 @@ def send_code(request):
             status=429,
         )
 
-    code = str(random.randint(100000, 999999))
+    code = str(secrets.randbelow(900000) + 100000)
 
     with connection.cursor() as c:
         c.execute(
@@ -276,7 +272,6 @@ def send_code(request):
 # ==========================================
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def change_password(request):
     import json as json_mod
@@ -371,7 +366,6 @@ def get_user_stats(request):
 # ==========================================
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def create_folder(request):
     import json as json_mod
@@ -458,6 +452,12 @@ def get_folders(request):
         if tab == "global-folders" and not search_query:
             order_by = "is_favorite DESC, f.id DESC"
 
+        order_by_whitelist = {
+            "f.id DESC": "f.id DESC",
+            "is_favorite DESC, f.id DESC": "is_favorite DESC, f.id DESC",
+        }
+        safe_order_by = order_by_whitelist.get(order_by, "f.id DESC")
+
         if tab == "my-folders":
             fetch_sql = f"""
                 SELECT f.id, f.title, f.visibility, f.likes,
@@ -465,7 +465,7 @@ def get_folders(request):
                        (SELECT COUNT(*) FROM cards WHERE folder_id = f.id) as card_count
                 FROM folders f
                 {base_where}
-                ORDER BY {order_by}
+                ORDER BY {safe_order_by}
                 LIMIT %s OFFSET %s
             """
             final_params = params + [limit, offset]
@@ -480,7 +480,7 @@ def get_folders(request):
                 FROM folders f
                 LEFT JOIN users u ON f.user_email = u.email OR f.user_email = u.username
                 {base_where}
-                ORDER BY {order_by}
+                ORDER BY {safe_order_by}
                 LIMIT %s OFFSET %s
             """
             final_params = [user_email, user_email] + params + [limit, offset]
@@ -521,7 +521,6 @@ def list_global_folders(request):
         return JsonResponse({"message": "公開データの取得に失敗しました"}, status=500)
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def update_folder(request):
     import json as json_mod
@@ -563,7 +562,6 @@ def update_folder(request):
     return JsonResponse({"message": "Success"})
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def delete_folder(request):
     import json as json_mod
@@ -590,7 +588,6 @@ def delete_folder(request):
     return JsonResponse({"message": "Deleted"})
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def toggle_action(request):
     import json as json_mod
@@ -600,26 +597,41 @@ def toggle_action(request):
     folder_id = data.get("folderId")
     action = data.get("action")
 
-    if not user_email or not folder_id:
+    if not user_email or not folder_id or action not in ("like", "favorite"):
         return JsonResponse({"message": "Invalid request"}, status=400)
 
-    table = "folder_likes" if action == "like" else "folder_favorites"
-
-    with connection.cursor() as c:
-        c.execute(
-            f"SELECT 1 FROM {table} WHERE user_email = %s AND folder_id = %s",
-            (user_email, folder_id),
-        )
-        if dictfetchone(c):
+    if action == "like":
+        with connection.cursor() as c:
             c.execute(
-                f"DELETE FROM {table} WHERE user_email = %s AND folder_id = %s",
+                "SELECT 1 FROM folder_likes WHERE user_email = %s AND folder_id = %s",
                 (user_email, folder_id),
             )
-        else:
+            if dictfetchone(c):
+                c.execute(
+                    "DELETE FROM folder_likes WHERE user_email = %s AND folder_id = %s",
+                    (user_email, folder_id),
+                )
+            else:
+                c.execute(
+                    "INSERT INTO folder_likes (user_email, folder_id) VALUES (%s, %s)",
+                    (user_email, folder_id),
+                )
+    else:
+        with connection.cursor() as c:
             c.execute(
-                f"INSERT INTO {table} (user_email, folder_id) VALUES (%s, %s)",
+                "SELECT 1 FROM folder_favorites WHERE user_email = %s AND folder_id = %s",
                 (user_email, folder_id),
             )
+            if dictfetchone(c):
+                c.execute(
+                    "DELETE FROM folder_favorites WHERE user_email = %s AND folder_id = %s",
+                    (user_email, folder_id),
+                )
+            else:
+                c.execute(
+                    "INSERT INTO folder_favorites (user_email, folder_id) VALUES (%s, %s)",
+                    (user_email, folder_id),
+                )
 
     return JsonResponse({"message": "Success"})
 
@@ -665,7 +677,6 @@ def global_search(request):
 # ==========================================
 
 
-@csrf_exempt
 @require_http_methods(["GET"])
 def export_folder(request):
     folder_id = request.GET.get("folderId")
@@ -702,7 +713,6 @@ def export_folder(request):
         return JsonResponse({"error": "Export failed"}, status=500)
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def import_folder(request):
     import json as json_mod
@@ -788,7 +798,6 @@ def get_study_cards(request):
         return JsonResponse({"error": "Failed to fetch study cards"}, status=500)
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def update_srs(request):
     import json as json_mod
@@ -853,7 +862,6 @@ def update_srs(request):
 # ==========================================
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def upload_image(request):
     if not request.FILES.get("image"):
@@ -870,7 +878,6 @@ def upload_image(request):
         return JsonResponse({"error": "Upload failed"}, status=500)
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def save_cards(request):
     import json as json_mod
@@ -996,7 +1003,6 @@ def load_cards(request, folder_id):
         return JsonResponse({"message": "データの読み込みに失敗しました"}, status=500)
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def delete_card(request):
     import json as json_mod
@@ -1038,7 +1044,6 @@ def delete_card(request):
 # ==========================================
 
 
-@csrf_exempt
 @require_http_methods(["POST"])
 def admin_migrate_passwords(request):
     import json as json_mod
@@ -1091,6 +1096,16 @@ def load_cards_fixed(request, folder_id):
     user_email = get_user_email_from_login_id(login_id) if login_id else ""
     try:
         with connection.cursor() as c:
+            c.execute(
+                "SELECT user_email, visibility FROM folders WHERE id = %s",
+                (folder_id,),
+            )
+            folder = dictfetchone(c)
+            if not folder:
+                return JsonResponse({"message": "Folder not found"}, status=404)
+            if folder["visibility"] != "public" and folder["user_email"] != user_email:
+                return JsonResponse({"message": "Access denied"}, status=403)
+
             c.execute(
                 "SELECT c.id, c.front_content as front, c.back_content as back, c.front_bg as frontBg, c.back_bg as backBg FROM cards c WHERE c.folder_id = %s",
                 (folder_id,),
