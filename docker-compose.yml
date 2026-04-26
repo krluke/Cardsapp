@@ -37,7 +37,7 @@ services:
       - GMAIL_USER=${GMAIL_USER}
       - GMAIL_PASS=${GMAIL_PASS}
       - ADMIN_API_KEY=${ADMIN_API_KEY}
-      - DEBUG=True
+      - DEBUG=${DEBUG:-True}
     volumes:
       - ./backend:/app
     depends_on:

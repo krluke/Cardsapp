@@ -1,12 +1,13 @@
 from django.apps import AppConfig
 import logging
+import os
 from django.db import connection
 from werkzeug.security import generate_password_hash
 
 # Development account constants
-DEV_EMAIL = "dev@cardsapp.local"
-DEV_USERNAME = "dev"
-DEV_PASSWORD = "devpassword"
+DEV_EMAIL = os.environ.get("DEV_EMAIL", "dev@cardsapp.local")
+DEV_USERNAME = os.environ.get("DEV_USERNAME", "dev")
+DEV_PASSWORD = os.environ.get("DEV_PASSWORD", "")
 
 
 class ApiConfig(AppConfig):
@@ -25,7 +26,7 @@ class ApiConfig(AppConfig):
         # ----- DEV ACCOUNT AUTO-CREATION / REVOKE (based on DEBUG) -----
         from django.conf import settings
 
-        if getattr(settings, "DEBUG", False):
+        if getattr(settings, "DEBUG", False) and DEV_PASSWORD:
             dev_hashed_pw = generate_password_hash(DEV_PASSWORD)
             try:
                 with connection.cursor() as c:

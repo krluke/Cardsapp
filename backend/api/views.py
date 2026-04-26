@@ -1,5 +1,5 @@
 import os
-import random
+import secrets
 import smtplib
 import math
 import json
@@ -248,7 +248,7 @@ def send_code(request):
             status=429,
         )
 
-    code = str(random.randint(100000, 999999))
+    code = str(secrets.randbelow(900000) + 100000)
 
     with connection.cursor() as c:
         c.execute(
@@ -458,6 +458,12 @@ def get_folders(request):
         if tab == "global-folders" and not search_query:
             order_by = "is_favorite DESC, f.id DESC"
 
+        order_by_whitelist = {
+            "f.id DESC": "f.id DESC",
+            "is_favorite DESC, f.id DESC": "is_favorite DESC, f.id DESC",
+        }
+        safe_order_by = order_by_whitelist.get(order_by, "f.id DESC")
+
         if tab == "my-folders":
             fetch_sql = f"""
                 SELECT f.id, f.title, f.visibility, f.likes,
@@ -465,7 +471,7 @@ def get_folders(request):
                        (SELECT COUNT(*) FROM cards WHERE folder_id = f.id) as card_count
                 FROM folders f
                 {base_where}
-                ORDER BY {order_by}
+                ORDER BY {safe_order_by}
                 LIMIT %s OFFSET %s
             """
             final_params = params + [limit, offset]
@@ -480,7 +486,7 @@ def get_folders(request):
                 FROM folders f
                 LEFT JOIN users u ON f.user_email = u.email OR f.user_email = u.username
                 {base_where}
-                ORDER BY {order_by}
+                ORDER BY {safe_order_by}
                 LIMIT %s OFFSET %s
             """
             final_params = [user_email, user_email] + params + [limit, offset]
@@ -600,26 +606,41 @@ def toggle_action(request):
     folder_id = data.get("folderId")
     action = data.get("action")
 
-    if not user_email or not folder_id:
+    if not user_email or not folder_id or action not in ("like", "favorite"):
         return JsonResponse({"message": "Invalid request"}, status=400)
 
-    table = "folder_likes" if action == "like" else "folder_favorites"
-
-    with connection.cursor() as c:
-        c.execute(
-            f"SELECT 1 FROM {table} WHERE user_email = %s AND folder_id = %s",
-            (user_email, folder_id),
-        )
-        if dictfetchone(c):
+    if action == "like":
+        with connection.cursor() as c:
             c.execute(
-                f"DELETE FROM {table} WHERE user_email = %s AND folder_id = %s",
+                "SELECT 1 FROM folder_likes WHERE user_email = %s AND folder_id = %s",
                 (user_email, folder_id),
             )
-        else:
+            if dictfetchone(c):
+                c.execute(
+                    "DELETE FROM folder_likes WHERE user_email = %s AND folder_id = %s",
+                    (user_email, folder_id),
+                )
+            else:
+                c.execute(
+                    "INSERT INTO folder_likes (user_email, folder_id) VALUES (%s, %s)",
+                    (user_email, folder_id),
+                )
+    else:
+        with connection.cursor() as c:
             c.execute(
-                f"INSERT INTO {table} (user_email, folder_id) VALUES (%s, %s)",
+                "SELECT 1 FROM folder_favorites WHERE user_email = %s AND folder_id = %s",
                 (user_email, folder_id),
             )
+            if dictfetchone(c):
+                c.execute(
+                    "DELETE FROM folder_favorites WHERE user_email = %s AND folder_id = %s",
+                    (user_email, folder_id),
+                )
+            else:
+                c.execute(
+                    "INSERT INTO folder_favorites (user_email, folder_id) VALUES (%s, %s)",
+                    (user_email, folder_id),
+                )
 
     return JsonResponse({"message": "Success"})
 
