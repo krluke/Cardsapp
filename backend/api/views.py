@@ -1040,6 +1040,7 @@ def delete_card(request):
     if not card_id:
         return JsonResponse({"message": "カードIDが必要です"}, status=400)
 
+    try:
         with connection.cursor() as c:
             c.execute(
                 """
