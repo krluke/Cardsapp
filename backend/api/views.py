@@ -19,6 +19,12 @@ from bleach.css_sanitizer import CSSSanitizer
 
 from api.rate_limiter import rate_limiter
 from api.csrf import csrf_protector
+from api.jwt_utils import (
+    generate_jwt_token,
+    jwt_required,
+    get_user_from_token,
+    refresh_jwt_token,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -101,7 +107,8 @@ def get_user_email_from_login_id(login_id):
 
 # ==========================================
 # AUTH ENDPOINTS
-# ========================================== 
+# ==========================================
+
 
 @csrf_exempt
 @require_http_methods(["POST"])
@@ -140,12 +147,14 @@ def login(request):
         rate_limiter.record_login_success(client_ip, is_ip=True)
         rate_limiter.record_login_success(login_id, is_ip=False)
         csrf_token = csrf_protector.generate_token(user["email"])
+        jwt_token = generate_jwt_token(user["id"], user["email"])
         return JsonResponse(
             {
                 "message": "ログイン成功！",
                 "username": user["username"],
                 "email": user["email"],
                 "csrfToken": csrf_token,
+                "token": jwt_token,
             }
         )
 
@@ -162,6 +171,26 @@ def login(request):
         )
 
     return JsonResponse({"message": "IDまたはパスワードが間違っています"}, status=401)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def refresh_token(request):
+    """Refresh JWT token"""
+    new_token = refresh_jwt_token(request)
+    if not new_token:
+        return JsonResponse(
+            {"message": "Invalid or expired token"}, status=401
+        )
+    return JsonResponse({"token": new_token})
+
+
+@csrf_exempt
+@jwt_required
+@require_http_methods(["POST"])
+def logout(request):
+    """Logout endpoint (client should clear the token)"""
+    return JsonResponse({"message": "Logged out successfully"})
 
 
 @csrf_exempt
@@ -274,16 +303,18 @@ def send_code(request):
 # ==========================================
 
 
+@csrf_exempt
+@jwt_required
 @require_http_methods(["POST"])
 def change_password(request):
     import json as json_mod
 
     data = json_mod.loads(request.body)
-    user_email = data.get("userEmail")
     current_password = data.get("currentPassword")
     new_password = data.get("newPassword")
+    user_email = request.user_email
 
-    if not user_email or not current_password or not new_password:
+    if not current_password or not new_password:
         return JsonResponse({"error": "入力情報が不足しています"}, status=400)
 
     try:
@@ -309,17 +340,9 @@ def change_password(request):
 
 
 @xframe_options_exempt
+@jwt_required
 def get_user_stats(request):
-    user_email = request.GET.get("email")
-    auth_email = request.GET.get("authEmail", "")
-
-    if not user_email:
-        return JsonResponse({"error": "Email missing"}, status=400)
-
-    if user_email != auth_email:
-        return JsonResponse(
-            {"error": "この情報にアクセスする権限がありません"}, status=403
-        )
+    user_email = request.user_email
 
     try:
         with connection.cursor() as c:
@@ -368,17 +391,16 @@ def get_user_stats(request):
 # ==========================================
 
 
+@csrf_exempt
+@jwt_required
 @require_http_methods(["POST"])
 def create_folder(request):
     import json as json_mod
 
     data = json_mod.loads(request.body)
-    user_email = data.get("userEmail")
+    user_email = request.user_email
     raw_title = data.get("title", "無題のフォルダ")
     title = bleach.clean(raw_title, tags=[], strip=True)
-
-    if not user_email:
-        return JsonResponse({"message": "ユーザー情報が必要です"}, status=400)
 
     with connection.cursor() as c:
         c.execute(
@@ -400,10 +422,9 @@ def create_folder(request):
 
 
 @xframe_options_exempt
+@jwt_required
 def list_folders(request):
-    user_email = request.GET.get("userEmail")
-    if not user_email:
-        return JsonResponse({"message": "ユーザー情報が必要です"}, status=400)
+    user_email = request.user_email
 
     try:
         with connection.cursor() as c:
@@ -419,17 +440,16 @@ def list_folders(request):
 
 
 @xframe_options_exempt
+@jwt_required
 def get_folders(request):
     try:
         tab = request.GET.get("tab", "my-folders")
         search_query = request.GET.get("q", "")
         page = int(request.GET.get("page", 1))
-        login_id = request.GET.get("userEmail", "")
+        user_email = request.user_email
 
         limit = 12
         offset = (page - 1) * limit
-
-        user_email = get_user_email_from_login_id(login_id)
 
         base_where = "WHERE 1=1"
         params = []
@@ -523,20 +543,20 @@ def list_global_folders(request):
         return JsonResponse({"message": "公開データの取得に失敗しました"}, status=500)
 
 
+@csrf_exempt
+@jwt_required
 @require_http_methods(["POST"])
 def update_folder(request):
     import json as json_mod
 
     data = json_mod.loads(request.body)
-    login_id = data.get("userEmail")
     folder_id = data.get("folderId")
     raw_title = data.get("title")
     title = bleach.clean(raw_title, tags=[], strip=True) if raw_title else None
+    user_email = request.user_email
 
-    if not login_id or not folder_id:
-        return JsonResponse({"message": "ユーザー情報が必要です"}, status=400)
-
-    user_email = get_user_email_from_login_id(login_id)
+    if not folder_id:
+        return JsonResponse({"message": "フォルダIDが必要です"}, status=400)
 
     with connection.cursor() as c:
         c.execute("SELECT user_email FROM folders WHERE id = %s", (folder_id,))
@@ -564,18 +584,18 @@ def update_folder(request):
     return JsonResponse({"message": "Success"})
 
 
+@csrf_exempt
+@jwt_required
 @require_http_methods(["POST"])
 def delete_folder(request):
     import json as json_mod
 
     data = json_mod.loads(request.body)
-    login_id = data.get("userEmail")
     folder_id = data.get("folderId")
+    user_email = request.user_email
 
-    if not login_id or not folder_id:
-        return JsonResponse({"message": "ユーザー情報が必要です"}, status=400)
-
-    user_email = get_user_email_from_login_id(login_id)
+    if not folder_id:
+        return JsonResponse({"message": "フォルダIDが必要です"}, status=400)
 
     with connection.cursor() as c:
         c.execute("SELECT user_email FROM folders WHERE id = %s", (folder_id,))
@@ -590,16 +610,18 @@ def delete_folder(request):
     return JsonResponse({"message": "Deleted"})
 
 
+@csrf_exempt
+@jwt_required
 @require_http_methods(["POST"])
 def toggle_action(request):
     import json as json_mod
 
     data = json_mod.loads(request.body)
-    user_email = data.get("userEmail")
     folder_id = data.get("folderId")
     action = data.get("action")
+    user_email = request.user_email
 
-    if not user_email or not folder_id or action not in ("like", "favorite"):
+    if not folder_id or action not in ("like", "favorite"):
         return JsonResponse({"message": "Invalid request"}, status=400)
 
     if action == "like":
@@ -644,13 +666,12 @@ def toggle_action(request):
 
 
 @xframe_options_exempt
+@jwt_required
 def global_search(request):
     query = request.GET.get("q", "")
-    user_email = request.GET.get("userEmail", "")
+    user_email = request.user_email
     if not query:
         return JsonResponse({"results": []})
-
-    user_email = get_user_email_from_login_id(user_email)
     search_term = f"%{query}%"
 
     try:
@@ -679,14 +700,14 @@ def global_search(request):
 # ==========================================
 
 
+@csrf_exempt
+@jwt_required
 @require_http_methods(["GET"])
 def export_folder(request):
     folder_id = request.GET.get("folderId")
-    user_email = request.GET.get("userEmail")
-    if not folder_id or not user_email:
-        return JsonResponse({"error": "Missing parameters"}, status=400)
-
-    user_email = get_user_email_from_login_id(user_email)
+    user_email = request.user_email
+    if not folder_id:
+        return JsonResponse({"error": "Missing folderId"}, status=400)
 
     try:
         with connection.cursor() as c:
@@ -715,18 +736,18 @@ def export_folder(request):
         return JsonResponse({"error": "Export failed"}, status=500)
 
 
+@csrf_exempt
+@jwt_required
 @require_http_methods(["POST"])
 def import_folder(request):
     import json as json_mod
 
     data = json_mod.loads(request.body)
     folder_data = data.get("folderData")
-    user_email = data.get("userEmail")
+    user_email = request.user_email
 
-    if not folder_data or not user_email:
-        return JsonResponse({"error": "Missing data"}, status=400)
-
-    user_email = get_user_email_from_login_id(user_email)
+    if not folder_data:
+        return JsonResponse({"error": "Missing folderData"}, status=400)
 
     try:
         with connection.cursor() as c:
@@ -769,13 +790,12 @@ def import_folder(request):
 
 
 @xframe_options_exempt
+@jwt_required
 def get_study_cards(request):
-    user_email = request.GET.get("userEmail")
+    user_email = request.user_email
     folder_id = request.GET.get("folderId")
-    if not user_email or not folder_id:
-        return JsonResponse({"error": "Missing parameters"}, status=400)
-
-    user_email = get_user_email_from_login_id(user_email)
+    if not folder_id:
+        return JsonResponse({"error": "Missing folderId"}, status=400)
 
     try:
         with connection.cursor() as c:
@@ -800,6 +820,8 @@ def get_study_cards(request):
         return JsonResponse({"error": "Failed to fetch study cards"}, status=500)
 
 
+@csrf_exempt
+@jwt_required
 @require_http_methods(["POST"])
 def update_srs(request):
     import json as json_mod
@@ -807,12 +829,10 @@ def update_srs(request):
     data = json_mod.loads(request.body)
     card_id = data.get("cardId")
     quality = data.get("quality")  # 0-5
-    user_email = data.get("userEmail")
+    user_email = request.user_email
 
-    if card_id is None or quality is None or not user_email:
+    if card_id is None or quality is None:
         return JsonResponse({"error": "Missing parameters"}, status=400)
-
-    user_email = get_user_email_from_login_id(user_email)
 
     try:
         with connection.cursor() as c:
@@ -864,6 +884,8 @@ def update_srs(request):
 # ==========================================
 
 
+@csrf_exempt
+@jwt_required
 @require_http_methods(["POST"])
 def upload_image(request):
     if not request.FILES.get("image"):
@@ -880,6 +902,8 @@ def upload_image(request):
         return JsonResponse({"error": "Upload failed"}, status=500)
 
 
+@csrf_exempt
+@jwt_required
 @require_http_methods(["POST"])
 def save_cards(request):
     import json as json_mod
@@ -888,16 +912,14 @@ def save_cards(request):
         data = json_mod.loads(request.body)
         folder_id = data.get("folderId")
         cards_data = data.get("cards")
-        login_id = data.get("userEmail")
+        user_email = request.user_email
 
         logger.error(
-            f"SAVE DEBUG - folder_id: {folder_id}, login_id: {login_id}, cards_count: {len(cards_data) if cards_data else 0}"
+            f"SAVE DEBUG - folder_id: {folder_id}, user_email: {user_email}, cards_count: {len(cards_data) if cards_data else 0}"
         )
 
-        if not login_id or not folder_id:
-            return JsonResponse({"message": "ユーザー情報が必要です"}, status=400)
-
-        user_email = get_user_email_from_login_id(login_id)
+        if not folder_id:
+            return JsonResponse({"message": "フォルダIDが必要です"}, status=400)
 
         with connection.cursor() as c:
             c.execute("SELECT user_email FROM folders WHERE id = %s", (folder_id,))
@@ -1005,20 +1027,20 @@ def load_cards(request, folder_id):
         return JsonResponse({"message": "データの読み込みに失敗しました"}, status=500)
 
 
+@csrf_exempt
+@jwt_required
 @require_http_methods(["POST"])
 def delete_card(request):
     import json as json_mod
 
     data = json_mod.loads(request.body)
     card_id = data.get("cardId")
-    login_id = data.get("userEmail")
+    user_email = request.user_email
 
-    if not card_id or not login_id:
-        return JsonResponse({"message": "パラメータが指定されていません"}, status=400)
+    if not card_id:
+        return JsonResponse({"message": "カードIDが必要です"}, status=400)
 
     try:
-        user_email = get_user_email_from_login_id(login_id)
-
         with connection.cursor() as c:
             c.execute(
                 """
@@ -1093,9 +1115,9 @@ def viewer(request, folder_id):
 
 
 @xframe_options_exempt
+@jwt_required
 def load_cards_fixed(request, folder_id):
-    login_id = request.GET.get("userEmail", "")
-    user_email = get_user_email_from_login_id(login_id) if login_id else ""
+    user_email = request.user_email
     try:
         with connection.cursor() as c:
             c.execute(
@@ -1171,11 +1193,13 @@ def get_public_cards(request):
             if "id" not in card:
                 card["id"] = idx + 1
 
-        return JsonResponse({
-            "cards": cards,
-            "totalPages": total_pages,
-            "currentPage": page,
-        })
+        return JsonResponse(
+            {
+                "cards": cards,
+                "totalPages": total_pages,
+                "currentPage": page,
+            }
+        )
     except Exception as e:
         logger.error(f"Get public cards error: {e}")
         return JsonResponse({"message": "Failed to load public cards"}, status=500)

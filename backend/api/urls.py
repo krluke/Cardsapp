@@ -6,6 +6,8 @@ urlpatterns = [
     path("login", views.login, name="login"),
     path("signup", views.signup, name="signup"),
     path("send-code", views.send_code, name="send_code"),
+    path("refresh-token", views.refresh_token, name="refresh_token"),
+    path("logout", views.logout, name="logout"),
     # User
     path("user/change-password", views.change_password, name="change_password"),
     path("user/stats", views.get_user_stats, name="user_stats"),
