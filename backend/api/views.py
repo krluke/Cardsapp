@@ -97,6 +97,7 @@ def get_user_email_from_login_id(login_id):
     """Resolve login_id (email or username) to actual email."""
     if not login_id:
         return login_id
+    login_id = str(login_id).strip()
     with connection.cursor() as c:
         c.execute(
             "SELECT email FROM users WHERE email = %s OR username = %s",
@@ -134,7 +135,7 @@ def login(request):
     import json as json_mod
 
     data = json_mod.loads(request.body)
-    login_id = data.get("id")
+    login_id = (data.get("id") or "").strip()
     raw_password = data.get("password")
 
     with connection.cursor() as c:
@@ -142,13 +143,20 @@ def login(request):
             "SELECT * FROM users WHERE email = %s OR username = %s",
             (login_id, login_id),
         )
-        user = dictfetchone(c)
+        users = dictfetchall(c)
 
-    if user and check_password_hash(user["password"], raw_password):
+    user = None
+    for candidate in users:
+        if check_password_hash(candidate.get("password", ""), raw_password):
+            user = candidate
+            break
+
+    if user:
         rate_limiter.record_login_success(client_ip, is_ip=True)
         rate_limiter.record_login_success(login_id, is_ip=False)
         csrf_token = csrf_protector.generate_token(user["email"])
-        jwt_token = generate_jwt_token(user["id"], user["email"])
+        jwt_user_id = user.get("id") or user.get("email")
+        jwt_token = generate_jwt_token(jwt_user_id, user["email"])
         return JsonResponse(
             {
                 "message": "ログイン成功！",
@@ -1037,6 +1045,40 @@ def load_cards(request, folder_id):
         return JsonResponse({"message": "データの読み込みに失敗しました"}, status=500)
 
 
+@xframe_options_exempt
+def load_cards_public(request, folder_id):
+    """Public read-only loader for public folders only."""
+    try:
+        with connection.cursor() as c:
+            c.execute("SELECT visibility FROM folders WHERE id = %s", (folder_id,))
+            folder = dictfetchone(c)
+            if not folder:
+                return JsonResponse({"message": "Folder not found"}, status=404)
+            if folder["visibility"] != "public":
+                return JsonResponse({"message": "Access denied"}, status=403)
+
+            c.execute(
+                """
+                SELECT c.id,
+                       c.front_content as front,
+                       c.back_content as back,
+                       c.front_bg as frontBg,
+                       c.back_bg as backBg,
+                       c.tags as tags
+                FROM cards c
+                WHERE c.folder_id = %s
+                ORDER BY c.order_index
+                """,
+                (folder_id,),
+            )
+            cards = dictfetchall(c)
+
+        return JsonResponse(cards, safe=False)
+    except Exception as e:
+        logger.error(f"load_cards_public error: {e}")
+        return JsonResponse({"message": "Failed to load cards"}, status=500)
+
+
 @csrf_exempt
 @jwt_required
 @require_http_methods(["POST"])
@@ -1141,13 +1183,20 @@ def load_cards_fixed(request, folder_id):
                 return JsonResponse({"message": "Access denied"}, status=403)
 
             c.execute(
-                "SELECT c.id, c.front_content as front, c.back_content as back, c.front_bg as frontBg, c.back_bg as backBg FROM cards c WHERE c.folder_id = %s",
+                """
+                SELECT c.id,
+                       c.front_content as front,
+                       c.back_content as back,
+                       c.front_bg as frontBg,
+                       c.back_bg as backBg,
+                       c.tags as tags
+                FROM cards c
+                WHERE c.folder_id = %s
+                ORDER BY c.order_index
+                """,
                 (folder_id,),
             )
             cards = dictfetchall(c)
-        for idx, card in enumerate(cards):
-            if "id" not in card:
-                card["id"] = idx + 1
         return JsonResponse(cards, safe=False)
     except Exception as e:
         logger.error(f"Load cards error: {e}")

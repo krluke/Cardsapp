@@ -23,17 +23,23 @@ export default function ViewerPage() {
 
   const loadData = async () => {
     try {
-      const login_id = JSON.parse(localStorage.getItem('session') || '{}').user?.email || ''
-      console.log('ViewerPage loadData:', { folderId, login_id })
-      const cardsRes = await fetch(`${API_BASE}/cards/load/${folderId}?userEmail=${login_id}`)
+      const session = JSON.parse(localStorage.getItem('session') || '{}')
+      const jwtToken = session.token || ''
+
+      const cardsRes = await fetch(`${API_BASE}/cards/load/${folderId}`)
       const cardsData = await cardsRes.json()
-      console.log('cardsRes:', cardsRes.status, cardsData)
       setCards(Array.isArray(cardsData) ? cardsData : [])
       
-      const folderRes = await fetch(`${API_BASE}/folders?tab=my-folders&userEmail=${login_id}`)
-      const folderData = await folderRes.json()
-      const currentFolder = folderData.folders?.find(f => f.id === parseInt(folderId))
-      setFolder(currentFolder)
+      if (jwtToken) {
+        const folderRes = await fetch(`${API_BASE}/folders?tab=my-folders`, {
+          headers: { 'Authorization': `Bearer ${jwtToken}` },
+        })
+        const folderData = await folderRes.json()
+        const currentFolder = folderData.folders?.find(f => f.id === parseInt(folderId))
+        setFolder(currentFolder || null)
+      } else {
+        setFolder(null)
+      }
     } catch (e) {
       console.error(e)
     } finally {

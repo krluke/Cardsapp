@@ -30,7 +30,10 @@ urlpatterns = [
     # Cards
     path("cards/upload", views.upload_image, name="upload_image"),
     path("cards/save", views.save_cards, name="save_cards"),
-    path("cards/load/<int:folder_id>", views.load_cards_fixed, name="load_cards"),
+    # Public read-only load (public folders only)
+    path("cards/load/<int:folder_id>", views.load_cards_public, name="load_cards_public"),
+    # Authenticated load (private + public, with access checks)
+    path("cards/load-auth/<int:folder_id>", views.load_cards_fixed, name="load_cards_auth"),
     path("cards/public", views.get_public_cards, name="get_public_cards"),
     path("cards/delete", views.delete_card, name="delete_card"),
     # Editor/Viewer pages

@@ -8,6 +8,11 @@ export function AddToFolderModal({ card, userEmail, onClose, onSuccess }) {
   const [loading, setLoading] = useState(true)
   const [lang, setLang] = useState('ja')
 
+  const getJwtToken = () => {
+    const session = JSON.parse(localStorage.getItem('session') || '{}')
+    return session.token || ''
+  }
+
   useEffect(() => {
     setLang(localStorage.getItem('app-lang') || 'ja')
     loadPrivateFolders()
@@ -15,7 +20,10 @@ export function AddToFolderModal({ card, userEmail, onClose, onSuccess }) {
 
   const loadPrivateFolders = async () => {
     try {
-      const res = await fetch(`${API_BASE}/folders?tab=my-folders&userEmail=${userEmail}`)
+      const jwtToken = getJwtToken()
+      const res = await fetch(`${API_BASE}/folders?tab=my-folders&userEmail=${userEmail}`, {
+        headers: jwtToken ? { 'Authorization': `Bearer ${jwtToken}` } : {},
+      })
       const data = await res.json()
       if (data.folders) {
         setFolders(data.folders.filter(f => f.visibility === 'private'))
@@ -49,7 +57,10 @@ export function AddToFolderModal({ card, userEmail, onClose, onSuccess }) {
 
   const addCardToFolder = async (folderId) => {
     try {
-      const res = await fetch(`${API_BASE}/cards/load/${folderId}?userEmail=${userEmail}`)
+      const jwtToken = getJwtToken()
+      const res = await fetch(`${API_BASE}/cards/load-auth/${folderId}`, {
+        headers: jwtToken ? { 'Authorization': `Bearer ${jwtToken}` } : {},
+      })
       const existingCards = await res.json()
       
       const newCard = {
@@ -63,7 +74,10 @@ export function AddToFolderModal({ card, userEmail, onClose, onSuccess }) {
       
       const saveRes = await fetch(`${API_BASE}/cards/save`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(jwtToken ? { 'Authorization': `Bearer ${jwtToken}` } : {}),
+        },
         body: JSON.stringify({
           folderId,
           cards: updatedCards,

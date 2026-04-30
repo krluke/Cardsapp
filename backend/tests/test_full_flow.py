@@ -48,6 +48,17 @@ class FullFlowTest(TestCase):
         login_json = login_resp.json()
         self.assertIn("csrfToken", login_json)
         csrf_token = login_json["csrfToken"]
+        jwt_token = login_json.get("token")
+        self.assertTrue(jwt_token)
+        auth_headers = {"HTTP_AUTHORIZATION": f"Bearer {jwt_token}"}
+
+        # Username login should work too
+        login_username_resp = self.client.post(
+            "/api/login",
+            json.dumps({"id": self.username, "password": self.password}),
+            content_type="application/json",
+        )
+        self.assertEqual(login_username_resp.status_code, 200)
 
         # -----------------------------------------------------------------
         # 2) Change password – using the token we just received
@@ -64,6 +75,7 @@ class FullFlowTest(TestCase):
                 }
             ),
             content_type="application/json",
+            **auth_headers,
         )
         self.assertEqual(change_resp.status_code, 200)
 
@@ -82,6 +94,7 @@ class FullFlowTest(TestCase):
             "/api/folders/create",
             json.dumps({"userEmail": self.email, "title": "Second Folder"}),
             content_type="application/json",
+            **auth_headers,
         )
         self.assertEqual(create_folder_resp.status_code, 200)
         second_folder_id = create_folder_resp.json()["folderId"]
@@ -107,6 +120,7 @@ class FullFlowTest(TestCase):
                 }
             ),
             content_type="application/json",
+            **auth_headers,
         )
         self.assertEqual(update_resp.status_code, 200)
 
@@ -115,6 +129,7 @@ class FullFlowTest(TestCase):
             "/api/folders/delete",
             json.dumps({"userEmail": self.email, "folderId": self.folder_id}),
             content_type="application/json",
+            **auth_headers,
         )
         self.assertEqual(delete_resp.status_code, 200)
 
@@ -145,6 +160,7 @@ class FullFlowTest(TestCase):
                 }
             ),
             content_type="application/json",
+            **auth_headers,
         )
         self.assertEqual(save_resp.status_code, 200)
 
@@ -162,6 +178,7 @@ class FullFlowTest(TestCase):
             "/api/cards/delete",
             json.dumps({"cardId": card_id_to_delete, "userEmail": self.email}),
             content_type="application/json",
+            **auth_headers,
         )
         self.assertEqual(del_resp.status_code, 200)
         # Verify card count reduced
@@ -183,6 +200,7 @@ class FullFlowTest(TestCase):
                 }
             ),
             content_type="application/json",
+            **auth_headers,
         )
         self.assertEqual(toggle_like.status_code, 200)
         # Toggle again should remove the like
@@ -196,6 +214,7 @@ class FullFlowTest(TestCase):
                 }
             ),
             content_type="application/json",
+            **auth_headers,
         )
         self.assertEqual(toggle_like2.status_code, 200)
 
@@ -210,6 +229,7 @@ class FullFlowTest(TestCase):
                 }
             ),
             content_type="application/json",
+            **auth_headers,
         )
         self.assertEqual(fav_resp.status_code, 200)
 

@@ -379,10 +379,14 @@ export default function EditorPage() {
   }, [state.selectedElement]);
 
   const getCsrfToken = () => session.csrfToken || '';
+  const getJwtToken = () => session.token || '';
 
   const loadData = async () => {
     try {
-      const res = await fetch(`${API_BASE}/cards/load/${folderId}?userEmail=${user.email || user.id}`);
+      const jwtToken = getJwtToken();
+      const res = await fetch(`${API_BASE}/cards/load-auth/${folderId}`, {
+        headers: jwtToken ? { 'Authorization': `Bearer ${jwtToken}` } : {},
+      });
       const data = await res.json();
       if (Array.isArray(data) && data.length > 0) {
         const parsedCards = data.map(card => ({
@@ -546,7 +550,10 @@ const addText = (x = 30, y = 40) => {
     try {
       const res = await fetch(`${API_BASE}/cards/upload`, {
         method: 'POST',
-        headers: { 'X-CSRF-Token': getCsrfToken() },
+        headers: {
+          'X-CSRF-Token': getCsrfToken(),
+          ...(getJwtToken() ? { 'Authorization': `Bearer ${getJwtToken()}` } : {}),
+        },
         body: formData,
       });
       const data = await res.json();
@@ -618,8 +625,12 @@ const addText = (x = 30, y = 40) => {
       }));
       const res = await fetch(`${API_BASE}/cards/save`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': getCsrfToken() },
-        body: JSON.stringify({ folderId: parseInt(folderId), userEmail: user.email || user.id, cards: serializedCards })
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': getCsrfToken(),
+          ...(getJwtToken() ? { 'Authorization': `Bearer ${getJwtToken()}` } : {}),
+        },
+        body: JSON.stringify({ folderId: parseInt(folderId), userEmail: user.email || user.id, cards: serializedCards }),
       });
     } catch (e) { console.error('Save error:', e); }
     finally { dispatch({ type: 'SET_SAVING', payload: false }); }

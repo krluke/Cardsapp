@@ -26,13 +26,16 @@ export default function StudyPage() {
 
   const session = JSON.parse(localStorage.getItem('session') || '{}');
   const user = session.user;
+  const jwtToken = session.token || '';
 
   const loadCards = useCallback(async (mode, shuffle = false) => {
     try {
       const url = mode === 'all' 
-        ? `${API_BASE}/cards/load/${folderId}?userEmail=${user.email || user.id}`
-        : `${API_BASE}/study/cards?userEmail=${user.email || user.id}&folderId=${folderId}`;
-      const res = await fetch(url);
+        ? `${API_BASE}/cards/load-auth/${folderId}`
+        : `${API_BASE}/study/cards?folderId=${folderId}`;
+      const res = await fetch(url, {
+        headers: jwtToken ? { 'Authorization': `Bearer ${jwtToken}` } : {},
+      });
       let data = await res.json();
       
       // Handle error responses
@@ -106,7 +109,11 @@ export default function StudyPage() {
       try {
         await fetch(`${API_BASE}/study/update`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': session.csrfToken || '' },
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': session.csrfToken || '',
+            ...(jwtToken ? { 'Authorization': `Bearer ${jwtToken}` } : {}),
+          },
           body: JSON.stringify({ cardId: card.id, quality, userEmail: user.email || user.id }),
         });
       } catch (e) { console.error(e); }
