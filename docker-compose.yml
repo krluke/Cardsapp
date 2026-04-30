@@ -5,16 +5,17 @@ services:
     container_name: my-mariadb-db
     restart: always
     environment:
-      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+      # Accept both legacy MYSQL_* and new MARIADB_* env vars.
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:-${MYSQL_ROOT_PASSWORD}}
       MARIADB_DATABASE: flashcards_db
       MARIADB_USER: flashcard_user
-      MARIADB_PASSWORD: ${MARIADB_PASSWORD}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD:-${MYSQL_PASSWORD}}
     ports:
       - "3306:3306"
     volumes:
       - ./db_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mariadb-admin", "ping", "-h", "localhost", "-u", "flashcard_user", "-p${MARIADB_PASSWORD}"]
+      test: ["CMD", "mariadb-admin", "ping", "-h", "localhost", "-u", "flashcard_user", "-p${MARIADB_PASSWORD:-${MYSQL_PASSWORD}}"]
       interval: 5s
       timeout: 5s
       retries: 20
@@ -32,7 +33,7 @@ services:
     environment:
       - DB_HOST=${DB_HOST:-db}
       - DB_USER=flashcard_user
-      - DB_PASSWORD=${MARIADB_PASSWORD}
+      - DB_PASSWORD=${MARIADB_PASSWORD:-${MYSQL_PASSWORD}}
       - DB_NAME=${DB_NAME:-flashcards_db}
       - GMAIL_USER=${GMAIL_USER}
       - GMAIL_PASS=${GMAIL_PASS}
