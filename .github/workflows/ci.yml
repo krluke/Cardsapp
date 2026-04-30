@@ -54,10 +54,9 @@ jobs:
       - name: Restart Docker Containers
         run: |
           cd ~/server-project
-          docker-compose down --remove-orphans
-          # Only prune if you're consistently hitting storage limits
-          # docker buildx prune -f 
-          docker-compose up -d --build --force-recreate
+    docker-compose down --remove-orphans
+    docker buildx prune -f
+    docker-compose up -d --build --force-recreate
 
       - name: Collect Static Files
         run: |
