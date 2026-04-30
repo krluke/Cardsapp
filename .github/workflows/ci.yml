@@ -16,28 +16,28 @@ jobs:
       run:
         working-directory: ./backend
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4 # Updated to v4
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5 # Updated to v5
-        with:
-          python-version: "3.10"
-          cache: 'pip' # Speeds up subsequent runs
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.10"
+        cache: 'pip'
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install flake8 pytest
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install flake8 pytest
 
-      - name: Lint with Flake8
-        run: |
-          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+    - name: Lint with Flake8
+      run: |
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
 
-      - name: Run Tests
-        run: |
-          pytest || echo "No tests found, skipping"
+    - name: Run Tests
+      run: |
+        pytest || echo "No tests found, skipping"
 
   deploy:
     needs: build-and-test
@@ -45,21 +45,20 @@ jobs:
     runs-on: self-hosted
 
     steps:
-      - name: Update local code
-        run: |
-          cd ~/server-project
-          git fetch origin
-          git reset --hard origin/main
+    - name: Update local code
+      run: |
+        cd ~/server-project
+        git fetch origin
+        git reset --hard origin/main
 
-      - name: Restart Docker Containers
-        run: |
-          cd ~/server-project
-    docker-compose down --remove-orphans
-    docker buildx prune -f
-    docker-compose up -d --build --force-recreate
+    - name: Restart Docker Containers
+      run: |
+        cd ~/server-project
+        docker-compose down --remove-orphans
+        docker buildx prune -f
+        docker-compose up -d --build --force-recreate
 
-      - name: Collect Static Files
-        run: |
-          cd ~/server-project
-          # Execute directly inside the running container
-          docker-compose exec -T backend python manage.py collectstatic --noinput
+    - name: Collect Static Files
+      run: |
+        cd ~/server-project
+        docker-compose exec -T backend python manage.py collectstatic --noinput
