@@ -24,6 +24,7 @@ from api.jwt_utils import (
     jwt_required,
     get_user_from_token,
     refresh_jwt_token,
+    verify_jwt_token,
 )
 
 logger = logging.getLogger(__name__)
@@ -438,13 +439,24 @@ def list_folders(request):
 
 
 @xframe_options_exempt
-@jwt_required
 def get_folders(request):
     try:
         tab = request.GET.get("tab", "my-folders")
         search_query = request.GET.get("q", "")
         page = int(request.GET.get("page", 1))
-        user_email = request.user_email
+
+        auth_header = request.headers.get("Authorization", "")
+        if auth_header.startswith("Bearer "):
+            token = auth_header[7:]
+            payload = verify_jwt_token(token)
+            user_email = payload["email"] if payload else None
+        else:
+            user_email = None
+
+        if tab == "my-folders" and not user_email:
+            return JsonResponse(
+                {"folders": [], "totalPages": 1, "currentPage": 1}
+            )
 
         limit = 12
         offset = (page - 1) * limit
@@ -503,7 +515,7 @@ def get_folders(request):
                 ORDER BY {safe_order_by}
                 LIMIT %s OFFSET %s
             """
-            final_params = [user_email, user_email] + params + [limit, offset]
+            final_params = [user_email or '', user_email or ''] + params + [limit, offset]
 
         with connection.cursor() as c:
             c.execute(fetch_sql, tuple(final_params))

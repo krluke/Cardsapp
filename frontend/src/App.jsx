@@ -220,6 +220,11 @@ function HomePage() {
     return session.csrfToken || ''
   }
 
+  const getJwtToken = () => {
+    const session = JSON.parse(localStorage.getItem('session') || '{}')
+    return session.token || ''
+  }
+
 const loadFolders = async () => {
     if (activeTab === 'my-folders' && !user) {
       setFolders([])
@@ -232,8 +237,11 @@ const loadFolders = async () => {
       tab: activeTab,
       userEmail: user?.email || user?.id || ''
     })
+    const jwtToken = getJwtToken()
     try {
-      const res = await fetch(`${API_BASE}${endpoint}?${params}`)
+      const res = await fetch(`${API_BASE}${endpoint}?${params}`, {
+        headers: jwtToken ? { 'Authorization': `Bearer ${jwtToken}` } : {},
+      })
       const data = await res.json()
       if (data.folders !== undefined) {
         setFolders(data.folders || [])
@@ -298,6 +306,7 @@ const loadFolders = async () => {
       const session = {
         user: { id: data.email, username: data.username, email: data.email },
         csrfToken: data.csrfToken,
+        token: data.token,
       }
       localStorage.setItem('session', JSON.stringify(session))
       setUser(session.user)
