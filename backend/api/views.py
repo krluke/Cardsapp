@@ -179,9 +179,7 @@ def refresh_token(request):
     """Refresh JWT token"""
     new_token = refresh_jwt_token(request)
     if not new_token:
-        return JsonResponse(
-            {"message": "Invalid or expired token"}, status=401
-        )
+        return JsonResponse({"message": "Invalid or expired token"}, status=401)
     return JsonResponse({"token": new_token})
 
 
