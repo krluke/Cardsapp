@@ -27,11 +27,16 @@ class RateLimiter:
             now = time.time()
             self._ip_requests = self._clean_expired(self._ip_requests, window)
             if ip not in self._ip_requests:
-                self._ip_requests[ip] = {"count": 0, "last": now}
+                self._ip_requests[ip] = {"count": 0, "first": now, "last": now}
+            elif now - self._ip_requests[ip].get("first", now) >= window:
+                self._ip_requests[ip] = {"count": 0, "first": now, "last": now}
             self._ip_requests[ip]["count"] += 1
             self._ip_requests[ip]["last"] = now
             if self._ip_requests[ip]["count"] > max_requests:
-                return False, max_requests - self._ip_requests[ip]["count"]
+                retry_after = int(
+                    max(0, window - (now - self._ip_requests[ip].get("first", now)))
+                )
+                return False, retry_after
         return True, 0
 
     def check_email_rate_limit(self, email, max_requests=3, window=300):
@@ -39,11 +44,18 @@ class RateLimiter:
             now = time.time()
             self._email_requests = self._clean_expired(self._email_requests, window)
             if email not in self._email_requests:
-                self._email_requests[email] = {"count": 0, "last": now}
+                self._email_requests[email] = {"count": 0, "first": now, "last": now}
+            elif now - self._email_requests[email].get("first", now) >= window:
+                self._email_requests[email] = {"count": 0, "first": now, "last": now}
             self._email_requests[email]["count"] += 1
             self._email_requests[email]["last"] = now
             if self._email_requests[email]["count"] > max_requests:
-                retry_after = int(window - (now - self._email_requests[email]["last"]))
+                retry_after = int(
+                    max(
+                        0,
+                        window - (now - self._email_requests[email].get("first", now)),
+                    )
+                )
                 return False, retry_after
         return True, 0
 

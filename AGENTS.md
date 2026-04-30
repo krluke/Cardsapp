@@ -24,8 +24,8 @@ docker-compose down
 # View backend logs
 docker-compose logs -f backend
 
-# Access MySQL database
-docker exec -it my-mysql-db mysql -u flashcard_user -pflashcards_db
+# Access MariaDB database
+docker exec -it my-mariadb-db mariadb -u flashcard_user -pflashcards_db
 ```
 
 ### Backend

@@ -1,5 +1,4 @@
 import jwt
-import os
 from datetime import datetime, timedelta, timezone
 from django.conf import settings
 from django.http import JsonResponse
@@ -14,16 +13,14 @@ def generate_jwt_token(user_id, email):
         "iat": datetime.now(timezone.utc),
     }
 
-    secret_key = os.getenv("JWT_SECRET_KEY", "your-secret-key-change-this")
-    token = jwt.encode(payload, secret_key, algorithm="HS256")
+    token = jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm="HS256")
     return token
 
 
 def verify_jwt_token(token):
     """Verify JWT token and return payload if valid"""
     try:
-        secret_key = os.getenv("JWT_SECRET_KEY", "your-secret-key-change-this")
-        payload = jwt.decode(token, secret_key, algorithms=["HS256"])
+        payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=["HS256"])
         return payload
     except jwt.ExpiredSignatureError:
         return None

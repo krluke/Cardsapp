@@ -14,6 +14,14 @@ if not SECRET_KEY:
 
 DEBUG = os.environ.get("DEBUG", "False") == "True"
 
+JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY")
+if not JWT_SECRET_KEY:
+    if DEBUG or os.environ.get("RUNNING_IN_DOCKER") or "test" in sys.argv:
+        # Dev/test fallback to avoid hard-coded secrets in code.
+        JWT_SECRET_KEY = SECRET_KEY
+    else:
+        raise ValueError("JWT_SECRET_KEY environment variable must be set")
+
 
 ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "").split(",")
 if not ALLOWED_HOSTS or ALLOWED_HOSTS == [""]:

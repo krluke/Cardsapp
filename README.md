@@ -37,8 +37,8 @@ Edit `.env` with your desired values. The following variables are required:
 
 | Variable | Description |
 |----------|-------------|
-| `MYSQL_ROOT_PASSWORD` | Password for MySQL root user |
-| `MYSQL_PASSWORD` | Password for the flashcard_user |
+| `MARIADB_ROOT_PASSWORD` | Password for MariaDB root user |
+| `MARIADB_PASSWORD` | Password for the `flashcard_user` |
 | `GMAIL_USER` | Gmail address for sending emails |
 | `GMAIL_PASS` | App password for Gmail |
 | `ADMIN_API_KEY` | Secret key for admin API |

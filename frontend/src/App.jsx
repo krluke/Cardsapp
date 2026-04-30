@@ -361,9 +361,14 @@ const createNewFolder = async () => {
     if (!userEmail) return
 
     try {
+      const jwtToken = getJwtToken()
       const res = await fetch(`${API_BASE}/folders/create`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': getCsrfToken() },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': getCsrfToken(),
+          ...(jwtToken ? { 'Authorization': `Bearer ${jwtToken}` } : {}),
+        },
         body: JSON.stringify({ userEmail, title }),
       })
       const data = await res.json()
@@ -400,9 +405,14 @@ const createNewFolder = async () => {
   const saveFolderSettings = async () => {
     if (!editingFolder || !user) return
     try {
+      const jwtToken = getJwtToken()
       const res = await fetch(`${API_BASE}/folders/update`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': getCsrfToken() },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': getCsrfToken(),
+          ...(jwtToken ? { 'Authorization': `Bearer ${jwtToken}` } : {}),
+        },
         body: JSON.stringify({
           folderId: editingFolder.id,
           title: editingFolder.title,
@@ -442,9 +452,14 @@ const createNewFolder = async () => {
       reader.onload = async (event) => {
         try {
           const folderData = JSON.parse(event.target.result);
+          const jwtToken = getJwtToken()
           const res = await fetch(`${API_BASE}/folders/import`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': getCsrfToken() },
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-Token': getCsrfToken(),
+              ...(jwtToken ? { 'Authorization': `Bearer ${jwtToken}` } : {}),
+            },
             body: JSON.stringify({ folderData, userEmail: user.email || user.id }),
           });
           if (res.ok) {
@@ -462,9 +477,14 @@ const createNewFolder = async () => {
     const confirmed = await showConfirm(t('confirm_delete_folder'), t('confirm_delete_folder'))
     if (!confirmed || !editingFolder || !user) return
     try {
+      const jwtToken = getJwtToken()
       const res = await fetch(`${API_BASE}/folders/delete`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': getCsrfToken() },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': getCsrfToken(),
+          ...(jwtToken ? { 'Authorization': `Bearer ${jwtToken}` } : {}),
+        },
         body: JSON.stringify({ folderId: editingFolder.id, userEmail: user.email || user.id }),
       })
       if (res.ok) {
