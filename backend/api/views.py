@@ -179,9 +179,7 @@ def refresh_token(request):
     """Refresh JWT token"""
     new_token = refresh_jwt_token(request)
     if not new_token:
-        return JsonResponse(
-            {"message": "Invalid or expired token"}, status=401
-        )
+        return JsonResponse({"message": "Invalid or expired token"}, status=401)
     return JsonResponse({"token": new_token})
 
 
@@ -1040,10 +1038,7 @@ def delete_card(request):
     if not card_id:
         return JsonResponse({"message": "カードIDが必要です"}, status=400)
 
-======= HEAD
-=======
     try:
->>>>>>> 7fc6496dea76aa8b74eff6f02fb13f55332cabe6
         with connection.cursor() as c:
             c.execute(
                 """
