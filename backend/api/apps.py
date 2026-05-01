@@ -14,6 +14,10 @@ class ApiConfig(AppConfig):
     name = "api"
 
     def ready(self):
+        # Skip database operations during build phase (collectstatic)
+        if os.environ.get("RUNNING_IN_DOCKER"):
+            return
+
         # Import and run the migration on startup
         from .management.commands.fix_srs_columns import Command
 
@@ -35,8 +39,8 @@ class ApiConfig(AppConfig):
                         INSERT INTO users (email, username, password)
                         VALUES (%s, %s, %s)
                         ON DUPLICATE KEY UPDATE
-                            username = VALUES(username),
-                            password = VALUES(password)
+                        username = VALUES(username),
+                        password = VALUES(password)
                         """,
                         (DEV_EMAIL, DEV_USERNAME, dev_hashed_pw),
                     )
