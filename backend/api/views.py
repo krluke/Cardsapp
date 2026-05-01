@@ -1138,7 +1138,9 @@ def admin_migrate_passwords(request):
         c.execute("SELECT email, password FROM users")
         users = dictfetchall(c)
         for user in users:
-            stored_hash = user["password"]
+            stored_hash = user.get("password")
+            if not stored_hash:
+                continue
             if stored_hash.startswith(("pbkdf2:sha256", "scrypt:", "bcrypt:")):
                 if check_password_hash(stored_hash, stored_hash):
                     new_hash = generate_password_hash(stored_hash)

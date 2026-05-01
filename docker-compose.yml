@@ -32,7 +32,7 @@ services:
       - .env
     environment:
       - DB_HOST=${DB_HOST:-db}
-      - DB_USER=flashcard_user
+      - DB_USER=${DB_USER:-flashcard_user}
       - DB_PASSWORD=${MARIADB_PASSWORD:-${MYSQL_PASSWORD}}
       - DB_NAME=${DB_NAME:-flashcards_db}
       - GMAIL_USER=${GMAIL_USER}

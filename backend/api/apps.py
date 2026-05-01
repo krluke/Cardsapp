@@ -5,9 +5,9 @@ from django.db import connection
 from werkzeug.security import generate_password_hash
 
 # Development account constants
-DEV_EMAIL = os.environ.get("DEV_EMAIL", "dev@cardsapp.local")
-DEV_USERNAME = os.environ.get("DEV_USERNAME", "dev")
-DEV_PASSWORD = os.environ.get("DEV_PASSWORD", "")
+DEV_EMAIL = os.environ.get("DEV_EMAIL") or "dev@cardsapp.local"
+DEV_USERNAME = os.environ.get("DEV_USERNAME") or "dev"
+DEV_PASSWORD = os.environ.get("DEV_PASSWORD") or ""
 
 
 class ApiConfig(AppConfig):
