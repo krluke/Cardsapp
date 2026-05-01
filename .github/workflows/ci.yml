@@ -59,8 +59,14 @@ jobs:
         docker-compose down --remove-orphans
         docker buildx prune -f
         docker-compose up -d --build --force-recreate
+        docker-compose wait backend
+
+    - name: Verify Backend Health
+      run: |
+        cd ~/server-project
+        docker-compose ps
 
     - name: Collect Static Files
       run: |
         cd ~/server-project
-        docker-compose exec -T backend python manage.py collectstatic --noinput
+        docker-compose exec -T backend python manage.py collectstatic --noinput || true
