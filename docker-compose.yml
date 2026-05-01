@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   # --- MySQL データベース ---
   db:
@@ -5,7 +7,6 @@ services:
     container_name: my-mariadb-db
     restart: always
     environment:
-      # Accept both legacy MYSQL_* and new MARIADB_* env vars.
       MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:-${MYSQL_ROOT_PASSWORD}}
       MARIADB_DATABASE: flashcards_db
       MARIADB_USER: flashcard_user
@@ -21,36 +22,36 @@ services:
       retries: 20
       start_period: 30s
 
-# --- Django バックエンド ---
-backend:
-  build: ./backend
-  container_name: my-backend
-  restart: always
-  ports:
-    - "5000:5000"
-  env_file:
-    - .env
-  environment:
-    - DB_HOST=${DB_HOST:-db}
-    - DB_USER=${DB_USER:-flashcard_user}
-    - DB_PASSWORD=${MARIADB_PASSWORD:-${MYSQL_PASSWORD}}
-    - DB_NAME=${DB_NAME:-flashcards_db}
-    - GMAIL_USER=${GMAIL_USER}
-    - GMAIL_PASS=${GMAIL_PASS}
-    - ADMIN_API_KEY=${ADMIN_API_KEY}
-    - DEBUG=${DEBUG:-True}
-    - RUNNING_IN_DOCKER=1
-  volumes:
-    - ./backend:/app
-  depends_on:
-    db:
-      condition: service_healthy
-  healthcheck:
-    test: ["CMD", "curl", "-f", "http://localhost:5000/"]
-    interval: 10s
-    timeout: 5s
-    retries: 5
-    start_period: 30s
+  # --- Django バックエンド ---
+  backend:
+    build: ./backend
+    container_name: my-backend
+    restart: always
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+    environment:
+      - DB_HOST=${DB_HOST:-db}
+      - DB_USER=${DB_USER:-flashcard_user}
+      - DB_PASSWORD=${MARIADB_PASSWORD:-${MYSQL_PASSWORD}}
+      - DB_NAME=${DB_NAME:-flashcards_db}
+      - GMAIL_USER=${GMAIL_USER}
+      - GMAIL_PASS=${GMAIL_PASS}
+      - ADMIN_API_KEY=${ADMIN_API_KEY}
+      - DEBUG=${DEBUG:-True}
+      - RUNNING_IN_DOCKER=1
+    volumes:
+      - ./backend:/app
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   # --- React フロントエンド ---
   frontend:
