@@ -1,19 +1,19 @@
-# Cardsapp 
+# Cardsapp
 
 A modern web application for managing and studying flashcards. Built with a focus on a clean user interface, seamless deployment, and reliable infrastructure.
 
 ## 🚀 Tech Stack
 
-- **Backend:** Python 3.9+, Django 4.2
-- **Database:** MySQL 8.0
-- **Frontend:** Vanilla JavaScript, Tailwind CSS
+- **Backend:** Python 3.10, Django 4.2
+- **Database:** MariaDB 11.4
+- **Frontend:** React 18, Vite 6, Tailwind CSS v4
 - **Infrastructure:** Docker & Docker Compose
 - **CI/CD:** GitHub Actions (Automated Linting with Flake8, Testing with Pytest, and Self-hosted Auto-Deploy)
 
 ## 📋 Requirements
 
 - **Docker** (version 20.10 or higher)
-- **Docker Compose** (version 1.29 or higher)
+- **Docker Compose** (version 2.x or higher)
 - **Git** (for cloning the repository)
 
 ## 🛠️ Setup Instructions
@@ -22,7 +22,7 @@ A modern web application for managing and studying flashcards. Built with a focu
 
 ```bash
 git clone <repository-url>
-cd Cardsapp
+cd server-project
 ```
 
 ### 2. Configure environment variables
@@ -33,7 +33,7 @@ Copy the example environment file and update it with your settings:
 cp .env.example .env
 ```
 
-Edit `.env` with your desired values. The following variables are required:
+Edit `.env` with your desired values. Required variables:
 
 | Variable | Description |
 |----------|-------------|
@@ -42,6 +42,10 @@ Edit `.env` with your desired values. The following variables are required:
 | `GMAIL_USER` | Gmail address for sending emails |
 | `GMAIL_PASS` | App password for Gmail |
 | `ADMIN_API_KEY` | Secret key for admin API |
+| `SECRET_KEY` | Django secret key |
+| `JWT_SECRET_KEY` | JWT authentication secret |
+| `DEBUG` | Set to `False` for production |
+| `ALLOWED_HOSTS` | Comma-separated list of allowed hosts |
 
 ### 3. Start the application
 
@@ -66,10 +70,17 @@ docker-compose down
 
 ## 🔧 Development Commands
 
+### Start all services
+
+```bash
+docker-compose up -d
+```
+
 ### View logs
+
 ```bash
 # All services
-docker-compose logs
+docker-compose logs -f
 
 # Specific service
 docker-compose logs -f backend
@@ -77,28 +88,44 @@ docker-compose logs -f db
 ```
 
 ### Run database migrations
+
 ```bash
 docker-compose exec backend python manage.py migrate
 ```
 
-### Create a superuser
+### Run tests
+
 ```bash
-docker-compose exec backend python manage.py createsuperuser
+cd backend
+python -m pytest tests/
+```
+
+### Lint code
+
+```bash
+# Backend (flake8)
+cd backend
+flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+
+# Frontend (ESLint)
+cd frontend
+npm run lint
 ```
 
 ## ✨ Current Features
 
-- **User Authentication:** Secure sign-up and log-in system.
-- **Account Management:** Users can securely update their passwords and manage their profiles.
-- **Responsive UI:** Clean and intuitive design for a better user experience.
-- **Automated CI/CD Pipeline:** Every Pull Request is automatically linted and tested. Merging to the `main` branch triggers an automatic deployment to the self-hosted production server.
-- **Containerized Environment:** Fully Dockerized backend and database for consistent development and production environments.
+- **User Authentication:** Secure sign-up and log-in system with JWT tokens
+- **Flashcard Management:** Create, edit, and organize flashcards into folders
+- **Folder System:** Public and private folders with like/favorite functionality
+- **Spaced Repetition System (SRS):** SM-2 algorithm for optimized card review scheduling
+- **Search:** Global search across public folders and cards
+- **Import/Export:** Export folders as JSON, import from JSON
+- **Responsive UI:** Clean and intuitive React-based design
+- **Automated CI/CD:** Every push to main is automatically linted, tested, and deployed to the production server
 
 ## 🗺️ Roadmap (Future Features)
 
-- [ ] **Deck Management:** From public cards, duplicate cards, and organize cards into custom decks.
-- [ ] **Learning mode:** Progress tracking. Track how many cards you have memorized in total on your account page (counted by looking at a card for more than 1-2 seconds)
-- [ ] **Spaced Repetition System (SRS):** A smart algorithm that optimizes the timing of card reviews to promote memorization.
-- [ ] **Batch creation function for card sets** A function to create card sets based on layouts selected in bulk from a list such as Google Sheets or Excel.
-- [ ] **Administrator-only page** Creation of reports from users and pages for managing the entire website.
-- [ ] **Report function for public card sets** A function that prevents public card sets that are being used incorrectly from being published. Report to the administrator from the flag in the upper right corner of the card tile.
+- [ ] **Administrator page:** Reports from users and website management
+- [ ] **Report function:** Flag inappropriate public card sets
+- [ ] **Batch creation:** Create cards from Google Sheets or Excel layouts
+- [ ] **Learning mode:** Progress tracking with time-based card memorization tracking

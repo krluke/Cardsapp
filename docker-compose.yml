@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-  # --- MySQL データベース ---
   db:
     image: mariadb:11.4
     container_name: my-mariadb-db
@@ -22,7 +21,6 @@ services:
       retries: 20
       start_period: 30s
 
-  # --- Django バックエンド ---
   backend:
     build: ./backend
     container_name: my-backend
@@ -47,13 +45,12 @@ services:
       db:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/folders?tab=global-folders"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
 
-  # --- React フロントエンド ---
   frontend:
     build:
       context: ./frontend
@@ -64,6 +61,3 @@ services:
       - "8080:80"
     depends_on:
       - backend
-
-volumes:
-  db_data:
