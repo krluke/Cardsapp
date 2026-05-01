@@ -59,7 +59,8 @@ jobs:
         docker-compose down --remove-orphans
         docker buildx prune -f
         docker-compose up -d --build --force-recreate
-        docker-compose wait backend
+        sleep 10
+        docker-compose ps
 
     - name: Verify Backend Health
       run: |
