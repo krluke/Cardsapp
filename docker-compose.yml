@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   db:
@@ -15,7 +15,17 @@ services:
     volumes:
       - ./db_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mariadb-admin", "ping", "-h", "localhost", "-u", "flashcard_user", "-p${MARIADB_PASSWORD}"]
+      test:
+        [
+          "CMD",
+          "mariadb-admin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "flashcard_user",
+          "-p${MARIADB_PASSWORD}",
+        ]
       interval: 5s
       timeout: 5s
       retries: 20
@@ -45,7 +55,13 @@ services:
       db:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/api/folders?tab=global-folders"]
+      test:
+        [
+          "CMD",
+          "curl",
+          "-f",
+          "http://localhost:5000/api/folders?tab=global-folders",
+        ]
       interval: 30s
       timeout: 10s
       retries: 10
@@ -61,3 +77,12 @@ services:
       - "8080:80"
     depends_on:
       - backend
+
+  # --- Cloudflare Tunnel ---
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflare-tunnel
+    restart: always
+    command: tunnel --no-autoupdate run
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_TOKEN}
