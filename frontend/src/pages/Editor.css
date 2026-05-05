@@ -182,12 +182,14 @@
 .editor-main {
   display: flex;
   flex: 1;
+  height: 100%;
   overflow: hidden;
 }
 
 .thumbnail-sidebar {
   width: 70px;
   min-width: 70px;
+  min-height: 0;
   background: var(--bg-surface);
   border-right: 1px solid var(--border-color);
   display: flex;
@@ -197,8 +199,9 @@
   overflow: hidden;
 }
 
-.thumbnail-scroll {
+.thumbnail-sidebar .thumbnail-scroll {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
   display: flex;
@@ -703,9 +706,10 @@
   flex: 1;
   overflow: hidden;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: stretch;
+  justify-content: flex-start;
   padding: 20px;
+  gap: 20px;
 }
 
 .canvas-konva-wrapper {
