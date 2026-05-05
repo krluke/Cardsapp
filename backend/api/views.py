@@ -461,6 +461,9 @@ def get_folders(request):
         else:
             user_email = None
 
+        if not user_email:
+            user_email = request.GET.get("userEmail", "") or None
+
         if tab == "my-folders" and not user_email:
             return JsonResponse(
                 {"folders": [], "totalPages": 1, "currentPage": 1}

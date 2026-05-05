@@ -573,6 +573,33 @@ const addText = (x = 30, y = 40) => {
     dispatch({ type: 'UPDATE_ELEMENT', payload: { elementId, updates } });
   };
 
+  const updateElementInCard = (elementId, updates, side) => {
+    const newCards = [...state.cards];
+    const card = { ...newCards[state.currentIndex] };
+    const elements = [...(side === 'back' ? card.back : card.front)];
+    const updatedElements = elements.map(el => el.id === elementId ? { ...el, ...updates } : el);
+    if (side === 'back') {
+      card.back = updatedElements;
+    } else {
+      card.front = updatedElements;
+    }
+    newCards[state.currentIndex] = card;
+    dispatch({ type: 'SET_CARDS', payload: newCards });
+  };
+
+  const deleteElementInCard = (elementId, side) => {
+    const newCards = [...state.cards];
+    const card = { ...newCards[state.currentIndex] };
+    const filteredElements = (side === 'back' ? card.back : card.front).filter(el => el.id !== elementId);
+    if (side === 'back') {
+      card.back = filteredElements;
+    } else {
+      card.front = filteredElements;
+    }
+    newCards[state.currentIndex] = card;
+    dispatch({ type: 'SET_CARDS', payload: newCards });
+  };
+
   const updateTags = (tags) => {
     // Tags are handled per card. We'll assume the current card should be updated.
     const newCards = [...state.cards];
@@ -698,20 +725,37 @@ const addText = (x = 30, y = 40) => {
           onAddCard={() => dispatch({ type: 'ADD_CARD' })} 
         />
         <div className="card-area">
-        <CardCanvas
-          elements={currentElements}
-          bgColor={currentBg}
-          isSelected={state.selectedElement}
-          onSelect={(id) => dispatch({ type: 'SET_SELECTED_ELEMENT', payload: id })}
-          onUpdate={updateElement}
-          onDelete={deleteElement}
-          t={t}
-        />
+          <div className="card-flip-container">
+            <div className={`card-flip-wrapper ${state.isFlipped ? 'flipped' : ''}`}>
+              <div className="card-flip-front">
+                <CardCanvas
+                  elements={currentCard?.front || []}
+                  bgColor={currentCard?.frontBg || '#ffffff'}
+                  isSelected={!state.isFlipped ? state.selectedElement : null}
+                  onSelect={(id) => !state.isFlipped && dispatch({ type: 'SET_SELECTED_ELEMENT', payload: id })}
+                  onUpdate={(id, updates) => updateElementInCard(id, updates, 'front')}
+                  onDelete={(id) => deleteElementInCard(id, 'front')}
+                  t={t}
+                />
+              </div>
+              <div className="card-flip-back">
+                <CardCanvas
+                  elements={currentCard?.back || []}
+                  bgColor={currentCard?.backBg || '#ffffff'}
+                  isSelected={state.isFlipped ? state.selectedElement : null}
+                  onSelect={(id) => state.isFlipped && dispatch({ type: 'SET_SELECTED_ELEMENT', payload: id })}
+                  onUpdate={(id, updates) => updateElementInCard(id, updates, 'back')}
+                  onDelete={(id) => deleteElementInCard(id, 'back')}
+                  t={t}
+                />
+              </div>
+            </div>
+          </div>
           <div className="card-nav">
             <button onClick={() => dispatch({ type: 'SET_CURRENT_INDEX', payload: Math.max(0, state.currentIndex - 1) })} disabled={state.currentIndex === 0}><ChevronLeft size={24} /></button>
             <span>{state.currentIndex + 1} / {state.cards.length}</span>
             <button onClick={() => dispatch({ type: 'SET_CURRENT_INDEX', payload: Math.min(state.cards.length - 1, state.currentIndex + 1) })} disabled={state.currentIndex === state.cards.length - 1}><ChevronRight size={24} /></button>
-            <button className="flip-btn" onClick={() => dispatch({ type: 'SET_FLIPPED', payload: !state.isFlipped })} >Flip</button>
+            <button className="flip-btn" onClick={() => dispatch({ type: 'SET_FLIPPED', payload: !state.isFlipped })} >{state.isFlipped ? 'Back' : 'Flip'}</button>
             <button className="toolbar-btn" onClick={() => dispatch({ type: 'DUPLICATE_CARD' })} title="Duplicate Card"><Copy size={18} /></button>
             <button className="delete-btn-nav" onClick={() => { if (state.cards.length > 1 && confirm(t('confirm_discard_card'))) dispatch({ type: 'DELETE_CARD' }) }} disabled={state.cards.length === 1}><Trash2 size={18} /></button>
           </div>
