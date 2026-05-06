@@ -495,7 +495,7 @@ const createNewFolder = async () => {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen home-page-shell">
       <header className="navbar">
         <h1 className="logo">CardsApp</h1>
         
@@ -567,7 +567,7 @@ const createNewFolder = async () => {
         </div>
       </header>
 
-      <main className="page-container">
+      <main className="page-container home-page-main">
         <div className="tabs-container">
           <button className={`tab-btn ${activeTab === 'my-folders' ? 'active' : ''}`} onClick={() => { setActiveTab('my-folders'); setPage(1) }}>{t('tab_my_folders')}</button>
           <button className={`tab-btn ${activeTab === 'global-folders' ? 'active' : ''}`} onClick={() => { setActiveTab('global-folders'); setPage(1) }}>{t('tab_global_folders')}</button>
@@ -662,6 +662,10 @@ const createNewFolder = async () => {
             </div>
           )}
       </main>
+
+      <footer className="home-page-footer">
+        © 2024-2025 Cardsapp. All rights reserved.
+      </footer>
 
       {showAuthModal && (
         <div className="modal" onClick={() => setShowAuthModal(false)}>
