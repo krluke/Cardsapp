@@ -41,10 +41,12 @@
 
 .editor-container {
   min-height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
   background: var(--bg-canvas);
   color: var(--text-main);
+  overflow: hidden;
 }
 
 .editor-header {
@@ -183,6 +185,7 @@
   display: flex;
   flex: 1;
   height: 100%;
+  min-height: 0;
   overflow: hidden;
 }
 
@@ -208,6 +211,7 @@
   flex-direction: column;
   gap: 8px;
   padding-right: 4px;
+  scrollbar-gutter: stable;
 }
 
 .thumbnail-scroll::-webkit-scrollbar {
@@ -271,6 +275,7 @@
 
 .card-area {
   flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -280,12 +285,13 @@
 
 .card-canvas {
   width: 100%;
-  max-width: 640px;
-  aspect-ratio: 3/2;
+  height: 100%;
+  max-width: 600px;
+  aspect-ratio: auto;
   background: #ffffff;
-  border-radius: var(--radius-lg);
+  border-radius: 16px;
   box-shadow: var(--shadow-lg);
-  border: 1px solid var(--border-color);
+  border: 2px solid var(--accent-color);
   position: relative;
   overflow: hidden;
   cursor: default;
@@ -506,36 +512,37 @@
 .card-nav {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 1rem;
   margin-top: 16px;
 }
 
-.card-nav button {
+.card-nav .nav-btn {
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--bg-surface);
   border: 1px solid var(--border-color);
   border-radius: 50%;
-  width: 40px;
-  height: 40px;
+  width: 60px;
+  height: 60px;
   cursor: pointer;
   transition: var(--transition);
   color: var(--text-main);
 }
 
-.card-nav button:hover:not(:disabled) {
+.card-nav .nav-btn:hover:not(:disabled) {
   background: var(--bg-surface-hover);
   border-color: var(--accent-color);
   color: var(--accent-color);
 }
 
-.card-nav button:disabled {
+.card-nav .nav-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
 
-.card-nav span {
+.editor-card-counter {
+  margin-top: 12px;
   font-weight: bold;
   color: var(--text-muted);
   min-width: 50px;
@@ -543,14 +550,15 @@
 }
 
 .flip-btn {
-  padding: 8px 16px;
+  padding: 1rem 3rem;
+  font-size: 1.125rem;
   background: var(--accent-color);
   color: white;
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: 8px;
   font-weight: bold;
   cursor: pointer;
-  transition: transform 0.2s, background 0.2s;
+  transition: var(--transition);
 }
 
 .flip-btn:hover {
@@ -560,8 +568,8 @@
 .card-flip-container {
   perspective: 1000px;
   width: 100%;
-  max-width: 500px;
-  aspect-ratio: 3 / 2;
+  max-width: 600px;
+  height: 400px;
   position: relative;
 }
 
@@ -590,8 +598,12 @@
   transform: rotateY(180deg);
 }
 
+.card-flip-back .card-canvas {
+  border-color: #3b82f6;
+}
+
 .delete-btn-nav {
-  background: var(--bg-surface) !important;
+  background: var(--bg-surface);
   color: var(--danger-color) !important;
   border-color: var(--danger-color) !important;
 }
@@ -617,6 +629,61 @@
   height: 28px;
 }
 
+.editor-meta-row {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.tags-input-container {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.tags-input-container label {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.tags-input-container input {
+  width: 220px;
+}
+
+.editor-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.editor-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.editor-action-btn:hover:not(:disabled) {
+  background: var(--bg-surface-hover);
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+}
+
+.editor-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 @media (max-width: 768px) {
   .editor-header {
     padding: 8px;
@@ -636,6 +703,21 @@
   
   .card-canvas {
     max-width: 100%;
+  }
+
+  .card-flip-container {
+    height: auto;
+    aspect-ratio: 3 / 2;
+  }
+
+  .card-nav .nav-btn {
+    width: 50px;
+    height: 50px;
+  }
+
+  .flip-btn {
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
   }
 }
 
@@ -704,6 +786,7 @@
 
 .editor-main {
   flex: 1;
+  min-height: 0;
   overflow: hidden;
   display: flex;
   align-items: stretch;
