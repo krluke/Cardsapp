@@ -751,24 +751,27 @@ const addText = (x = 30, y = 40) => {
               </div>
             </div>
           </div>
+          <div className="editor-card-counter">{state.currentIndex + 1} / {state.cards.length}</div>
           <div className="card-nav">
-            <button onClick={() => dispatch({ type: 'SET_CURRENT_INDEX', payload: Math.max(0, state.currentIndex - 1) })} disabled={state.currentIndex === 0}><ChevronLeft size={24} /></button>
-            <span>{state.currentIndex + 1} / {state.cards.length}</span>
-            <button onClick={() => dispatch({ type: 'SET_CURRENT_INDEX', payload: Math.min(state.cards.length - 1, state.currentIndex + 1) })} disabled={state.currentIndex === state.cards.length - 1}><ChevronRight size={24} /></button>
-            <button className="flip-btn" onClick={() => dispatch({ type: 'SET_FLIPPED', payload: !state.isFlipped })} >{state.isFlipped ? 'Back' : 'Flip'}</button>
-            <button className="toolbar-btn" onClick={() => dispatch({ type: 'DUPLICATE_CARD' })} title="Duplicate Card"><Copy size={18} /></button>
-            <button className="delete-btn-nav" onClick={() => { if (state.cards.length > 1 && confirm(t('confirm_discard_card'))) dispatch({ type: 'DELETE_CARD' }) }} disabled={state.cards.length === 1}><Trash2 size={18} /></button>
+            <button className="nav-btn" onClick={() => dispatch({ type: 'SET_CURRENT_INDEX', payload: Math.max(0, state.currentIndex - 1) })} disabled={state.currentIndex === 0}><ChevronLeft size={32} /></button>
+            <button className="flip-btn" onClick={() => dispatch({ type: 'SET_FLIPPED', payload: !state.isFlipped })}>Flip</button>
+            <button className="nav-btn" onClick={() => dispatch({ type: 'SET_CURRENT_INDEX', payload: Math.min(state.cards.length - 1, state.currentIndex + 1) })} disabled={state.currentIndex === state.cards.length - 1}><ChevronRight size={32} /></button>
           </div>
-          <div className="tags-input-container" style={{ marginTop: '10px', display: 'flex', gap: '8px', alignItems: 'center', justifyContent: 'center' }}>
-            <label style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Tags:</label>
-            <input 
-              type="text" 
-              className="toolbar-select" 
-              placeholder="Comma separated tags..." 
-              value={currentTags} 
-              onChange={(e) => updateTags(e.target.value)}
-              style={{ width: '200px' }}
-            />
+          <div className="editor-meta-row">
+            <div className="tags-input-container">
+              <label>Tags:</label>
+              <input 
+                type="text" 
+                className="toolbar-select" 
+                placeholder="Comma separated tags..." 
+                value={currentTags} 
+                onChange={(e) => updateTags(e.target.value)}
+              />
+            </div>
+            <div className="editor-card-actions">
+              <button className="editor-action-btn" onClick={() => dispatch({ type: 'DUPLICATE_CARD' })} title="Duplicate Card"><Copy size={18} /></button>
+              <button className="editor-action-btn delete-btn-nav" onClick={() => { if (state.cards.length > 1 && confirm(t('confirm_discard_card'))) dispatch({ type: 'DELETE_CARD' }) }} disabled={state.cards.length === 1}><Trash2 size={18} /></button>
+            </div>
           </div>
         </div>
       </div>
