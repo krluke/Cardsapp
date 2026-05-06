@@ -367,6 +367,34 @@
   margin-top: 1rem;
 }
 
+.consent-list {
+  margin: 0.5rem 0 1rem;
+  padding-left: 1.25rem;
+  color: var(--text-main);
+}
+
+.consent-list li {
+  margin-bottom: 0.5rem;
+}
+
+.consent-item {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.consent-item input[type="checkbox"] {
+  margin-top: 0.15rem;
+}
+
+.primary-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
 .text-link {
   color: var(--accent-color);
   cursor: pointer;
@@ -374,6 +402,33 @@
 }
 
 .text-link:hover { text-decoration: underline; }
+
+.policy-page {
+  max-width: 900px;
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+}
+
+.policy-page h1 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+.policy-page h2 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.policy-page p {
+  margin: 0;
+  color: var(--text-main);
+  line-height: 1.65;
+}
+
+.policy-back-btn {
+  margin-top: 1.5rem;
+  width: fit-content;
+}
 
 /* Dropdowns */
 .account-menu, .theme-menu, .lang-menu {
