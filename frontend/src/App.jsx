@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, Link } from 'react-router-dom'
 import { X, FolderPlus, Palette, Globe, User, LogOut, LogIn, Settings, Trash2, Search, ChevronLeft, ChevronRight, BookOpen, Plus } from 'lucide-react'
 import EditorPage from './pages/EditorPage'
 import ViewerPage from './pages/ViewerPage'
@@ -147,6 +147,8 @@ export default function App() {
         <Route path="/home" element={<HomePage />} />
         <Route path="/account" element={<AccountPage />} />
         <Route path="/change-password" element={<ChangePasswordPage />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+        <Route path="/terms-of-service" element={<TermsOfServicePage />} />
         <Route path="/editor/:folderId" element={<EditorPage />} />
         <Route path="/viewer/:folderId" element={<ViewerPage />} />
         <Route path="/study/:folderId" element={<StudyPage />} />
@@ -163,6 +165,7 @@ function HomePage() {
   const [authView, setAuthView] = useState('login')
   const [loginData, setLoginData] = useState({ id: '', password: '' })
   const [signupData, setSignupData] = useState({ username: '', email: '', code: '', password: '' })
+  const [signupConsents, setSignupConsents] = useState({ privacy: false, terms: false })
   const [message, setMessage] = useState({ type: '', text: '' })
   const [folders, setFolders] = useState([])
   const [globalCards, setGlobalCards] = useState([])
@@ -320,6 +323,10 @@ const loadFolders = async () => {
   const handleSignup = async (e) => {
     e.preventDefault()
     setMessage({ type: '', text: '' })
+    if (!signupConsents.privacy || !signupConsents.terms) {
+      setMessage({ type: 'error', text: 'Please agree to both the Privacy Policy and Terms of Service.' })
+      return
+    }
     try {
       const res = await fetch(`${API_BASE}/signup`, {
         method: 'POST',
@@ -495,7 +502,7 @@ const createNewFolder = async () => {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen home-page-shell">
       <header className="navbar">
         <h1 className="logo">CardsApp</h1>
         
@@ -567,7 +574,7 @@ const createNewFolder = async () => {
         </div>
       </header>
 
-      <main className="page-container">
+      <main className="page-container home-page-main">
         <div className="tabs-container">
           <button className={`tab-btn ${activeTab === 'my-folders' ? 'active' : ''}`} onClick={() => { setActiveTab('my-folders'); setPage(1) }}>{t('tab_my_folders')}</button>
           <button className={`tab-btn ${activeTab === 'global-folders' ? 'active' : ''}`} onClick={() => { setActiveTab('global-folders'); setPage(1) }}>{t('tab_global_folders')}</button>
@@ -663,6 +670,10 @@ const createNewFolder = async () => {
           )}
       </main>
 
+      <footer className="home-page-footer">
+        © 2024-2025 Cardsapp. All rights reserved.
+      </footer>
+
       {showAuthModal && (
         <div className="modal" onClick={() => setShowAuthModal(false)}>
           <div className="auth-box" onClick={e => e.stopPropagation()}>
@@ -688,7 +699,39 @@ const createNewFolder = async () => {
                 </div>
                 <input className="input-field mb-1" placeholder={t('placeholder_verify_code')} value={signupData.code} onChange={e => setSignupData({...signupData, code: e.target.value})} required />
                 <input type="password" className="input-field mb-1" placeholder={t('placeholder_password')} value={signupData.password} onChange={e => setSignupData({...signupData, password: e.target.value})} required />
-                <button type="submit" className="primary-btn w-full">{t('btn_signup')}</button>
+                <ul className="consent-list">
+                  <li>
+                    <label className="consent-item">
+                      <input
+                        type="checkbox"
+                        checked={signupConsents.privacy}
+                        onChange={e => setSignupConsents(prev => ({ ...prev, privacy: e.target.checked }))}
+                      />
+                      <span>
+                        I agree to the{' '}
+                        <Link className="text-link" to="/privacy-policy" onClick={() => setShowAuthModal(false)}>
+                          Privacy Policy (Personal Information Protection Policy)
+                        </Link>
+                      </span>
+                    </label>
+                  </li>
+                  <li>
+                    <label className="consent-item">
+                      <input
+                        type="checkbox"
+                        checked={signupConsents.terms}
+                        onChange={e => setSignupConsents(prev => ({ ...prev, terms: e.target.checked }))}
+                      />
+                      <span>
+                        I agree to the{' '}
+                        <Link className="text-link" to="/terms-of-service" onClick={() => setShowAuthModal(false)}>
+                          Terms of Service
+                        </Link>
+                      </span>
+                    </label>
+                  </li>
+                </ul>
+                <button type="submit" className="primary-btn w-full" disabled={!signupConsents.privacy || !signupConsents.terms}>{t('btn_signup')}</button>
                 <p className="switch-auth-text">{t('switch_to_login_text')} <span className="text-link" onClick={() => setAuthView('login')}>{t('switch_to_login_link')}</span></p>
               </form>
             )}
@@ -753,4 +796,50 @@ const createNewFolder = async () => {
 
 function ChangePasswordPage() {
   return <div className="page-container"><h1>Change Password</h1><p>Coming soon...</p></div>
+}
+
+function PrivacyPolicyPage() {
+  return (
+    <div className="page-container policy-page">
+      <h1>Privacy Policy (Personal Information Protection Policy)</h1>
+      <p>This page explains how Cardsapp handles personal information.</p>
+
+      <h2>1. Information We Collect</h2>
+      <p>We may collect account information such as username, email address, and usage data needed to operate the service.</p>
+
+      <h2>2. Purpose of Use</h2>
+      <p>Collected information is used for authentication, card and folder management, security, and service improvement.</p>
+
+      <h2>3. Data Protection</h2>
+      <p>We apply reasonable technical and organizational safeguards to protect personal information.</p>
+
+      <h2>4. Contact</h2>
+      <p>For questions about this policy, please contact the service administrator.</p>
+
+      <Link className="secondary-btn policy-back-btn" to="/home">Back to Home</Link>
+    </div>
+  )
+}
+
+function TermsOfServicePage() {
+  return (
+    <div className="page-container policy-page">
+      <h1>Terms of Service</h1>
+      <p>By using Cardsapp, you agree to these terms.</p>
+
+      <h2>1. Account Responsibility</h2>
+      <p>You are responsible for your account credentials and all activity under your account.</p>
+
+      <h2>2. Acceptable Use</h2>
+      <p>You must not misuse the service, attempt unauthorized access, or upload harmful or unlawful content.</p>
+
+      <h2>3. Content</h2>
+      <p>You retain ownership of your content and are responsible for what you create, store, and share.</p>
+
+      <h2>4. Service Changes</h2>
+      <p>We may modify features or availability as needed for quality, security, and maintenance.</p>
+
+      <Link className="secondary-btn policy-back-btn" to="/home">Back to Home</Link>
+    </div>
+  )
 }
