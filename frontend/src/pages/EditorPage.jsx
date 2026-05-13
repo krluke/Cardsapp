@@ -7,8 +7,7 @@ import { EditorToolbar } from './editor/EditorToolbar';
 import { EditorSidebar } from './editor/EditorSidebar';
 import { CardCanvas } from './editor/CardCanvas';
 import { FloatingTextToolbar } from './editor/FloatingTextToolbar';
-
-const API_BASE = '/api';
+import { apiFetch, API_BASE, getJwtToken, getCsrfToken } from '@/lib/api';
 
 const TEMPLATES = {
   blank: { front: [], back: [] },
@@ -378,17 +377,16 @@ export default function EditorPage() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [state.selectedElement]);
 
-  const getCsrfToken = () => session.csrfToken || '';
-  const getJwtToken = () => session.token || '';
-
   const loadData = async () => {
     try {
-      const jwtToken = getJwtToken();
-      const res = await fetch(`${API_BASE}/cards/load-auth/${folderId}`, {
-        headers: jwtToken ? { 'Authorization': `Bearer ${jwtToken}` } : {},
-      });
+      const res = await apiFetch(`/cards/load-auth/${folderId}`);
+      if (res.status === 401) {
+        localStorage.removeItem('session');
+        navigate('/home');
+        return;
+      }
       const data = await res.json();
-      if (Array.isArray(data) && data.length > 0) {
+      if (res.ok && Array.isArray(data) && data.length > 0) {
         const parsedCards = data.map(card => ({
           front: parseElements(card.front),
           back: parseElements(card.back),
@@ -548,14 +546,10 @@ const addText = (x = 30, y = 40) => {
     const formData = new FormData();
     formData.append('image', file);
     try {
-      const res = await fetch(`${API_BASE}/cards/upload`, {
-        method: 'POST',
-        headers: {
-          'X-CSRF-Token': getCsrfToken(),
-          ...(getJwtToken() ? { 'Authorization': `Bearer ${getJwtToken()}` } : {}),
-        },
-        body: formData,
-      });
+const res = await apiFetch('/cards/upload', {
+method: 'POST',
+body: formData,
+});
       const data = await res.json();
       if (data.url) {
         dispatch({ type: 'ADD_IMAGE', payload: { imageUrl: data.url } });
@@ -649,16 +643,14 @@ const addText = (x = 30, y = 40) => {
         frontBg: card.frontBg,
         backBg: card.backBg,
         tags: card.tags || ''
-      }));
-      const res = await fetch(`${API_BASE}/cards/save`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-Token': getCsrfToken(),
-          ...(getJwtToken() ? { 'Authorization': `Bearer ${getJwtToken()}` } : {}),
-        },
-        body: JSON.stringify({ folderId: parseInt(folderId), userEmail: user.email || user.id, cards: serializedCards }),
-      });
+}));
+const res = await apiFetch('/cards/save', {
+method: 'POST',
+headers: {
+  'Content-Type': 'application/json',
+},
+body: JSON.stringify({ folderId: parseInt(folderId), userEmail: user.email || user.id, cards: serializedCards }),
+});
     } catch (e) { console.error('Save error:', e); }
     finally { dispatch({ type: 'SET_SAVING', payload: false }); }
   };

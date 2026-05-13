@@ -73,14 +73,21 @@ def get_user_from_token(request):
 
 
 def refresh_jwt_token(request):
-    """Refresh JWT token using a valid existing token"""
+    """Refresh JWT token using a valid or expired existing token"""
     auth_header = request.headers.get("Authorization")
     if not auth_header or not auth_header.startswith("Bearer "):
         return None
 
     token = auth_header.split(" ")[1]
     payload = verify_jwt_token(token)
-    if not payload:
-        return None
+    if payload:
+        return generate_jwt_token(payload["user_id"], payload["email"])
 
-    return generate_jwt_token(payload["user_id"], payload["email"])
+    try:
+        payload = jwt.decode(
+            token, settings.JWT_SECRET_KEY, algorithms=["HS256"],
+            options={"verify_exp": False}
+        )
+        return generate_jwt_token(payload["user_id"], payload["email"])
+    except jwt.InvalidTokenError:
+        return None

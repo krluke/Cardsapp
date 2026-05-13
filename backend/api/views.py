@@ -240,7 +240,17 @@ def signup(request):
                 "INSERT INTO users (email, username, password) VALUES (%s, %s, %s)",
                 (email, username, hashed_password),
             )
-            return JsonResponse({"message": "アカウント作成成功！"})
+            csrf_token = csrf_protector.generate_token(email)
+            jwt_token = generate_jwt_token(email, email)
+            return JsonResponse(
+                {
+                    "message": "アカウント作成成功！",
+                    "username": username,
+                    "email": email,
+                    "csrfToken": csrf_token,
+                    "token": jwt_token,
+                }
+            )
         except Exception:
             return JsonResponse(
                 {"message": "このメールアドレスは既に登録されています"}, status=400

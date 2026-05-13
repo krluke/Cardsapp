@@ -1,9 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, CheckCircle, XCircle, HelpCircle, RotateCcw, Volume2, Shuffle, BookOpen } from 'lucide-react';
+import { apiFetch, API_BASE } from '@/lib/api';
 import './Study.css';
-
-const API_BASE = '/api';
 
 function getNextReviewText(quality, currentInterval) {
   const intervals = { 0: '1 day', 2: '1 day', 3: currentInterval === 0 ? '1 day' : currentInterval === 1 ? '6 days' : `${Math.ceil(currentInterval * 2.5)} days`, 5: currentInterval === 0 ? '1 day' : currentInterval === 1 ? '6 days' : `${Math.ceil(currentInterval * 3)} days` };
@@ -26,16 +25,13 @@ export default function StudyPage() {
 
   const session = JSON.parse(localStorage.getItem('session') || '{}');
   const user = session.user;
-  const jwtToken = session.token || '';
 
   const loadCards = useCallback(async (mode, shuffle = false) => {
     try {
-      const url = mode === 'all' 
-        ? `${API_BASE}/cards/load-auth/${folderId}`
-        : `${API_BASE}/study/cards?folderId=${folderId}`;
-      const res = await fetch(url, {
-        headers: jwtToken ? { 'Authorization': `Bearer ${jwtToken}` } : {},
-      });
+      const endpoint = mode === 'all'
+        ? `/cards/load-auth/${folderId}`
+        : `/study/cards?folderId=${folderId}`;
+      const res = await apiFetch(endpoint);
       let data = await res.json();
       
       // Handle error responses
@@ -107,15 +103,13 @@ export default function StudyPage() {
     
     if (studyMode === 'due') {
       try {
-        await fetch(`${API_BASE}/study/update`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-Token': session.csrfToken || '',
-            ...(jwtToken ? { 'Authorization': `Bearer ${jwtToken}` } : {}),
-          },
-          body: JSON.stringify({ cardId: card.id, quality, userEmail: user.email || user.id }),
-        });
+      await apiFetch('/study/update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ cardId: card.id, quality, userEmail: user.email || user.id }),
+      });
       } catch (e) { console.error(e); }
     }
 

@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
+import { apiFetch } from '@/lib/api'
 import './AccountPage.css'
-
-const API_BASE = '/api'
 
 export default function AccountPage() {
   const navigate = useNavigate()
@@ -31,7 +30,7 @@ export default function AccountPage() {
 
   const loadTotalCards = async (userEmail) => {
     try {
-      const res = await fetch(`${API_BASE}/folders?tab=my-folders&userEmail=${userEmail}`)
+      const res = await apiFetch(`/folders?tab=my-folders&userEmail=${userEmail}`)
       const data = await res.json()
       if (data.folders) {
         const total = data.folders.reduce((sum, folder) => sum + (folder.card_count || 0), 0)

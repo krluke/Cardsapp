@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react'
+import { apiFetch } from '@/lib/api'
 import './Viewer.css'
-
-const API_BASE = '/api'
 
 export default function ViewerPage() {
   const { folderId } = useParams()
@@ -26,14 +25,12 @@ export default function ViewerPage() {
       const session = JSON.parse(localStorage.getItem('session') || '{}')
       const jwtToken = session.token || ''
 
-      const cardsRes = await fetch(`${API_BASE}/cards/load/${folderId}`)
+      const cardsRes = await apiFetch(`/cards/load/${folderId}`)
       const cardsData = await cardsRes.json()
       setCards(Array.isArray(cardsData) ? cardsData : [])
-      
+
       if (jwtToken) {
-        const folderRes = await fetch(`${API_BASE}/folders?tab=my-folders`, {
-          headers: { 'Authorization': `Bearer ${jwtToken}` },
-        })
+        const folderRes = await apiFetch('/folders?tab=my-folders')
         const folderData = await folderRes.json()
         const currentFolder = folderData.folders?.find(f => f.id === parseInt(folderId))
         setFolder(currentFolder || null)

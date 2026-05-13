@@ -8,9 +8,8 @@ import AccountPage from './pages/AccountPage'
 import { GlobalSearchModal } from './components/GlobalSearchModal'
 import { AddToFolderModal } from './components/AddToFolderModal'
 import { useModal, Modal } from './components/Modal'
+import { apiFetch, API_BASE, getJwtToken, getCsrfToken } from './lib/api'
 import './i18n'
-
-const API_BASE = '/api'
 
 function t(key) {
   const lang = localStorage.getItem('app-lang') || 'ja'
@@ -218,42 +217,29 @@ function HomePage() {
     return () => window.removeEventListener('focus', handleFocus)
   }, [activeTab, page, searchInput, user])
 
-  const getCsrfToken = () => {
-    const session = JSON.parse(localStorage.getItem('session') || '{}')
-    return session.csrfToken || ''
-  }
-
-  const getJwtToken = () => {
-    const session = JSON.parse(localStorage.getItem('session') || '{}')
-    return session.token || ''
-  }
-
 const loadFolders = async () => {
-    if (activeTab === 'my-folders' && !user) {
-      setFolders([])
-      return
-    }
-    const endpoint = '/folders'
-    const params = new URLSearchParams({
-      page,
-      q: searchInput,
-      tab: activeTab,
-      userEmail: user?.email || user?.id || ''
-    })
-    const jwtToken = getJwtToken()
-    try {
-      const res = await fetch(`${API_BASE}${endpoint}?${params}`, {
-        headers: jwtToken ? { 'Authorization': `Bearer ${jwtToken}` } : {},
-      })
-      const data = await res.json()
-      if (data.folders !== undefined) {
-        setFolders(data.folders || [])
-        setTotalPages(data.totalPages || 1)
-      } else if (data.message) {
-        console.error('loadFolders error:', data.message)
-      }
-    } catch (e) { console.error(e) }
+  if (activeTab === 'my-folders' && !user) {
+    setFolders([])
+    return
   }
+  const endpoint = '/folders'
+  const params = new URLSearchParams({
+    page,
+    q: searchInput,
+    tab: activeTab,
+    userEmail: user?.email || user?.id || ''
+  })
+  try {
+    const res = await apiFetch(`${endpoint}?${params}`)
+    const data = await res.json()
+    if (data.folders !== undefined) {
+      setFolders(data.folders || [])
+      setTotalPages(data.totalPages || 1)
+    } else if (data.message) {
+      console.error('loadFolders error:', data.message)
+    }
+  } catch (e) { console.error(e) }
+}
 
   const loadGlobalCards = async () => {
     const params = new URLSearchParams({
@@ -261,7 +247,7 @@ const loadFolders = async () => {
       search: searchInput,
     })
     try {
-      const res = await fetch(`${API_BASE}/cards/public?${params}`)
+      const res = await apiFetch(`/cards/public?${params}`)
       const data = await res.json()
       if (data.cards) {
         const filteredCards = (data.cards || []).filter(card => {
@@ -341,6 +327,7 @@ const loadFolders = async () => {
       const session = {
         user: { id: data.email, username: data.username, email: data.email },
         csrfToken: data.csrfToken,
+        token: data.token,
       }
       localStorage.setItem('session', JSON.stringify(session))
       setUser(session.user)
@@ -368,16 +355,13 @@ const createNewFolder = async () => {
     if (!userEmail) return
 
     try {
-      const jwtToken = getJwtToken()
-      const res = await fetch(`${API_BASE}/folders/create`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-Token': getCsrfToken(),
-          ...(jwtToken ? { 'Authorization': `Bearer ${jwtToken}` } : {}),
-        },
-        body: JSON.stringify({ userEmail, title }),
-      })
+const res = await apiFetch('/folders/create', {
+method: 'POST',
+headers: {
+'Content-Type': 'application/json',
+},
+body: JSON.stringify({ userEmail, title }),
+})
       const data = await res.json()
       if (res.ok) {
         loadFolders()
@@ -409,24 +393,21 @@ const createNewFolder = async () => {
     setShowSettingsModal(true)
   }
 
-  const saveFolderSettings = async () => {
-    if (!editingFolder || !user) return
-    try {
-      const jwtToken = getJwtToken()
-      const res = await fetch(`${API_BASE}/folders/update`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-Token': getCsrfToken(),
-          ...(jwtToken ? { 'Authorization': `Bearer ${jwtToken}` } : {}),
-        },
-        body: JSON.stringify({
-          folderId: editingFolder.id,
-          title: editingFolder.title,
-          visibility: editingFolder.visibility,
-          userEmail: user.email || user.id,
-        }),
-      })
+const saveFolderSettings = async () => {
+if (!editingFolder || !user) return
+try {
+const res = await apiFetch('/folders/update', {
+method: 'POST',
+headers: {
+  'Content-Type': 'application/json',
+},
+body: JSON.stringify({
+  folderId: editingFolder.id,
+  title: editingFolder.title,
+  visibility: editingFolder.visibility,
+  userEmail: user.email || user.id,
+}),
+})
       if (res.ok) {
         setShowSettingsModal(false)
         loadFolders()
@@ -437,7 +418,7 @@ const createNewFolder = async () => {
   const exportFolder = async () => {
     if (!editingFolder || !user) return
     try {
-      const res = await fetch(`${API_BASE}/folders/export?folderId=${editingFolder.id}&userEmail=${user.email || user.id}`);
+      const res = await apiFetch(`/folders/export?folderId=${editingFolder.id}&userEmail=${user.email || user.id}`);
       const data = await res.json();
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
@@ -458,17 +439,14 @@ const createNewFolder = async () => {
       const reader = new FileReader();
       reader.onload = async (event) => {
         try {
-          const folderData = JSON.parse(event.target.result);
-          const jwtToken = getJwtToken()
-          const res = await fetch(`${API_BASE}/folders/import`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-CSRF-Token': getCsrfToken(),
-              ...(jwtToken ? { 'Authorization': `Bearer ${jwtToken}` } : {}),
-            },
-            body: JSON.stringify({ folderData, userEmail: user.email || user.id }),
-          });
+      const folderData = JSON.parse(event.target.result);
+      const res = await apiFetch('/folders/import', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ folderData, userEmail: user.email || user.id }),
+      });
           if (res.ok) {
             showAlert(t('success_import'))
             loadFolders();
@@ -480,20 +458,17 @@ const createNewFolder = async () => {
     input.click();
   }
 
-  const deleteFolder = async () => {
-    const confirmed = await showConfirm(t('confirm_delete_folder'), t('confirm_delete_folder'))
-    if (!confirmed || !editingFolder || !user) return
-    try {
-      const jwtToken = getJwtToken()
-      const res = await fetch(`${API_BASE}/folders/delete`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-Token': getCsrfToken(),
-          ...(jwtToken ? { 'Authorization': `Bearer ${jwtToken}` } : {}),
-        },
-        body: JSON.stringify({ folderId: editingFolder.id, userEmail: user.email || user.id }),
-      })
+const deleteFolder = async () => {
+const confirmed = await showConfirm(t('confirm_delete_folder'), t('confirm_delete_folder'))
+if (!confirmed || !editingFolder || !user) return
+try {
+const res = await apiFetch('/folders/delete', {
+method: 'POST',
+headers: {
+  'Content-Type': 'application/json',
+},
+body: JSON.stringify({ folderId: editingFolder.id, userEmail: user.email || user.id }),
+})
       if (res.ok) {
         setShowSettingsModal(false)
         loadFolders()
