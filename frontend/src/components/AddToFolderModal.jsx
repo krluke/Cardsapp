@@ -1,17 +1,11 @@
 import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
-
-const API_BASE = '/api'
+import { apiFetch } from '@/lib/api'
 
 export function AddToFolderModal({ card, userEmail, onClose, onSuccess }) {
   const [folders, setFolders] = useState([])
   const [loading, setLoading] = useState(true)
   const [lang, setLang] = useState('ja')
-
-  const getJwtToken = () => {
-    const session = JSON.parse(localStorage.getItem('session') || '{}')
-    return session.token || ''
-  }
 
   useEffect(() => {
     setLang(localStorage.getItem('app-lang') || 'ja')
@@ -20,10 +14,7 @@ export function AddToFolderModal({ card, userEmail, onClose, onSuccess }) {
 
   const loadPrivateFolders = async () => {
     try {
-      const jwtToken = getJwtToken()
-      const res = await fetch(`${API_BASE}/folders?tab=my-folders&userEmail=${userEmail}`, {
-        headers: jwtToken ? { 'Authorization': `Bearer ${jwtToken}` } : {},
-      })
+      const res = await apiFetch(`/folders?tab=my-folders&userEmail=${userEmail}`)
       const data = await res.json()
       if (data.folders) {
         setFolders(data.folders.filter(f => f.visibility === 'private'))
@@ -57,26 +48,22 @@ export function AddToFolderModal({ card, userEmail, onClose, onSuccess }) {
 
   const addCardToFolder = async (folderId) => {
     try {
-      const jwtToken = getJwtToken()
-      const res = await fetch(`${API_BASE}/cards/load-auth/${folderId}`, {
-        headers: jwtToken ? { 'Authorization': `Bearer ${jwtToken}` } : {},
-      })
+      const res = await apiFetch(`/cards/load-auth/${folderId}`)
       const existingCards = await res.json()
-      
+
       const newCard = {
         front: card.front,
         back: card.back,
         frontBg: card.frontBg,
         backBg: card.backBg,
       }
-      
+
       const updatedCards = [...(Array.isArray(existingCards) ? existingCards : []), newCard]
-      
-      const saveRes = await fetch(`${API_BASE}/cards/save`, {
+
+      const saveRes = await apiFetch('/cards/save', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(jwtToken ? { 'Authorization': `Bearer ${jwtToken}` } : {}),
         },
         body: JSON.stringify({
           folderId,
@@ -84,7 +71,7 @@ export function AddToFolderModal({ card, userEmail, onClose, onSuccess }) {
           userEmail,
         }),
       })
-      
+
       if (saveRes.ok) {
         onSuccess(t('success_add_card'))
       } else {
@@ -101,7 +88,7 @@ export function AddToFolderModal({ card, userEmail, onClose, onSuccess }) {
       <div className="auth-box" onClick={e => e.stopPropagation()}>
         <button className="close-btn" onClick={onClose}><X size={20} /></button>
         <h2 className="auth-title">{t('select_folder')}</h2>
-        
+
         {loading ? (
           <p>Loading...</p>
         ) : folders.length === 0 ? (
@@ -115,7 +102,7 @@ export function AddToFolderModal({ card, userEmail, onClose, onSuccess }) {
             ))}
           </div>
         )}
-        
+
         <button className="secondary-btn w-full mt-1" onClick={onClose}>{t('cancel')}</button>
       </div>
     </div>
