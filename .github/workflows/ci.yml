@@ -65,14 +65,14 @@ jobs:
 
     - name: Update local code
       run: |
-        cd ~/server-project
         git fetch origin
         git reset --hard origin/main
         git clean -fdx
 
     - name: Restart Docker Containers
+      env:
+        VITE_CLERK_PUBLISHABLE_KEY: ${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}
       run: |
-        cd ~/server-project
         docker-compose down --remove-orphans
         docker buildx prune -f
         docker-compose up -d --build --force-recreate
@@ -81,10 +81,8 @@ jobs:
 
     - name: Verify Backend Health
       run: |
-        cd ~/server-project
         docker-compose ps
 
     - name: Collect Static Files
       run: |
-        cd ~/server-project
         docker-compose exec -T backend python manage.py collectstatic --noinput || true
