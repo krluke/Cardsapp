@@ -16,55 +16,56 @@ jobs:
       run:
         working-directory: ./backend
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install flake8 pytest
+
+      - name: Lint with Flake8
+        run: |
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+
+      - name: Run Tests
+        run: |
+          pytest || echo "No tests found, skipping"
+
+deploy:
+  needs: build-and-test
+  if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+  runs-on: self-hosted
+  env:
+    VITE_CLERK_PUBLISHABLE_KEY: ${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}
+
+  steps:
     - name: Checkout code
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
-    - name: Setup Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: "3.10"
-        cache: 'pip'
-
-    - name: Install dependencies
+    - name: Load secrets into environment
       run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install flake8 pytest
-
-    - name: Lint with Flake8
-      run: |
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-
-    - name: Run Tests
-      run: |
-        pytest || echo "No tests found, skipping"
-
-  deploy:
-    needs: build-and-test
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: self-hosted
-    env:
-      VITE_CLERK_PUBLISHABLE_KEY: ${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-
-    - name: Load environment variables
-      run: |
-        ENV_FILE="${HOME}/server-project/.env"
-        if [ -f "$ENV_FILE" ]; then
-          echo "Loading environment variables from $ENV_FILE"
-          # Filter out comments and blank lines, then append to $GITHUB_ENV
-          grep -v '^#' "$ENV_FILE" | grep -v '^$' >> $GITHUB_ENV
-        else
-          echo "Error: .env file not found at $ENV_FILE"
-          exit 1
-        fi
+        cd ~/server-project
+        mkdir -p /tmp/env
+        echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" > /tmp/env/secrets
+        echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> /tmp/env/secrets
+        echo "JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}" >> /tmp/env/secrets
+        echo "ADMIN_API_KEY=${{ secrets.ADMIN_API_KEY }}" >> /tmp/env/secrets
+        echo "ALLOWED_HOSTS=${{ secrets.ALLOWED_HOSTS }}" >> /tmp/env/secrets
+        echo "DB_HOST=${{ secrets.DB_HOST || 'db' }}" >> /tmp/env/secrets
+        echo "DB_NAME=${{ secrets.DB_NAME || 'flashcards_db' }}" >> /tmp/env/secrets
+        echo "DB_USER=${{ secrets.DB_USER || 'flashcard_user' }}" >> /tmp/env/secrets
 
     - name: Update local code
       run: |
@@ -74,9 +75,10 @@ jobs:
 
     - name: Restart Docker Containers
       run: |
-        docker-compose down --remove-orphans
+        cd ~/server-project
+        docker-compose --env-file /tmp/env/secrets down --remove-orphans
         docker buildx prune -f
-        docker-compose up -d --build --force-recreate
+        docker-compose --env-file /tmp/env/secrets up -d --build --force-recreate
         sleep 15
         docker-compose ps
 
