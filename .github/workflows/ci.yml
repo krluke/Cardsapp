@@ -43,8 +43,10 @@ jobs:
 
   deploy:
     needs: build-and-test
-    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: self-hosted
+    env:
+      VITE_CLERK_PUBLISHABLE_KEY: ${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}
 
     steps:
     - name: Checkout code
@@ -52,10 +54,20 @@ jobs:
       with:
         fetch-depth: 0
 
+    - name: Load environment variables
+      run: |
+        cd ~/server-project
+        if [ -f .env ]; then
+          set -a
+          . .env
+          set +a
+        fi
+
     - name: Update local code
       run: |
         git fetch origin
         git reset --hard origin/main
+        git clean -fdx
 
     - name: Restart Docker Containers
       env:
@@ -64,7 +76,7 @@ jobs:
         docker-compose down --remove-orphans
         docker buildx prune -f
         docker-compose up -d --build --force-recreate
-        sleep 10
+        sleep 15
         docker-compose ps
 
     - name: Verify Backend Health
