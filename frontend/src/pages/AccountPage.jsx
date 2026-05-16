@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, User, Lock } from 'lucide-react'
 import { apiFetch } from '@/lib/api'
 import './AccountPage.css'
 
@@ -10,6 +10,11 @@ export default function AccountPage() {
   const [totalCards, setTotalCards] = useState(0)
   const [loading, setLoading] = useState(true)
   const [lang, setLang] = useState('ja')
+  const [showPasswordModal, setShowPasswordModal] = useState(false)
+  const [oldPassword, setOldPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [passwordError, setPasswordError] = useState('')
 
   useEffect(() => {
     const session = JSON.parse(localStorage.getItem('session') || '{}')
@@ -30,7 +35,7 @@ export default function AccountPage() {
 
   const loadTotalCards = async (userEmail) => {
     try {
-      const res = await apiFetch(`/folders?tab=my-folders&userEmail=${userEmail}`)
+      const res = await apiFetch(`/folders?tab=my-folders&userEmail=${encodeURIComponent(userEmail)}`)
       const data = await res.json()
       if (data.folders) {
         const total = data.folders.reduce((sum, folder) => sum + (folder.card_count || 0), 0)
@@ -43,6 +48,45 @@ export default function AccountPage() {
     }
   }
 
+  const handlePasswordChange = async (e) => {
+    e.preventDefault()
+    setPasswordError('')
+
+    if (!oldPassword || !newPassword || !confirmPassword) {
+      setPasswordError('Please fill in all fields')
+      return
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError('New passwords do not match')
+      return
+    }
+
+    if (newPassword.length < 8) {
+      setPasswordError('Password must be at least 8 characters')
+      return
+    }
+
+    try {
+      const res = await apiFetch('/change-password', {
+        method: 'POST',
+        body: JSON.stringify({ oldPassword, newPassword })
+      })
+
+      if (res.ok) {
+        setOldPassword('')
+        setNewPassword('')
+        setConfirmPassword('')
+        setShowPasswordModal(false)
+      } else {
+        const data = await res.json()
+        setPasswordError(data.error || 'Failed to change password')
+      }
+    } catch (err) {
+      setPasswordError('Error changing password')
+    }
+  }
+
   const t = (key) => {
     const translations = {
       ja: {
@@ -51,6 +95,13 @@ export default function AccountPage() {
         account_email: "メールアドレス",
         account_total_cards: "保有カード数",
         btn_back: "戻る",
+        change_password_btn: "パスワードを変更",
+        change_password_title: "パスワードを変更",
+        current_password: "現在のパスワード",
+        new_password: "新しいパスワード",
+        confirm_new_password: "新しいパスワードを確認",
+        cancel: "キャンセル",
+        update: "更新",
       },
       en: {
         account_title: "Account Info",
@@ -58,6 +109,13 @@ export default function AccountPage() {
         account_email: "Email",
         account_total_cards: "Total Cards",
         btn_back: "Back",
+        change_password_btn: "Change Password",
+        change_password_title: "Change Password",
+        current_password: "Current Password",
+        new_password: "New Password",
+        confirm_new_password: "Confirm New Password",
+        cancel: "Cancel",
+        update: "Update",
       },
     }
     return translations[lang]?.[key] || key
@@ -66,29 +124,115 @@ export default function AccountPage() {
   if (loading) return <div className="page-container">Loading...</div>
 
   return (
-    <div className="account-page">
-      <header className="account-header">
-        <button className="back-btn" onClick={() => navigate('/home')}>
-          <ArrowLeft size={20} /> {t('btn_back')}
-        </button>
-        <h1 className="account-title">{t('account_title')}</h1>
-      </header>
-      <main className="account-main">
-        <div className="account-card">
-          <div className="account-info-row">
-            <span className="account-label">{t('account_username')}</span>
-            <span className="account-value">{user?.username || '-'}</span>
+    <>
+      <div className="account-page">
+        <header className="account-header">
+          <button className="back-btn" onClick={() => navigate('/home')}>
+            <ArrowLeft size={20} /> {t('btn_back')}
+          </button>
+          <User size={20} className="user-icon-header" />
+          <h1 className="account-title">{t('account_title')}</h1>
+        </header>
+        <main className="account-main">
+          <div className="account-card">
+            <div className="account-info-row">
+              <span className="account-label">{t('account_username')}</span>
+              <span className="account-value">{user?.username || '-'}</span>
+            </div>
+            <div className="account-info-row">
+              <span className="account-label">{t('account_email')}</span>
+              <span className="account-value">{user?.email || '-'}</span>
+            </div>
+            <div className="account-info-row">
+              <span className="account-label">{t('account_total_cards')}</span>
+              <span className="account-value">{totalCards}</span>
+            </div>
+            <div className="account-action-row">
+              <button
+                className="change-password-btn"
+                onClick={() => setShowPasswordModal(true)}
+              >
+                <Lock size={16} />
+                {t('change_password_btn')}
+              </button>
+            </div>
           </div>
-          <div className="account-info-row">
-            <span className="account-label">{t('account_email')}</span>
-            <span className="account-value">{user?.email || '-'}</span>
-          </div>
-          <div className="account-info-row">
-            <span className="account-label">{t('account_total_cards')}</span>
-            <span className="account-value">{totalCards}</span>
+        </main>
+      </div>
+
+      {showPasswordModal && (
+        <div className="password-modal-overlay">
+          <div className="password-modal-container">
+            <div className="account-header">
+              <h2 className="modal-title">{t('change_password_title')}</h2>
+              <button
+                onClick={() => setShowPasswordModal(false)}
+                className="close-modal-btn"
+              >
+                ×
+              </button>
+            </div>
+            <form onSubmit={handlePasswordChange} className="password-form">
+              <div className="form-input-group">
+                <label htmlFor="oldPassword" className="form-label">
+                  {t('current_password')}
+                </label>
+                <input
+                  id="oldPassword"
+                  type="password"
+                  value={oldPassword}
+                  onChange={(e) => setOldPassword(e.target.value)}
+                  className="form-input"
+                  required
+                />
+              </div>
+              <div className="form-input-group">
+                <label htmlFor="newPassword" className="form-label">
+                  {t('new_password')}
+                </label>
+                <input
+                  id="newPassword"
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="form-input"
+                  minLength={8}
+                  required
+                />
+              </div>
+              <div className="form-input-group">
+                <label htmlFor="confirmPassword" className="form-label">
+                  {t('confirm_new_password')}
+                </label>
+                <input
+                  id="confirmPassword"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="form-input"
+                  required
+                />
+              </div>
+              {passwordError && <p className="password-error">{passwordError}</p>}
+              <div className="modal-action-buttons">
+                <button
+                  type="button"
+                  onClick={() => setShowPasswordModal(false)}
+                  className="btn-outline-secondary"
+                >
+                  {t('cancel')}
+                </button>
+                <button
+                  type="submit"
+                  className="btn-primary"
+                >
+                  {t('update')}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
-      </main>
-    </div>
+      )}
+    </>
   )
 }
