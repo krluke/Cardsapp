@@ -34,3 +34,5 @@ Thumbs.db
 *.log
 
 backup_all.sql
+# Node.js dependencies
+node_modules/
