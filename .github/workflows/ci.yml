@@ -58,7 +58,7 @@ jobs:
         cd ~/server-project
         docker-compose down --remove-orphans
         docker buildx prune -f
-        docker-compose up -d --build --force-recreate
+        VITE_CLERK_PUBLISHABLE_KEY=${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }} docker-compose up -d --build --force-recreate
         sleep 10
         docker-compose ps
 
