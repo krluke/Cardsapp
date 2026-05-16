@@ -58,8 +58,8 @@ jobs:
       run: |
         if [ -f ~/server-project/.env ]; then
           echo "Loading environment variables from ~/server-project/.env"
-          # Append the entire .env file content directly into the GitHub environment
-          cat ~/server-project/.env >> $GITHUB_ENV
+          # Filter out comments and blank lines, then append to $GITHUB_ENV
+          grep -v '^#' ~/server-project/.env | grep -v '^$' >> $GITHUB_ENV
         else
           echo "Warning: .env file not found at ~/server-project/.env"
         fi
