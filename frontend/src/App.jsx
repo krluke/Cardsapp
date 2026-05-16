@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, Link } from 'react-router-dom'
 import { X, FolderPlus, Palette, Globe, User, LogOut, LogIn, Settings, Trash2, Search, ChevronLeft, ChevronRight, BookOpen, Plus } from 'lucide-react'
-import { Show, SignInButton, SignUpButton, useAuth } from '@clerk/clerk-react'
+import { Show, SignInButton, UserButton, useAuth } from '@clerk/clerk-react'
 import EditorPage from './pages/EditorPage'
 import ViewerPage from './pages/ViewerPage'
 import StudyPage from './pages/study/StudyPage'
@@ -752,17 +752,18 @@ body: JSON.stringify({ folderId: editingFolder.id, userEmail: user.email || user
               <span>または</span>
             </div>
             <div className="clerk-buttons">
-              {isSignedIn ? (
+              <Show when="signed-in">
                 <div>
                   <p className="clerk-signed-in-text">You are signed in</p>
-                  <SignInButton signInUrl="/account" appearance={{ sidebarLinks: { signInUrl: '/account' } }} asChild={<button type="button" className="clerk-oauth-btn">Account</button>} />
+                  <UserButton afterSignOutUrl="/" appearance={{ sidebarLinks: { signOutUrl: '/' } }} asChild={<button type="button" className="clerk-oauth-btn">Account</button>} />
                 </div>
-              ) : (
+              </Show>
+              <Show when="signed-out">
                 <>
                   <SignInButton mode="modal" appearance={{ sidebarLinks: { signUpUrl: '/' } }} asChild={<button type="button" className="clerk-oauth-btn">Googleで続ける</button>} />
                   <SignInButton mode="modal" appearance={{ sidebarLinks: { signUpUrl: '/' } }} asChild={<button type="button" className="clerk-oauth-btn">GitHubで続ける</button>} />
                 </>
-              )}
+              </Show>
             </div>
           </div>
         </div>
