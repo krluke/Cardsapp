@@ -316,6 +316,106 @@ def send_code(request):
 
 
 # ==========================================
+# CLERK OAUTH ENDPOINT
+# ==========================================
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def clerk_auth(request):
+    """Verify Clerk JWT, find/create local user, return internal session."""
+    import json as json_mod
+    import requests as http_requests
+
+    data = json_mod.loads(request.body)
+    clerk_token = data.get("clerk_token")
+    if not clerk_token:
+        return JsonResponse({"message": "clerk_token is required"}, status=400)
+
+    # Fetch JWKS from Clerk
+    clerk_issuer = os.getenv("CLERK_ISSUER", "https://absolute-hound-18.clerk.accounts.dev")
+    jwks_url = f"{clerk_issuer}/.well-known/jwks.json"
+    try:
+        jwks_resp = http_requests.get(jwks_url, timeout=10)
+        jwks_resp.raise_for_status()
+        jwks = jwks_resp.json()
+    except Exception as e:
+        logger.error(f"Clerk JWKS fetch error: {e}")
+        return JsonResponse({"message": "Failed to verify token"}, status=500)
+
+    # Find the key matching the token header
+    import jwt
+    try:
+        unverified_header = jwt.get_unverified_header(clerk_token)
+        kid = unverified_header.get("kid")
+    except Exception:
+        return JsonResponse({"message": "Invalid token"}, status=401)
+
+    rsa_key = None
+    for key in jwks.get("keys", []):
+        if key.get("kid") == kid:
+            rsa_key = key
+            break
+    if not rsa_key:
+        return JsonResponse({"message": "Invalid token"}, status=401)
+
+    # Verify and decode
+    try:
+        from jwt.algorithms import RSAAlgorithm
+        public_key = RSAAlgorithm.from_jwk(json_mod.dumps(rsa_key))
+        payload = jwt.decode(
+            clerk_token,
+            public_key,
+            algorithms=["RS256"],
+            audience=[os.getenv("CLERK_PUBLISHABLE_KEY", "")],
+            issuer=clerk_issuer,
+        )
+    except jwt.ExpiredSignatureError:
+        return JsonResponse({"message": "Token expired"}, status=401)
+    except Exception as e:
+        logger.error(f"Clerk token verification error: {e}")
+        return JsonResponse({"message": "Invalid token"}, status=401)
+
+    email = payload.get("email") or payload.get("primary_email_address")
+    username = payload.get("name") or payload.get("username") or email.split("@")[0]
+    clerk_user_id = payload.get("sub")
+
+    if not email:
+        return JsonResponse({"message": "Email not found in token"}, status=400)
+
+    # Find or create user in local DB
+    with connection.cursor() as c:
+        c.execute("SELECT * FROM users WHERE email = %s", (email,))
+        user = dictfetchone(c)
+
+        if not user:
+            try:
+                hashed_password = generate_password_hash(secrets.token_urlsafe(32))
+                c.execute(
+                    "INSERT INTO users (email, username, password) VALUES (%s, %s, %s)",
+                    (email, username, hashed_password),
+                )
+                c.execute("SELECT * FROM users WHERE email = %s", (email,))
+                user = dictfetchone(c)
+            except Exception:
+                return JsonResponse({"message": "Failed to create user"}, status=500)
+
+    csrf_token = csrf_protector.generate_token(email)
+    jwt_user_id = user.get("id") or user.get("email")
+    jwt_token = generate_jwt_token(jwt_user_id, email)
+
+    return JsonResponse(
+        {
+            "message": "ログイン成功！",
+            "username": user["username"],
+            "email": user["email"],
+            "csrfToken": csrf_token,
+            "token": jwt_token,
+        }
+    )
+
+
+# ==========================================
 # USER ENDPOINTS
 # ==========================================
 
