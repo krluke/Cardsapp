@@ -56,12 +56,14 @@ jobs:
 
     - name: Load environment variables
       run: |
-        if [ -f ~/server-project/.env ]; then
-          echo "Loading environment variables from ~/server-project/.env"
+        ENV_FILE="${HOME}/server-project/.env"
+        if [ -f "$ENV_FILE" ]; then
+          echo "Loading environment variables from $ENV_FILE"
           # Filter out comments and blank lines, then append to $GITHUB_ENV
-          grep -v '^#' ~/server-project/.env | grep -v '^$' >> $GITHUB_ENV
+          grep -v '^#' "$ENV_FILE" | grep -v '^$' >> $GITHUB_ENV
         else
-          echo "Warning: .env file not found at ~/server-project/.env"
+          echo "Error: .env file not found at $ENV_FILE"
+          exit 1
         fi
 
     - name: Update local code
