@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, User, Lock } from 'lucide-react'
-import { apiFetch } from '@/lib/api'
 import './AccountPage.css'
 
 export default function AccountPage() {
@@ -10,11 +9,12 @@ export default function AccountPage() {
   const [totalCards, setTotalCards] = useState(0)
   const [loading, setLoading] = useState(true)
   const [lang, setLang] = useState('ja')
-  const [showPasswordModal, setShowPasswordModal] = useState(false)
-  const [oldPassword, setOldPassword] = useState('')
-  const [newPassword, setNewPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [passwordError, setPasswordError] = useState('')
+      const [showPasswordModal, setShowPasswordModal] = useState(false)
+      const [oldPassword, setOldPassword] = useState('')
+      const [newPassword, setNewPassword] = useState('')
+      const [confirmPassword, setConfirmPassword] = useState('')
+      const [passwordError, setPasswordError] = useState('')
+      const [passwordSuccess, setPasswordSuccess] = useState(false)
 
   useEffect(() => {
     const session = JSON.parse(localStorage.getItem('session') || '{}')
@@ -67,65 +67,89 @@ export default function AccountPage() {
       return
     }
 
-    try {
-      const res = await apiFetch('/change-password', {
+      try {
+      const session = JSON.parse(localStorage.getItem('session') || '{}')
+      const csrfToken = session.csrfToken || ''
+      const res = await fetch('/api/user/change-password', {
         method: 'POST',
-        body: JSON.stringify({ oldPassword, newPassword })
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.token}`,
+          'X-CSRF-Token': csrfToken
+        },
+        body: JSON.stringify({ currentPassword: oldPassword, newPassword })
       })
 
-      if (res.ok) {
-        setOldPassword('')
-        setNewPassword('')
-        setConfirmPassword('')
-        setShowPasswordModal(false)
-      } else {
-        const data = await res.json()
-        setPasswordError(data.error || 'Failed to change password')
-      }
-    } catch (err) {
-      setPasswordError('Error changing password')
+    const data = await res.json()
+    if (res.ok) {
+      setPasswordSuccess(true)
+      setOldPassword('')
+      setNewPassword('')
+      setConfirmPassword('')
+      setPasswordError('')
+      setTimeout(() => setShowPasswordModal(false), 2000)
+      setTimeout(() => setPasswordSuccess(false), 5000)
+    } else {
+      setPasswordError(data.error || 'Failed to change password')
     }
+  } catch (err) {
+  setPasswordError('Error changing password')
   }
+}
 
   const t = (key) => {
     const translations = {
-      ja: {
-        account_title: "アカウント情報",
-        account_username: "ユーザー名",
-        account_email: "メールアドレス",
-        account_total_cards: "保有カード数",
-        btn_back: "戻る",
-        change_password_btn: "パスワードを変更",
-        change_password_title: "パスワードを変更",
-        current_password: "現在のパスワード",
-        new_password: "新しいパスワード",
-        confirm_new_password: "新しいパスワードを確認",
-        cancel: "キャンセル",
-        update: "更新",
-      },
-      en: {
-        account_title: "Account Info",
-        account_username: "Username",
-        account_email: "Email",
-        account_total_cards: "Total Cards",
-        btn_back: "Back",
-        change_password_btn: "Change Password",
-        change_password_title: "Change Password",
-        current_password: "Current Password",
-        new_password: "New Password",
-        confirm_new_password: "Confirm New Password",
-        cancel: "Cancel",
-        update: "Update",
-      },
+  ja: {
+    account_title: "アカウント情報",
+    account_username: "ユーザー名",
+    account_email: "メールアドレス",
+    account_total_cards: "保有カード数",
+    btn_back: "戻る",
+    change_password_btn: "パスワードを変更",
+    change_password_title: "パスワードを変更",
+    current_password: "現在のパスワード",
+    new_password: "新しいパスワード",
+    confirm_new_password: "新しいパスワードを確認",
+    cancel: "キャンセル",
+    update: "更新",
+    password_change_success: "パスワードを正常に変更しました！",
+  },
+  en: {
+    account_title: "Account Info",
+    account_username: "Username",
+    account_email: "Email",
+    account_total_cards: "Total Cards",
+    btn_back: "Back",
+    change_password_btn: "Change Password",
+    change_password_title: "Change Password",
+    current_password: "Current Password",
+    new_password: "New Password",
+    confirm_new_password: "Confirm New Password",
+    cancel: "Cancel",
+    update: "Update",
+    password_change_success: "Password changed successfully!",
+  },
     }
     return translations[lang]?.[key] || key
   }
 
   if (loading) return <div className="page-container">Loading...</div>
 
+  if (passwordSuccess) {
+    return (
+      <div className="page-container">
+        <div className="account-page">
+          <div className="empty-state-password-success">
+            {t('password_change_success')}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <>
-      <div className="account-page">
+    <div className="account-page">
         <header className="account-header">
           <button className="back-btn" onClick={() => navigate('/home')}>
             <ArrowLeft size={20} /> {t('btn_back')}

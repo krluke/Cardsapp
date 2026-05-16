@@ -320,40 +320,47 @@ def send_code(request):
 # ==========================================
 
 
-@csrf_exempt
-@jwt_required
 @require_http_methods(["POST"])
 def change_password(request):
-    import json as json_mod
+  import json as json_mod
 
-    data = json_mod.loads(request.body)
-    current_password = data.get("currentPassword")
-    new_password = data.get("newPassword")
-    user_email = request.user_email
+  session_email = request.user_email
+  if not session_email:
+    return JsonResponse({"error": "認証されていません"}, status=401)
 
-    if not current_password or not new_password:
-        return JsonResponse({"error": "入力情報が不足しています"}, status=400)
+  data = json_mod.loads(request.body)
+  current_password = data.get("currentPassword", "")
+  new_password = data.get("newPassword", "")
 
-    try:
-        with connection.cursor() as c:
-            c.execute("SELECT password FROM users WHERE email = %s", (user_email,))
-            user = dictfetchone(c)
+  if not current_password or not new_password:
+    return JsonResponse({"error": "現在のパスワードと新しいパスワードを入力してください"}, status=400)
+  
+  if len(new_password) < 8:
+    return JsonResponse({"error": "パスワードは8文字以上で入力してください"}, status=400)
 
-            if not user or not check_password_hash(user["password"], current_password):
-                return JsonResponse(
-                    {"error": "現在のパスワードが間違っています"}, status=401
-                )
+  try:
+    with connection.cursor() as c:
+      c.execute("SELECT password FROM users WHERE email = %s", (session_email,))
+      user = dictfetchone(c)
 
-            hashed_password = generate_password_hash(new_password)
-            c.execute(
-                "UPDATE users SET password = %s WHERE email = %s",
-                (hashed_password, user_email),
-            )
+      if not user:
+        return JsonResponse({"error": "ユーザーが見つかりません"}, status=404)
 
-        return JsonResponse({"message": "パスワードを更新しました"})
-    except Exception as e:
-        logger.error(f"Password change error: {e}")
-        return JsonResponse({"error": "サーバーエラーが発生しました"}, status=500)
+      if not check_password_hash(user["password"], current_password):
+        return JsonResponse(
+          {"error": "現在のパスワードが間違っています"}, status=401
+        )
+
+      hashed_password = generate_password_hash(new_password)
+      c.execute(
+        "UPDATE users SET password = %s WHERE email = %s",
+        (hashed_password, session_email),
+      )
+
+      return JsonResponse({"message": "パスワードを更新しました"})
+  except Exception as e:
+    logger.error(f"Password change error: {e}")
+    return JsonResponse({"error": "サーバーエラーが発生しました"}, status=500)
 
 
 @xframe_options_exempt
