@@ -3,6 +3,14 @@
   padding: 0;
 }
 
+.empty-state-password-success {
+  padding: 2rem;
+  text-align: center;
+  color: var(--primary);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
 .account-header {
   display: flex;
   align-items: center;
@@ -140,6 +148,17 @@
   color: var(--destructive);
   font-size: 0.85rem;
   margin: 0;
+  text-align: center;
+  width: 100%;
+}
+
+.password-success {
+  color: var(--primary);
+  font-size: 0.85rem;
+  margin: 0;
+  text-align: center;
+  width: 100%;
+  font-weight: 600;
 }
 
 .user-icon-header {
