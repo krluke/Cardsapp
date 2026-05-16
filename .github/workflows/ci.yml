@@ -47,27 +47,30 @@ jobs:
     runs-on: self-hosted
 
     steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
     - name: Update local code
       run: |
-        cd ~/server-project
         git fetch origin
         git reset --hard origin/main
 
     - name: Restart Docker Containers
+      env:
+        VITE_CLERK_PUBLISHABLE_KEY: ${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}
       run: |
-        cd ~/server-project
         docker-compose down --remove-orphans
         docker buildx prune -f
-        VITE_CLERK_PUBLISHABLE_KEY=${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }} docker-compose up -d --build --force-recreate
+        docker-compose up -d --build --force-recreate
         sleep 10
         docker-compose ps
 
     - name: Verify Backend Health
       run: |
-        cd ~/server-project
         docker-compose ps
 
     - name: Collect Static Files
       run: |
-        cd ~/server-project
         docker-compose exec -T backend python manage.py collectstatic --noinput || true
