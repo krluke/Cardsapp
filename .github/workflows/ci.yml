@@ -56,11 +56,12 @@ jobs:
 
     - name: Load environment variables
       run: |
-        cd ~/server-project
-        if [ -f .env ]; then
-          set -a
-          . .env
-          set +a
+        if [ -f ~/server-project/.env ]; then
+          echo "Loading environment variables from ~/server-project/.env"
+          # Append the entire .env file content directly into the GitHub environment
+          cat ~/server-project/.env >> $GITHUB_ENV
+        else
+          echo "Warning: .env file not found at ~/server-project/.env"
         fi
 
     - name: Update local code
@@ -70,8 +71,6 @@ jobs:
         git clean -fdx
 
     - name: Restart Docker Containers
-      env:
-        VITE_CLERK_PUBLISHABLE_KEY: ${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}
       run: |
         docker-compose down --remove-orphans
         docker buildx prune -f
