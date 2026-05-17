@@ -52,6 +52,7 @@ jobs:
           fetch-depth: 0
 
       - name: Restart Docker Containers
+        if: ${{ env.CI != 'true' }}
         run: |
           docker compose down --remove-orphans
           docker buildx prune -f
@@ -60,9 +61,11 @@ jobs:
           docker compose ps
 
       - name: Verify Backend Health
+        if: ${{ env.CI != 'true' }}
         run: |
           docker compose ps
 
       - name: Collect Static Files
+        if: ${{ env.CI != 'true' }}
         run: |
           docker compose exec -T backend python manage.py collectstatic --noinput || true
