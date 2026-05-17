@@ -78,8 +78,8 @@ deploy:
         cd ~/server-project
         docker-compose --env-file /tmp/env/secrets down --remove-orphans
         docker buildx prune -f
-        docker-compose --env-file /tmp/env/secrets up -d --build --force-recreate
-        sleep 15
+        docker-compose up -d --build --force-recreate
+        sleep 10
         docker-compose ps
 
     - name: Verify Backend Health

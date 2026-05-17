@@ -15,6 +15,9 @@ staticfiles/
 # 環境変数 / 秘密情報
 # GMAILのパスワードなどを守るために必須です
 .env
+.env.local
+.env.frontend
+.backend/.env
 
 # IDE / エディタ
 .vscode/
