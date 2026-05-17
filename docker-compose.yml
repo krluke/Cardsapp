@@ -59,8 +59,11 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        - VITE_CLERK_PUBLISHABLE_KEY
     env_file:
       - .env.frontend
+      
     container_name: my-frontend
     restart: always
     ports:
