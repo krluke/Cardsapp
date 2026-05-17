@@ -65,9 +65,10 @@ services:
         restart: always
     ports:
       - "8080:80"
-      depends_on:
+  depends_on:
+    - backend
 
-  # --- Cloudflare Tunnel ---
+# --- Cloudflare Tunnel ---
   cloudflared:
     image: cloudflare/cloudflared:latest
     container_name: cloudflare-tunnel
