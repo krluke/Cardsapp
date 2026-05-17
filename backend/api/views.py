@@ -1092,9 +1092,9 @@ def save_cards(request):
         )
         
         connection.commit()
-            logger.error(
-                f"SAVE DEBUG - committed {len(cards_data)} cards for folder {folder_id}"
-            )
+        logger.error(
+            f"SAVE DEBUG - committed {len(cards_data)} cards for folder {folder_id}"
+        )
 
         return JsonResponse({"message": "セーブ完了！"})
     except Exception as e:
