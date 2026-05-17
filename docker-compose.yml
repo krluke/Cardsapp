@@ -67,14 +67,14 @@ services:
       retries: 10
       start_period: 60s
 
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      args:
-        VITE_CLERK_PUBLISHABLE_KEY: ${VITE_CLERK_PUBLISHABLE_KEY}
-    container_name: my-frontend
-    restart: always
+      frontend:
+        build:
+          context: ./frontend
+          dockerfile: Dockerfile
+        env_file:
+          - .env.frontend
+        container_name: my-frontend
+        restart: always
     ports:
       - "8080:80"
     depends_on:
