@@ -41,51 +41,32 @@ jobs:
         run: |
           pytest || echo "No tests found, skipping"
 
-deploy:
-  needs: build-and-test
-  if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-  runs-on: self-hosted
-  env:
-    VITE_CLERK_PUBLISHABLE_KEY: ${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}
+  deploy:
+    needs: build-and-test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' || (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true)
+    runs-on: self-hosted
+    steps:
+      - name: Update local code
+        run: |
+          cd ~/server-project
+          git fetch origin
+          git reset --hard origin/main
 
-  steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
+      - name: Restart Docker Containers
+        run: |
+          cd ~/server-project
+          docker-compose down --remove-orphans
+          docker buildx prune -f
+          docker-compose up -d --build --force-recreate
+          sleep 10
+          docker-compose ps
 
-    - name: Load secrets into environment
-      run: |
-        cd ~/server-project
-        mkdir -p /tmp/env
-        echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" > /tmp/env/secrets
-        echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> /tmp/env/secrets
-        echo "JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}" >> /tmp/env/secrets
-        echo "ADMIN_API_KEY=${{ secrets.ADMIN_API_KEY }}" >> /tmp/env/secrets
-        echo "ALLOWED_HOSTS=${{ secrets.ALLOWED_HOSTS }}" >> /tmp/env/secrets
-        echo "DB_HOST=${{ secrets.DB_HOST || 'db' }}" >> /tmp/env/secrets
-        echo "DB_NAME=${{ secrets.DB_NAME || 'flashcards_db' }}" >> /tmp/env/secrets
-        echo "DB_USER=${{ secrets.DB_USER || 'flashcard_user' }}" >> /tmp/env/secrets
+      - name: Verify Backend Health
+        run: |
+          cd ~/server-project
+          docker-compose ps
 
-    - name: Update local code
-      run: |
-        git fetch origin
-        git reset --hard origin/main
-        git clean -fdx
-
-    - name: Restart Docker Containers
-      run: |
-        cd ~/server-project
-        docker-compose --env-file /tmp/env/secrets down --remove-orphans
-        docker buildx prune -f
-        docker-compose up -d --build --force-recreate
-        sleep 10
-        docker-compose ps
-
-    - name: Verify Backend Health
-      run: |
-        docker-compose ps
-
-    - name: Collect Static Files
-      run: |
-        docker-compose exec -T backend python manage.py collectstatic --noinput || true
+      - name: Collect Static Files
+        run: |
+          cd ~/server-project
+          docker-compose exec -T backend python manage.py collectstatic --noinput || true
