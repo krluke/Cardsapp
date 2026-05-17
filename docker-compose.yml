@@ -51,24 +51,23 @@ services:
       - RUNNING_IN_DOCKER=1
     volumes:
       - ./backend:/app
-  depends_on:
+    depends_on:
       db:
         condition: service_healthy
 
-      frontend:
-        build:
-          context: ./frontend
-          dockerfile: Dockerfile
-        env_file:
-          - .env.frontend
-        container_name: my-frontend
-        restart: always
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    env_file:
+      - .env.frontend
+    container_name: my-frontend
+    restart: always
     ports:
       - "8080:80"
-  depends_on:
-    - backend
+    depends_on:
+      - backend
 
-# --- Cloudflare Tunnel ---
   cloudflared:
     image: cloudflare/cloudflared:latest
     container_name: cloudflare-tunnel
