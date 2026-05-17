@@ -691,66 +691,9 @@ body: JSON.stringify({ folderId: editingFolder.id, userEmail: user.email || user
           <div className="auth-box" onClick={e => e.stopPropagation()}>
             <button className="close-btn" onClick={() => setShowAuthModal(false)}><X size={20} /></button>
             
-            {authView === 'login' ? (
-              <form onSubmit={handleLogin}>
-                <h2 className="auth-title">{t('login_title')}</h2>
-                {message.text && <div className={`auth-message ${message.type}`}>{message.text}</div>}
-                <input className="input-field mb-1" placeholder={t('placeholder_login_id')} value={loginData.id} onChange={e => setLoginData({...loginData, id: e.target.value})} required />
-                <input type="password" className="input-field mb-1" placeholder={t('placeholder_password')} value={loginData.password} onChange={e => setLoginData({...loginData, password: e.target.value})} required />
-                <button type="submit" className="primary-btn w-full">{t('btn_login')}</button>
-                <p className="switch-auth-text">{t('switch_to_signup_text')} <span className="text-link" onClick={() => setAuthView('signup')}>{t('switch_to_signup_link')}</span></p>
-              </form>
-            ) : (
-              <form onSubmit={handleSignup}>
-                <h2 className="auth-title">{t('signup_title')}</h2>
-                {message.text && <div className={`auth-message ${message.type}`}>{message.text}</div>}
-                <input className="input-field mb-1" placeholder={t('placeholder_username')} value={signupData.username} onChange={e => setSignupData({...signupData, username: e.target.value})} required />
-                <div className="input-with-btn mb-1">
-                  <input type="email" className="input-field" placeholder={t('placeholder_email')} value={signupData.email} onChange={e => setSignupData({...signupData, email: e.target.value})} required />
-                  <button type="button" className="secondary-btn shadow-btn">{t('btn_send_code')}</button>
-                </div>
-                <input className="input-field mb-1" placeholder={t('placeholder_verify_code')} value={signupData.code} onChange={e => setSignupData({...signupData, code: e.target.value})} required />
-                <input type="password" className="input-field mb-1" placeholder={t('placeholder_password')} value={signupData.password} onChange={e => setSignupData({...signupData, password: e.target.value})} required />
-                <ul className="consent-list">
-                  <li>
-                    <label className="consent-item">
-                      <input
-                        type="checkbox"
-                        checked={signupConsents.privacy}
-                        onChange={e => setSignupConsents(prev => ({ ...prev, privacy: e.target.checked }))}
-                      />
-                      <span>
-                        I agree to the{' '}
-                        <Link className="text-link" to="/privacy-policy" onClick={() => setShowAuthModal(false)}>
-                          Privacy Policy (Personal Information Protection Policy)
-                        </Link>
-                      </span>
-                    </label>
-                  </li>
-                  <li>
-                    <label className="consent-item">
-                      <input
-                        type="checkbox"
-                        checked={signupConsents.terms}
-                        onChange={e => setSignupConsents(prev => ({ ...prev, terms: e.target.checked }))}
-                      />
-                      <span>
-                        I agree to the{' '}
-                        <Link className="text-link" to="/terms-of-service" onClick={() => setShowAuthModal(false)}>
-                          Terms of Service
-                        </Link>
-                      </span>
-                    </label>
-                  </li>
-                </ul>
-                <button type="submit" className="primary-btn w-full" disabled={!signupConsents.privacy || !signupConsents.terms}>{t('btn_signup')}</button>
-                <p className="switch-auth-text">{t('switch_to_login_text')} <span className="text-link" onClick={() => setAuthView('login')}>{t('switch_to_login_link')}</span></p>
-              </form>
-            )}
+{/* Legacy login removed – use Clerk */}
 
-            <div className="clerk-divider">
-              <span>または</span>
-            </div>
+{/* Divider removed */}
 <div className="clerk-buttons">
   <SignedIn>
     <div>
