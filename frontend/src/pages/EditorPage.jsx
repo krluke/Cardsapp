@@ -406,24 +406,24 @@ export default function EditorPage() {
     const elements = [];
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
-    
+
     // Check if it's old Polotno format (uses pixels instead of %)
     const hasPxFormat = html.includes('left:') && html.includes('px') && !html.includes('position:absolute');
-    
+
     if (hasPxFormat) {
       // Old Polotno format - parse text elements
       doc.querySelectorAll('.draggable-text, [data-name]').forEach((el, idx) => {
         const style = el.getAttribute('style') || '';
         const textEl = el.querySelector('.text-content');
         const content = textEl ? textEl.textContent : el.textContent;
-        
+
         if (!content || content.trim() === '') return;
-        
+
         const leftMatch = style.match(/left:\s*(\d+)px/);
         const topMatch = style.match(/top:\s*(\d+)px/);
         const widthMatch = style.match(/width:\s*(\d+)px/);
         const fontSizeMatch = style.match(/font-size:\s*(\d+)px/);
-        
+
         elements.push({
           id: `text-${Date.now()}-${idx}`,
           type: 'text',
@@ -437,18 +437,18 @@ export default function EditorPage() {
           color: '#000000'
         });
       });
-      
+
       // Parse images
       doc.querySelectorAll('.draggable-image').forEach((el, idx) => {
         const img = el.querySelector('img');
         if (!img) return;
-        
+
         const style = el.getAttribute('style') || '';
         const leftMatch = style.match(/left:\s*(\d+)px/);
         const topMatch = style.match(/top:\s*(\d+)px/);
         const widthMatch = style.match(/width:\s*(\d+)px/);
         const heightMatch = style.match(/height:\s*(\d+)px/);
-        
+
         elements.push({
           id: `img-${Date.now()}-${idx}`,
           type: 'image',
@@ -459,63 +459,116 @@ export default function EditorPage() {
           height: heightMatch ? Math.round((parseInt(heightMatch[1]) / 600) * 100) : 30
         });
       });
-} else {
-    // New format with percentages
-    doc.querySelectorAll('.draggable-text, [style*="position: absolute"]').forEach((el, idx) => {
-      const style = el.getAttribute('style') || '';
-      const isText = !el.querySelector('img');
-      if (isText) {
-        const textEl = el.querySelector('.text-content') || el;
-        const rotationMatch = style.match(/transform:rotate\((\d+)deg\)/);
-        elements.push({
-          id: `text-${Date.now()}-${idx}`,
-          type: 'text',
-          content: textEl.innerText || '',
-          left: parseInt(style.match(/left:\s*(\d+)%/)?.[1] || '10'),
-          top: parseInt(style.match(/top:\s*(\d+)%/)?.[1] || '20'),
-          width: parseInt(style.match(/width:\s*(\d+)%/)?.[1] || '40'),
-          height: style.match(/height:\s*(\d+)%/) ? parseInt(style.match(/height:\s*(\d+)%/)?.[1]) : 'auto',
-          fontSize: parseInt(style.match(/font-size:\s*(\d+)px/)?.[1] || '16'),
-          fontFamily: style.match(/font-family:\s*([^;]+)/)?.[1] || 'sans-serif',
-          fontWeight: style.match(/font-weight:\s*(\w+)/)?.[1] || 'normal',
-          fontStyle: style.match(/font-style:\s*(\w+)/)?.[1] || 'normal',
-          textDecoration: style.match(/text-decoration:\s*(\w+)/)?.[1] || 'none',
-          textAlign: style.match(/text-align:\s*(\w+)/)?.[1] || 'left',
-          color: style.match(/color:\s*(#[0-9a-fA-F]+)/)?.[1] || '#000000',
-          backgroundColor: style.match(/background-color:\s*([^;]+)/)?.[1] || 'transparent',
-          rotation: rotationMatch ? parseInt(rotationMatch[1]) : 0
+    } else {
+      // New format with percentages - direct text extraction approach to avoid wrapper issues
+      try {
+        // Parse text elements from style-based approach
+        const textElements = doc.querySelectorAll('[style*="position"]');
+        textElements.forEach((el) => {
+          const style = el.getAttribute('style') || '';
+          const isTextElement = !el.querySelector('img') && el.innerHTML && !el.querySelector('img');
+          
+          if (isTextElement && el.textContent && el.textContent.trim()) {
+            // Check if this has image children first
+            const img = el.querySelector('img');
+            if (img) return;
+
+            // Extract from direct element content
+            const textContent = el.textContent;
+            const rotationMatch = style.match(/transform:\s*rotate\((\d+)deg\)/);
+            
+            // Try different ways to get styles
+            const leftMatch = style.match(/left:\s*(\d+)%/);
+            const topMatch = style.match(/top:\s*(\d+)%/);
+            const widthMatch = style.match(/width:\s*(\d+)%/);
+            const heightMatch = style.match(/height:\s*(\d+)%/);
+            const fontSizeMatch = style.match(/font-size:\s*(\d+)px/);
+            const fontFamilyMatch = style.match(/font-family:\s*([^;]+)/);
+            const fontWeightMatch = style.match(/font-weight:\s*(\w+)/);
+            const fontStyleMatch = style.match(/font-style:\s*(\w+)/);
+            const textDecorationMatch = style.match(/text-decoration:\s*(\w+)/);
+            const textAlignMatch = style.match(/text-align:\s*(\w+)/);
+            const colorMatch = style.match(/color:\s*(#[0-9a-fA-F]+)/);
+            const bgColorMatch = style.match(/background-color:\s*([^;]+)/);
+
+            elements.push({
+              id: `text-${Date.now()}-${elements.length}`,
+              type: 'text',
+              content: textContent.trim(),
+              left: leftMatch ? parseInt(leftMatch[1]) : 10,
+              top: topMatch ? parseInt(topMatch[1]) : 20,
+              width: widthMatch ? parseInt(widthMatch[1]) : 40,
+              height: heightMatch ? parseInt(heightMatch[1]) : 'auto',
+              fontSize: fontSizeMatch ? parseInt(fontSizeMatch[1]) : 16,
+              fontFamily: fontFamilyMatch ? fontFamilyMatch[1] : 'sans-serif',
+              fontWeight: fontWeightMatch ? fontWeightMatch[1] : 'normal',
+              fontStyle: fontStyleMatch ? fontStyleMatch[1] : 'normal',
+              textDecoration: textDecorationMatch ? textDecorationMatch[1] : 'none',
+              textAlign: textAlignMatch ? textAlignMatch[1] : 'left',
+              color: colorMatch ? colorMatch[1] : '#000000',
+              backgroundColor: bgColorMatch ? bgColorMatch[1] : 'transparent',
+              rotation: rotationMatch ? parseInt(rotationMatch[1]) : 0
+            });
+          }
         });
+
+        // Parse images by finding img tags with position attributes
+        doc.querySelectorAll('img').forEach((img) => {
+          const parent = img.closest('[style*="position"]') || img.parentElement;
+          if (!parent) return;
+          
+          const style = parent.getAttribute('style') || '';
+          const leftMatch = style.match(/left:\s*(\d+)%/);
+          const topMatch = style.match(/top:\s*(\d+)%/);
+          const widthMatch = style.match(/width:\s*(\d+)%/);
+          const heightMatch = style.match(/height:\s*(\d+)%/);
+
+          elements.push({
+            id: `img-${Date.now()}-${elements.length}`,
+            type: 'image',
+            src: img.src,
+            left: leftMatch ? parseInt(leftMatch[1]) : 20,
+            top: topMatch ? parseInt(topMatch[1]) : 20,
+            width: widthMatch ? parseInt(widthMatch[1]) : 50,
+            height: heightMatch ? parseInt(heightMatch[1]) : 30
+          });
+        });
+      } catch (e) {
+        console.error('Error parsing elements:', e);
+        // Fallback: simple text content extraction
+        const textEl = doc.body.querySelector('*');
+        if (textEl && textEl.textContent && textEl.textContent.trim()) {
+          elements.push({
+            id: `text-${Date.now()}-0`,
+            type: 'text',
+            content: textEl.textContent.trim(),
+            left: 10,
+            top: 20,
+            width: 80,
+            fontSize: 16
+          });
+        }
       }
-    });
-      
-      doc.querySelectorAll('img').forEach((img, idx) => {
-        const parent = img.closest('[style*="position"]') || img.parentElement;
-        const style = parent?.getAttribute('style') || '';
-        elements.push({
-          id: `img-${Date.now()}-${idx}`,
-          type: 'image',
-          src: img.src,
-          left: parseInt(style.match(/left:\s*(\d+)%/)?.[1] || '20'),
-          top: parseInt(style.match(/top:\s*(\d+)%/)?.[1] || '20'),
-          width: parseInt(style.match(/width:\s*(\d+)%/)?.[1] || '50'),
-          height: parseInt(style.match(/height:\s*(\d+)%/)?.[1] || '30')
-        });
-      });
     }
     return elements;
   };
 
-const serializeElements = (elements) => {
-  return elements.map(el => {
-    if (el.type === 'text') {
-      return `<div class="draggable-text" style="position:absolute;left:${el.left}%;top:${el.top}%;width:${el.width}%;height:${el.height || 'auto'};font-size:${el.fontSize}px;font-family:${el.fontFamily};font-weight:${el.fontWeight};font-style:${el.fontStyle || 'normal'};text-decoration:${el.textDecoration || 'none'};text-align:${el.textAlign || 'left'};color:${el.color};background-color:${el.backgroundColor || 'transparent'};transform:rotate(${el.rotation || 0}deg);"><div class="text-content">${el.content}</div></div>`;
-    }
-    if (el.type === 'image') {
-      return `<div class="draggable-image" style="position:absolute;left:${el.left}%;top:${el.top}%;width:${el.width}%;height:${el.height}%;"><img src="${el.src}" style="width:100%;height:100%;object-fit:contain;" /></div>`;
-    }
-    return '';
-  }).join('');
-};
+  const serializeElements = (elements) => {
+    return elements.map(el => {
+      if (el.type === 'text') {
+        // Sanitize content to prevent XSS - escape HTML tags
+        const sanitizedContent = el.content 
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;');
+        return `<div class="draggable-text" style="position:absolute;left:${el.left}%;top:${el.top}%;width:${el.width}%;height:${el.height || 'auto'};font-size:${el.fontSize}px;font-family:${el.fontFamily};font-weight:${el.fontWeight};font-style:${el.fontStyle || 'normal'};text-decoration:${el.textDecoration || 'none'};text-align:${el.textAlign || 'left'};color:${el.color};background-color:${el.backgroundColor || 'transparent'};transform:rotate(${el.rotation || 0}deg)">${sanitizedContent}</div>`;
+      }
+      if (el.type === 'image') {
+        return `<div class="draggable-image" style="position:absolute;left:${el.left}%;top:${el.top}%;width:${el.width}%;height:${el.height}%;"><img src="${el.src}" style="width:100%;height:100%;object-fit:contain;" /></div>`;
+      }
+      return '';
+    }).join('');
+  };
 
   const currentCard = state.cards[state.currentIndex];
   const currentElements = state.isFlipped ? currentCard?.back || [] : currentCard?.front || [];
