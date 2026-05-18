@@ -44,25 +44,29 @@ jobs:
   deploy:
     needs: build-and-test
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' || (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true)
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+      - name: Update local code
+        run: |
+          cd ~/server-project
+          git fetch origin
+          git reset --hard origin/main
 
       - name: Restart Docker Containers
         run: |
-          docker compose down --remove-orphans
+          cd ~/server-project
+          docker-compose down --remove-orphans
           docker buildx prune -f
-          docker compose up -d --build --force-recreate
+          docker-compose up -d --build --force-recreate
           sleep 10
-          docker compose ps
+          docker-compose ps
 
       - name: Verify Backend Health
         run: |
-          docker compose ps
+          cd ~/server-project
+          docker-compose ps
 
       - name: Collect Static Files
         run: |
-          docker compose exec -T backend python manage.py collectstatic --noinput || true
+          cd ~/server-project
+          docker-compose exec -T backend python manage.py collectstatic --noinput || true
