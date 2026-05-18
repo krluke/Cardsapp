@@ -698,12 +698,12 @@ body: formData,
         tags: card.tags || ''
 }));
 const res = await apiFetch('/cards/save', {
-method: 'POST',
-headers: {
-  'Content-Type': 'application/json',
-},
-body: JSON.stringify({ folderId: parseInt(folderId), userEmail: user.email || user.id, cards: serializedCards }),
-});
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ folderId: parseInt(folderId), cards: serializedCards }), // userEmail is extracted from JWT token in backend
+    });
     } catch (e) { console.error('Save error:', e); }
     finally { dispatch({ type: 'SET_SAVING', payload: false }); }
   };

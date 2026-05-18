@@ -25,8 +25,8 @@ export default function ViewerPage() {
       const session = JSON.parse(localStorage.getItem('session') || '{}')
       const jwtToken = session.token || ''
 
-      const cardsRes = await apiFetch(`/cards/load/${folderId}`)
-      const cardsData = await cardsRes.json()
+        const cardsRes = await apiFetch(`/cards/load-auth/${folderId}`)
+        const cardsData = await cardsRes.json()
       setCards(Array.isArray(cardsData) ? cardsData : [])
 
       if (jwtToken) {

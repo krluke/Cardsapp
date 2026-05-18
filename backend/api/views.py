@@ -4,6 +4,7 @@ import smtplib
 import math
 import json
 import logging
+import traceback
 from email.mime.text import MIMEText
 
 from django.conf import settings
@@ -16,6 +17,7 @@ from django.core.files.storage import FileSystemStorage
 from werkzeug.security import generate_password_hash, check_password_hash
 import bleach
 from bleach.css_sanitizer import CSSSanitizer
+import traceback
 
 from api.rate_limiter import rate_limiter
 from api.csrf import csrf_protector
@@ -719,7 +721,8 @@ def update_folder(request):
             (title, data.get("visibility"), folder_id),
         )
 
-    return JsonResponse({"message": "Success"})
+        connection.commit()
+        return JsonResponse({"message": "Success"})
 
 
 @csrf_exempt
@@ -902,19 +905,35 @@ def import_folder(request):
 
             # Import cards
             for idx, card in enumerate(folder_data["cards"]):
+                front_content = sanitize_html(card.get("front_content", ""))
+                back_content = sanitize_html(card.get("back_content", ""))
+                front_bg = card.get("front_bg", "")
+                back_bg = card.get("back_bg", "")
+                tags = card.get("tags", "")
+                
                 c.execute(
-                    "INSERT INTO cards (folder_id, order_index, front_content, back_content, front_bg, back_bg, tags) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+                    "INSERT INTO cards (folder_id, order_index, front_content, back_content, front_bg, back_bg, tags, srs_interval, srs_ease, srs_next_review) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                     (
                         folder_id,
                         idx,
-                        card["front_content"],
-                        card["back_content"],
-                        card["front_bg"],
-                        card["back_bg"],
-                        card.get("tags", ""),
+                        front_content,
+                        back_content,
+                        front_bg,
+                        back_bg,
+                        tags,
+                        0,  # default srs_interval
+                        2.5,  # default srs_ease
+                        None,  # srs_next_review NULL
                     ),
                 )
-            # connection.commit()
+
+            connection.commit()
+        
+        return JsonResponse({"message": "Import successful", "folderId": folder_id})
+        
+    except Exception as e:
+        logger.error(f"import_folder error: {e}")
+        return JsonResponse({"error": "Import failed"}, status=500)
 
         return JsonResponse({"message": "Import successful", "folderId": folder_id})
     except Exception as e:
@@ -1005,12 +1024,11 @@ def update_srs(request):
 
             next_review = datetime.now() + timedelta(days=new_interval)
 
-            c.execute(
-                "UPDATE cards SET srs_interval = %s, srs_ease = %s, srs_next_review = %s WHERE id = %s",
-                (new_interval, new_ease, next_review, card_id),
-            )
-            # connection.commit()
-
+        c.execute(
+            "UPDATE cards SET srs_interval = %s, srs_ease = %s, srs_next_review = %s WHERE id = %s",
+            (new_interval, new_ease, next_review, card_id),
+        )
+        connection.commit()
         return JsonResponse({"message": "SRS updated"})
     except Exception as e:
         logger.error(f"update_srs error: {e}")
@@ -1057,6 +1075,7 @@ def save_cards(request):
         )
 
         if not folder_id:
+            logger.error("Save error: folderId is missing from request")
             return JsonResponse({"message": "フォルダIDが必要です"}, status=400)
 
         with connection.cursor() as c:
@@ -1099,6 +1118,7 @@ def save_cards(request):
         return JsonResponse({"message": "セーブ完了！"})
     except Exception as e:
         logger.error(f"Save Error: {e}")
+        logger.error(f"Save Error with stack trace: {e}\n{traceback.format_exc()}")
         return JsonResponse({"message": "カードの保存に失敗しました"}, status=500)
 
 
