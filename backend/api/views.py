@@ -905,27 +905,35 @@ def import_folder(request):
 
             # Import cards
             for idx, card in enumerate(folder_data["cards"]):
-        c.execute(
-            "INSERT INTO cards (folder_id, order_index, front_content, back_content, front_bg, back_bg, tags, srs_interval, srs_ease, srs_next_review) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-            (
-                folder_id, 
-                idx, 
-                front_html, 
-                back_html, 
-                front_bg, 
-                back_bg, 
-                card.get("tags", ""),
-                0, # default srs_interval
-                2.5, # default srs_ease
-                None, # srs_next_review NULL
-            ),
-        )
+                front_content = sanitize_html(card.get("front_content", ""))
+                back_content = sanitize_html(card.get("back_content", ""))
+                front_bg = card.get("front_bg", "")
+                back_bg = card.get("back_bg", "")
+                tags = card.get("tags", "")
+                
+                c.execute(
+                    "INSERT INTO cards (folder_id, order_index, front_content, back_content, front_bg, back_bg, tags, srs_interval, srs_ease, srs_next_review) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                    (
+                        folder_id,
+                        idx,
+                        front_content,
+                        back_content,
+                        front_bg,
+                        back_bg,
+                        tags,
+                        0,  # default srs_interval
+                        2.5,  # default srs_ease
+                        None,  # srs_next_review NULL
+                    ),
+                )
 
-    connection.commit()
-    logger.error(
-        f"SAVE DEBUG - committed {len(cards_data)} cards for folder {folder_id}"
-    )
-            # connection.commit()
+            connection.commit()
+        
+        return JsonResponse({"message": "Import successful", "folderId": folder_id})
+        
+    except Exception as e:
+        logger.error(f"import_folder error: {e}")
+        return JsonResponse({"error": "Import failed"}, status=500)
 
         return JsonResponse({"message": "Import successful", "folderId": folder_id})
     except Exception as e:
