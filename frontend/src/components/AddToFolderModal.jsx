@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 import { apiFetch } from '@/lib/api'
 
-export function AddToFolderModal({ card, userEmail, onClose, onSuccess }) {
+export function AddToFolderModal({ card, onClose, onSuccess }) {
   const [folders, setFolders] = useState([])
   const [loading, setLoading] = useState(true)
   const [lang, setLang] = useState('ja')
@@ -10,11 +10,11 @@ export function AddToFolderModal({ card, userEmail, onClose, onSuccess }) {
   useEffect(() => {
     setLang(localStorage.getItem('app-lang') || 'ja')
     loadPrivateFolders()
-  }, [userEmail])
+  }, [])
 
   const loadPrivateFolders = async () => {
     try {
-      const res = await apiFetch(`/folders?tab=my-folders&userEmail=${userEmail}`)
+      const res = await apiFetch('/folders?tab=my-folders')
       const data = await res.json()
       if (data.folders) {
         setFolders(data.folders.filter(f => f.visibility === 'private'))
@@ -68,7 +68,6 @@ export function AddToFolderModal({ card, userEmail, onClose, onSuccess }) {
         body: JSON.stringify({
           folderId,
           cards: updatedCards,
-          userEmail,
         }),
       })
 

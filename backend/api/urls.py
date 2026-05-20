@@ -3,14 +3,8 @@ from . import views
 
 urlpatterns = [
     # Auth
-    path("login", views.login, name="login"),
-    path("signup", views.signup, name="signup"),
-    path("send-code", views.send_code, name="send_code"),
-    path("refresh-token", views.refresh_token, name="refresh_token"),
     path("clerk-auth", views.clerk_auth, name="clerk_auth"),
-    path("logout", views.logout, name="logout"),
     # User
-    path("user/change-password", views.change_password, name="change_password"),
     path("user/stats", views.get_user_stats, name="user_stats"),
     # Folders
     path("folders/list", views.list_folders, name="list_folders"),
@@ -40,8 +34,4 @@ urlpatterns = [
     # Editor/Viewer pages
     path("editor/<int:folder_id>", views.editor, name="editor"),
     path("viewer/<int:folder_id>", views.viewer, name="viewer"),
-    # Admin
-    path(
-        "admin/migrate-passwords", views.admin_migrate_passwords, name="admin_migrate"
-    ),
 ]

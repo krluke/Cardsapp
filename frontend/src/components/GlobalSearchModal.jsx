@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Search, X } from 'lucide-react';
 import sanitizeHtml from 'sanitize-html';
+import { apiFetch } from '@/lib/api';
 
-export function GlobalSearchModal({ isOpen, onClose, onSelectCard, userEmail }) {
+export function GlobalSearchModal({ isOpen, onClose, onSelectCard }) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -11,7 +12,7 @@ export function GlobalSearchModal({ isOpen, onClose, onSelectCard, userEmail }) 
     if (!query.trim()) return;
     setLoading(true);
     try {
-      const res = await fetch(`/api/search?q=${encodeURIComponent(query)}&userEmail=${userEmail}`);
+      const res = await apiFetch(`/search?q=${encodeURIComponent(query)}`);
       const data = await res.json();
       setResults(data.results || []);
     } catch (e) { console.error(e); }

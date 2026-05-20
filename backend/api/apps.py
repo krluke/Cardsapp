@@ -2,12 +2,9 @@ from django.apps import AppConfig
 import logging
 import os
 from django.db import connection
-from werkzeug.security import generate_password_hash
 
-# Development account constants
 DEV_EMAIL = os.environ.get("DEV_EMAIL") or "dev@cardsapp.local"
 DEV_USERNAME = os.environ.get("DEV_USERNAME") or "dev"
-DEV_PASSWORD = os.environ.get("DEV_PASSWORD") or ""
 
 
 class ApiConfig(AppConfig):
@@ -30,26 +27,24 @@ class ApiConfig(AppConfig):
         # ----- DEV ACCOUNT AUTO-CREATION / REVOKE (based on DEBUG) -----
         from django.conf import settings
 
-        if getattr(settings, "DEBUG", False) and DEV_PASSWORD:
-            dev_hashed_pw = generate_password_hash(DEV_PASSWORD)
+        if getattr(settings, "DEBUG", False):
             try:
                 with connection.cursor() as c:
                     c.execute(
                         """
-                        INSERT INTO users (email, username, password)
-                        VALUES (%s, %s, %s)
+                        INSERT INTO users (email, username, password, clerk_user_id)
+                        VALUES (%s, %s, NULL, %s)
                         ON DUPLICATE KEY UPDATE
-                        username = VALUES(username),
-                        password = VALUES(password)
+                        username = VALUES(username)
                         """,
-                        (DEV_EMAIL, DEV_USERNAME, dev_hashed_pw),
+                        (DEV_EMAIL, DEV_USERNAME, "dev_local"),
                     )
                 logging.getLogger(__name__).info(
-                    "🔧 Development user ensured (email=%s)", DEV_EMAIL
+                    "Dev user ensured (email=%s)", DEV_EMAIL
                 )
             except Exception as e:
                 logging.getLogger(__name__).warning(
-                    "⚠️ Failed to ensure dev user (DEBUG=True): %s", e
+                    "Failed to ensure dev user (DEBUG=True): %s", e
                 )
         else:
             # Revoke dev user when DEBUG is False
@@ -57,9 +52,9 @@ class ApiConfig(AppConfig):
                 with connection.cursor() as c:
                     c.execute("DELETE FROM users WHERE email = %s", (DEV_EMAIL,))
                 logging.getLogger(__name__).info(
-                    "🔧 Development user revoked (DEBUG=False)"
+                    "Dev user revoked (DEBUG=False)"
                 )
             except Exception as e:
                 logging.getLogger(__name__).warning(
-                    "⚠️ Failed to revoke dev user (DEBUG=False): %s", e
+                    "Failed to revoke dev user (DEBUG=False): %s", e
                 )
