@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, Link } from 'react-router-dom'
 import { X, FolderPlus, Palette, Globe, User, LogOut, LogIn, Settings, Trash2, Search, ChevronLeft, ChevronRight, BookOpen, Plus } from 'lucide-react'
-import { SignInButton, UserButton, useAuth, SignedIn, SignedOut } from '@clerk/clerk-react'
+import { SignInButton, UserButton, useAuth, useClerk, SignedIn, SignedOut } from '@clerk/clerk-react'
 import EditorPage from './pages/EditorPage'
 import ViewerPage from './pages/ViewerPage'
 import StudyPage from './pages/study/StudyPage'
@@ -9,7 +9,7 @@ import AccountPage from './pages/AccountPage'
 import { GlobalSearchModal } from './components/GlobalSearchModal'
 import { AddToFolderModal } from './components/AddToFolderModal'
 import { useModal, Modal } from './components/Modal'
-import { apiFetch, API_BASE, getJwtToken, getCsrfToken } from './lib/api'
+import { apiFetch, API_BASE } from './lib/api'
 import './i18n'
 
 function t(key) {
@@ -143,15 +143,14 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Navigate to="/home" replace />} />
-        <Route path="/home" element={<HomePage />} />
-        <Route path="/account" element={<AccountPage />} />
-        <Route path="/change-password" element={<ChangePasswordPage />} />
-        <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
-        <Route path="/terms-of-service" element={<TermsOfServicePage />} />
-        <Route path="/editor/:folderId" element={<EditorPage />} />
-        <Route path="/viewer/:folderId" element={<ViewerPage />} />
-        <Route path="/study/:folderId" element={<StudyPage />} />
+      <Route path="/" element={<Navigate to="/home" replace />} />
+      <Route path="/home" element={<HomePage />} />
+      <Route path="/account" element={<AccountPage />} />
+      <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+      <Route path="/terms-of-service" element={<TermsOfServicePage />} />
+      <Route path="/editor/:folderId" element={<EditorPage />} />
+      <Route path="/viewer/:folderId" element={<ViewerPage />} />
+      <Route path="/study/:folderId" element={<StudyPage />} />
       </Routes>
     </BrowserRouter>
   )
@@ -162,11 +161,7 @@ function HomePage() {
   const [user, setUser] = useState(null)
   const [activeTab, setActiveTab] = useState('my-folders')
   const [showAuthModal, setShowAuthModal] = useState(false)
-  const [authView, setAuthView] = useState('login')
-  const [loginData, setLoginData] = useState({ id: '', password: '' })
-  const [signupData, setSignupData] = useState({ username: '', email: '', code: '', password: '' })
-  const [signupConsents, setSignupConsents] = useState({ privacy: false, terms: false })
-  const [message, setMessage] = useState({ type: '', text: '' })
+  const [_message, _setMessage] = useState({ type: '', text: '' })
   const [folders, setFolders] = useState([])
   const [globalCards, setGlobalCards] = useState([])
   const [searchInput, setSearchInput] = useState('')
@@ -186,99 +181,33 @@ function HomePage() {
   const { modalState, showAlert, showConfirm, showPrompt, closeModal, handleConfirm, handlePromptSubmit } = useModal()
 
   const { isSignedIn, getToken } = useAuth()
+  const clerk = useClerk()
+  const exchangingRef = useRef(false)
 
-  const exchangeClerkToken = useCallback(async () => {
+  const loadFolders = useCallback(async () => {
+    if (activeTab === 'my-folders' && !user) {
+      setFolders([])
+      return
+    }
+    const endpoint = '/folders'
+    const params = new URLSearchParams({
+      page,
+      q: searchInput,
+      tab: activeTab,
+    })
     try {
-      const clerkToken = await getToken({ template: 'default' })
-      if (!clerkToken) return
-      const res = await fetch(`${API_BASE}/clerk-auth`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ clerk_token: clerkToken }),
-      })
+      const res = await apiFetch(`${endpoint}?${params}`)
       const data = await res.json()
-      if (!res.ok) {
-        console.error('Clerk auth failed:', data.message)
-        return
+      if (data.folders !== undefined) {
+        setFolders(data.folders || [])
+        setTotalPages(data.totalPages || 1)
+      } else if (data.message) {
+        console.error('loadFolders error:', data.message)
       }
-      const session = {
-        user: { id: data.email, username: data.username, email: data.email },
-        csrfToken: data.csrfToken,
-        token: data.token,
-      }
-      localStorage.setItem('session', JSON.stringify(session))
-      setUser(session.user)
-      setShowAuthModal(false)
-      loadFolders()
-    } catch (err) {
-      console.error('Clerk token exchange error:', err)
-    }
-  }, [])
-
-  useEffect(() => {
-    if (isSignedIn && !user) {
-      exchangeClerkToken()
-    }
-  }, [isSignedIn, user, exchangeClerkToken])
-
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('app-theme') || 'light'
-    const savedLang = localStorage.getItem('app-lang') || 'ja'
-    setTheme(savedTheme)
-    setLang(savedLang)
-    document.documentElement.setAttribute('data-theme', savedTheme)
-    
-    const session = JSON.parse(localStorage.getItem('session') || '{}')
-    if (session.user) setUser(session.user)
-  }, [])
-
-  // --- Gitコンフリクト修正部分：両方の機能（自動更新と未ログイン対応）を統合 ---
-  useEffect(() => {
-    loadFolders()
+    } catch (e) { console.error(e) }
   }, [activeTab, page, searchInput, user])
 
-  useEffect(() => {
-    // 15秒ごとの定期ポーリング
-    const interval = setInterval(() => {
-      loadFolders()
-    }, 15000)
-    return () => clearInterval(interval)
-  }, [activeTab, page, searchInput, user])
-
-  useEffect(() => {
-    // タブに戻ってきた時のフォーカス更新
-    const handleFocus = () => {
-      loadFolders()
-    }
-    window.addEventListener('focus', handleFocus)
-    return () => window.removeEventListener('focus', handleFocus)
-  }, [activeTab, page, searchInput, user])
-
-const loadFolders = async () => {
-  if (activeTab === 'my-folders' && !user) {
-    setFolders([])
-    return
-  }
-  const endpoint = '/folders'
-  const params = new URLSearchParams({
-    page,
-    q: searchInput,
-    tab: activeTab,
-    userEmail: user?.email || user?.id || ''
-  })
-  try {
-    const res = await apiFetch(`${endpoint}?${params}`)
-    const data = await res.json()
-    if (data.folders !== undefined) {
-      setFolders(data.folders || [])
-      setTotalPages(data.totalPages || 1)
-    } else if (data.message) {
-      console.error('loadFolders error:', data.message)
-    }
-  } catch (e) { console.error(e) }
-}
-
-  const loadGlobalCards = async () => {
+  const loadGlobalCards = useCallback(async () => {
     const params = new URLSearchParams({
       page,
       search: searchInput,
@@ -296,84 +225,95 @@ const loadFolders = async () => {
         setTotalPages(data.totalPages || 1)
       }
     } catch (e) { console.error(e) }
-  }
+  }, [page, searchInput])
+
+  const exchangeClerkToken = useCallback(async () => {
+    if (exchangingRef.current) return
+    exchangingRef.current = true
+    try {
+      const clerkToken = await getToken({ template: 'default' })
+      if (!clerkToken) return
+      const res = await fetch(`${API_BASE}/clerk-auth`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clerk_token: clerkToken }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        console.error('Clerk auth failed:', data.message)
+        return
+      }
+      const session = {
+        user: { id: data.email, username: data.username, email: data.email, clerkUserId: data.clerkUserId },
+        csrfToken: data.csrfToken,
+        token: data.token,
+      }
+      localStorage.setItem('session', JSON.stringify(session))
+      setUser(session.user)
+      setShowAuthModal(false)
+      loadFolders()
+    } catch (err) {
+      console.error('Clerk token exchange error:', err)
+    } finally {
+      exchangingRef.current = false
+    }
+  }, [getToken, loadFolders])
+
+  useEffect(() => {
+    if (isSignedIn && !user) {
+      exchangeClerkToken()
+    }
+  }, [isSignedIn, user, exchangeClerkToken])
+
+  useEffect(() => {
+    if (!clerk.addListener) return
+    const unsubscribe = clerk.addListener(({ event }) => {
+      if (event === 'signedOut') {
+        localStorage.removeItem('session')
+        setUser(null)
+        setFolders([])
+        setGlobalCards([])
+        setActiveTab('my-folders')
+      }
+    })
+    return unsubscribe
+  }, [clerk])
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('app-theme') || 'light'
+    const savedLang = localStorage.getItem('app-lang') || 'ja'
+    setTheme(savedTheme)
+    setLang(savedLang)
+    document.documentElement.setAttribute('data-theme', savedTheme)
+
+    const session = JSON.parse(localStorage.getItem('session') || '{}')
+    if (session.user) setUser(session.user)
+  }, [])
+
+  useEffect(() => {
+    loadFolders()
+  }, [loadFolders])
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      loadFolders()
+    }, 15000)
+    return () => clearInterval(interval)
+  }, [loadFolders])
+
+  useEffect(() => {
+    const handleFocus = () => {
+      loadFolders()
+    }
+    window.addEventListener('focus', handleFocus)
+    return () => window.removeEventListener('focus', handleFocus)
+  }, [loadFolders])
 
   useEffect(() => {
     if (activeTab === 'global-cards') {
       loadGlobalCards()
     }
-  }, [activeTab, page, searchInput, user])
-  // -------------------------------------------------------------------------
-
-  const handleLogin = async (e) => {
-    e.preventDefault()
-    setMessage({ type: '', text: '' })
-    try {
-      const csrfToken = getCsrfToken()
-      const res = await fetch(`${API_BASE}/login`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json', 
-          'X-CSRF-Token': csrfToken || 'dummy-csrf-for-login'
-        },
-        body: JSON.stringify(loginData),
-      })
-      const data = await res.json()
-      if (!res.ok) {
-        const lang = localStorage.getItem('app-lang') || 'ja'
-        const translations = {
-          ja: { 'IDまたはパスワードが間違っています': 'IDまたはパスワードが間違っています', 'Network error': 'ネットワークエラー' },
-          en: { 'IDまたはパスワードが間違っています': 'Invalid ID or password', 'ネットワークエラー': 'Network error' }
-        }
-        const translatedMsg = translations[lang]?.[data.message] || data.message || 'Login failed'
-        setMessage({ type: 'error', text: translatedMsg })
-        return
-      }
-      const session = {
-        user: { id: data.email, username: data.username, email: data.email },
-        csrfToken: data.csrfToken,
-        token: data.token,
-      }
-      localStorage.setItem('session', JSON.stringify(session))
-      setUser(session.user)
-      setShowAuthModal(false)
-      loadFolders()
-    } catch (err) {
-      setMessage({ type: 'error', text: 'Network error' })
-    }
-  }
-
-  const handleSignup = async (e) => {
-    e.preventDefault()
-    setMessage({ type: '', text: '' })
-    if (!signupConsents.privacy || !signupConsents.terms) {
-      setMessage({ type: 'error', text: 'Please agree to both the Privacy Policy and Terms of Service.' })
-      return
-    }
-    try {
-      const res = await fetch(`${API_BASE}/signup`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': getCsrfToken() },
-        body: JSON.stringify(signupData),
-      })
-      const data = await res.json()
-      if (!res.ok) {
-        setMessage({ type: 'error', text: data.message || 'Signup failed' })
-        return
-      }
-      const session = {
-        user: { id: data.email, username: data.username, email: data.email },
-        csrfToken: data.csrfToken,
-        token: data.token,
-      }
-      localStorage.setItem('session', JSON.stringify(session))
-      setUser(session.user)
-      setShowAuthModal(false)
-      loadFolders()
-    } catch (err) {
-      setMessage({ type: 'error', text: 'Network error' })
-    }
-  }
+  }, [activeTab, loadGlobalCards])
 
   const handleLogout = () => {
     localStorage.removeItem('session')
@@ -382,23 +322,23 @@ const loadFolders = async () => {
     setGlobalCards([])
     setActiveTab('my-folders')
     setAuthMenuOpen(false)
+    if (clerk.signOut) {
+      clerk.signOut({ redirectUrl: window.location.origin + '/home' })
+    }
   }
 
-const createNewFolder = async () => {
+  const createNewFolder = async () => {
     const title = await showPrompt('Untitled', t('placeholder_folder_name'))
     if (!title || !user) return
 
-    const userEmail = user.email || user.id
-    if (!userEmail) return
-
     try {
-const res = await apiFetch('/folders/create', {
-method: 'POST',
-headers: {
-'Content-Type': 'application/json',
-},
-body: JSON.stringify({ userEmail, title }),
-})
+      const res = await apiFetch('/folders/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ title }),
+      })
       const data = await res.json()
       if (res.ok) {
         loadFolders()
@@ -409,7 +349,7 @@ body: JSON.stringify({ userEmail, title }),
           showAlert(data.message || t('error_create_folder'))
         }
       }
-    } catch (e) { showAlert(t('error_create_folder')) }
+    } catch { showAlert(t('error_create_folder')) }
   }
 
   const selectTheme = (newTheme) => {
@@ -430,32 +370,31 @@ body: JSON.stringify({ userEmail, title }),
     setShowSettingsModal(true)
   }
 
-const saveFolderSettings = async () => {
-if (!editingFolder || !user) return
-try {
-const res = await apiFetch('/folders/update', {
-method: 'POST',
-headers: {
-  'Content-Type': 'application/json',
-},
-body: JSON.stringify({
-  folderId: editingFolder.id,
-  title: editingFolder.title,
-  visibility: editingFolder.visibility,
-  userEmail: user.email || user.id,
-}),
-})
+  const saveFolderSettings = async () => {
+    if (!editingFolder || !user) return
+    try {
+      const res = await apiFetch('/folders/update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          folderId: editingFolder.id,
+          title: editingFolder.title,
+          visibility: editingFolder.visibility,
+        }),
+      })
       if (res.ok) {
         setShowSettingsModal(false)
         loadFolders()
       }
-    } catch (e) { showAlert(t('error_save')) }
+    } catch { showAlert(t('error_save')) }
   }
 
   const exportFolder = async () => {
     if (!editingFolder || !user) return
     try {
-      const res = await apiFetch(`/folders/export?folderId=${editingFolder.id}&userEmail=${user.email || user.id}`);
+      const res = await apiFetch(`/folders/export?folderId=${editingFolder.id}`);
       const data = await res.json();
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
@@ -463,7 +402,7 @@ body: JSON.stringify({
       a.href = url;
       a.download = `${editingFolder.title}.json`;
       a.click();
-    } catch (e) { showAlert(t('error_export')) }
+    } catch { showAlert(t('error_export')) }
   }
 
   const importFolder = async () => {
@@ -482,13 +421,13 @@ body: JSON.stringify({
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ folderData, userEmail: user.email || user.id }),
+        body: JSON.stringify({ folderData }),
       });
           if (res.ok) {
             showAlert(t('success_import'))
             loadFolders();
           }
-        } catch (e) { showAlert(t('error_import')) }
+        } catch { showAlert(t('error_import')) }
       };
       reader.readAsText(file);
     };
@@ -499,18 +438,18 @@ const deleteFolder = async () => {
 const confirmed = await showConfirm(t('confirm_delete_folder'), t('confirm_delete_folder'))
 if (!confirmed || !editingFolder || !user) return
 try {
-const res = await apiFetch('/folders/delete', {
-method: 'POST',
-headers: {
-  'Content-Type': 'application/json',
-},
-body: JSON.stringify({ folderId: editingFolder.id, userEmail: user.email || user.id }),
-})
+      const res = await apiFetch('/folders/delete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ folderId: editingFolder.id }),
+      })
       if (res.ok) {
         setShowSettingsModal(false)
         loadFolders()
       }
-    } catch (e) { showAlert(t('error_delete')) }
+    } catch { showAlert(t('error_delete')) }
   }
 
   return (
@@ -686,31 +625,28 @@ body: JSON.stringify({ folderId: editingFolder.id, userEmail: user.email || user
         © 2024-2025 Cardsapp. All rights reserved.
       </footer>
 
-      {showAuthModal && (
-        <div className="modal" onClick={() => setShowAuthModal(false)}>
-          <div className="auth-box" onClick={e => e.stopPropagation()}>
-            <button className="close-btn" onClick={() => setShowAuthModal(false)}><X size={20} /></button>
-            
-{/* Legacy login removed – use Clerk */}
+  {showAuthModal && (
+    <div className="modal" onClick={() => setShowAuthModal(false)}>
+      <div className="auth-box" onClick={e => e.stopPropagation()}>
+        <button className="close-btn" onClick={() => setShowAuthModal(false)}><X size={20} /></button>
 
-{/* Divider removed */}
-<div className="clerk-buttons">
-  <SignedIn>
-    <div>
-      <p className="clerk-signed-in-text">You are signed in</p>
-      <UserButton afterSignOutUrl="/" appearance={{ signUpUrl: '/' }} asChild={<button type="button" className="clerk-oauth-btn">Account</button>} />
-    </div>
-  </SignedIn>
-  <SignedOut>
-    <>
-      <SignInButton mode="modal" appearance={{ signUpUrl: '/' }} asChild><button type="button" className="clerk-oauth-btn">Googleで続ける</button></SignInButton>
-      <SignInButton mode="modal" appearance={{ signUpUrl: '/' }} asChild><button type="button" className="clerk-oauth-btn">GitHubで続ける</button></SignInButton>
-                </>
-              </SignedOut>
+        <div className="clerk-buttons">
+          <SignedIn>
+            <div>
+              <p className="clerk-signed-in-text">You are signed in</p>
+              <UserButton afterSignOutUrl="/" appearance={{ signUpUrl: '/' }} asChild={<button type="button" className="clerk-oauth-btn">Account</button>} />
             </div>
-          </div>
+          </SignedIn>
+          <SignedOut>
+            <>
+              <SignInButton mode="modal" appearance={{ signUpUrl: '/' }} asChild><button type="button" className="clerk-oauth-btn">Googleで続ける</button></SignInButton>
+              <SignInButton mode="modal" appearance={{ signUpUrl: '/' }} asChild><button type="button" className="clerk-oauth-btn">GitHubで続ける</button></SignInButton>
+            </>
+          </SignedOut>
         </div>
-      )}
+      </div>
+    </div>
+  )}
 
        {showSettingsModal && editingFolder && (
          <div className="modal" onClick={() => setShowSettingsModal(false)}>
@@ -743,33 +679,27 @@ body: JSON.stringify({ folderId: editingFolder.id, userEmail: user.email || user
          </div>
        )}
         {showSearchModal && (
-          <GlobalSearchModal 
-            isOpen={showSearchModal} 
-            onClose={() => setShowSearchModal(false)} 
-            userEmail={user?.email || user?.id}
-            onSelectCard={(res) => {
-               setShowSearchModal(false);
-               navigate(`/editor/${res.folder_id}`);
-            }}
-          />
+    <GlobalSearchModal
+      isOpen={showSearchModal}
+      onClose={() => setShowSearchModal(false)}
+      onSelectCard={(res) => {
+        setShowSearchModal(false);
+        navigate(`/editor/${res.folder_id}`);
+      }}
+    />
         )}
 
         {showAddToFolderModal && selectedCard && (
-          <AddToFolderModal
-            card={selectedCard}
-            userEmail={user?.email || user?.id}
-            onClose={() => { setShowAddToFolderModal(false); setSelectedCard(null) }}
-            onSuccess={(msg) => { setShowAddToFolderModal(false); setSelectedCard(null); showAlert(msg) }}
-          />
+    <AddToFolderModal
+      card={selectedCard}
+      onClose={() => { setShowAddToFolderModal(false); setSelectedCard(null) }}
+      onSuccess={(msg) => { setShowAddToFolderModal(false); setSelectedCard(null); showAlert(msg) }}
+    />
         )}
         <Modal state={modalState} onClose={closeModal} onConfirm={handleConfirm} onSubmit={handlePromptSubmit} />
       </div>
     )
   }
-
-function ChangePasswordPage() {
-  return <div className="page-container"><h1>Change Password</h1><p>Coming soon...</p></div>
-}
 
 function PrivacyPolicyPage() {
   return (

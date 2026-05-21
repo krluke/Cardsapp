@@ -1,11 +1,8 @@
 import os
-import secrets
-import smtplib
 import math
 import json
 import logging
 import traceback
-from email.mime.text import MIMEText
 
 from django.conf import settings
 from django.db import connection
@@ -14,18 +11,14 @@ from django.views.decorators.http import require_http_methods
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.views.decorators.csrf import csrf_exempt
 from django.core.files.storage import FileSystemStorage
-from werkzeug.security import generate_password_hash, check_password_hash
 import bleach
 from bleach.css_sanitizer import CSSSanitizer
-import traceback
 
 from api.rate_limiter import rate_limiter
 from api.csrf import csrf_protector
 from api.jwt_utils import (
     generate_jwt_token,
     jwt_required,
-    get_user_from_token,
-    refresh_jwt_token,
     verify_jwt_token,
 )
 
@@ -95,228 +88,6 @@ def sanitize_html(html):
     )
 
 
-def get_user_email_from_login_id(login_id):
-    """Resolve login_id (email or username) to actual email."""
-    if not login_id:
-        return login_id
-    login_id = str(login_id).strip()
-    with connection.cursor() as c:
-        c.execute(
-            "SELECT email FROM users WHERE email = %s OR username = %s",
-            (login_id, login_id),
-        )
-        row = dictfetchone(c)
-    return row["email"] if row else login_id
-
-
-# ==========================================
-# AUTH ENDPOINTS
-# ==========================================
-
-
-@csrf_exempt
-@require_http_methods(["POST"])
-def login(request):
-    client_ip = request.META.get("REMOTE_ADDR", "127.0.0.1")
-
-    if rate_limiter.is_ip_blocked(client_ip):
-        return JsonResponse(
-            {
-                "message": "一時的にブロックされました。しばらくしてから再試行してください。"
-            },
-            status=429,
-        )
-
-    allowed, _ = rate_limiter.check_ip_rate_limit(client_ip, max_requests=30, window=60)
-    if not allowed:
-        return JsonResponse(
-            {"message": "リクエストが多すぎます。しばらくしてから再試行してください。"},
-            status=429,
-        )
-
-    import json as json_mod
-
-    data = json_mod.loads(request.body)
-    login_id = (data.get("id") or "").strip()
-    raw_password = data.get("password")
-
-    with connection.cursor() as c:
-        c.execute(
-            "SELECT * FROM users WHERE email = %s OR username = %s",
-            (login_id, login_id),
-        )
-        users = dictfetchall(c)
-
-    user = None
-    for candidate in users:
-        if check_password_hash(candidate.get("password", ""), raw_password):
-            user = candidate
-            break
-
-    if user:
-        rate_limiter.record_login_success(client_ip, is_ip=True)
-        rate_limiter.record_login_success(login_id, is_ip=False)
-        csrf_token = csrf_protector.generate_token(user["email"])
-        jwt_user_id = user.get("id") or user.get("email")
-        jwt_token = generate_jwt_token(jwt_user_id, user["email"])
-        return JsonResponse(
-            {
-                "message": "ログイン成功！",
-                "username": user["username"],
-                "email": user["email"],
-                "csrfToken": csrf_token,
-                "token": jwt_token,
-            }
-        )
-
-    block_duration = rate_limiter.record_login_failure(client_ip, is_ip=True)
-    if login_id:
-        rate_limiter.record_login_failure(login_id, is_ip=False)
-
-    if block_duration > 0:
-        return JsonResponse(
-            {
-                "message": f"ログイン試行回数が多すぎます。{int(block_duration)}秒後に再試行してください。"
-            },
-            status=429,
-        )
-
-    return JsonResponse({"message": "IDまたはパスワードが間違っています"}, status=401)
-
-
-@csrf_exempt
-@require_http_methods(["POST"])
-def refresh_token(request):
-    """Refresh JWT token"""
-    new_token = refresh_jwt_token(request)
-    if not new_token:
-        return JsonResponse({"message": "Invalid or expired token"}, status=401)
-    return JsonResponse({"token": new_token})
-
-
-@csrf_exempt
-@jwt_required
-@require_http_methods(["POST"])
-def logout(request):
-    """Logout endpoint (client should clear the token)"""
-    return JsonResponse({"message": "Logged out successfully"})
-
-
-@csrf_exempt
-@require_http_methods(["POST"])
-def signup(request):
-    import json as json_mod
-
-    data = json_mod.loads(request.body)
-    email = data.get("email")
-    username = data.get("username")
-    raw_password = data.get("password")
-
-    allowed, retry_after = rate_limiter.check_email_rate_limit(
-        email, max_requests=5, window=300
-    )
-    if not allowed:
-        return JsonResponse(
-            {
-                "message": f"リクエストが多すぎます。{retry_after}秒後に再試行してください。"
-            },
-            status=429,
-        )
-
-    with connection.cursor() as c:
-        c.execute("SELECT code FROM verification_codes WHERE email = %s", (email,))
-        row = dictfetchone(c)
-        if not row or row["code"] != data.get("code"):
-            return JsonResponse({"message": "コードが違います"}, status=400)
-
-        c.execute("SELECT email FROM users WHERE username = %s", (username,))
-        if dictfetchone(c):
-            return JsonResponse(
-                {"message": "このユーザー名は既に使われています"}, status=400
-            )
-
-        hashed_password = generate_password_hash(raw_password)
-
-        try:
-            c.execute(
-                "INSERT INTO users (email, username, password) VALUES (%s, %s, %s)",
-                (email, username, hashed_password),
-            )
-            csrf_token = csrf_protector.generate_token(email)
-            jwt_token = generate_jwt_token(email, email)
-            return JsonResponse(
-                {
-                    "message": "アカウント作成成功！",
-                    "username": username,
-                    "email": email,
-                    "csrfToken": csrf_token,
-                    "token": jwt_token,
-                }
-            )
-        except Exception:
-            return JsonResponse(
-                {"message": "このメールアドレスは既に登録されています"}, status=400
-            )
-
-
-@require_http_methods(["POST"])
-def send_code(request):
-    import json as json_mod
-
-    client_ip = request.META.get("REMOTE_ADDR", "127.0.0.1")
-
-    if rate_limiter.is_ip_blocked(client_ip):
-        return JsonResponse(
-            {
-                "message": "一時的にブロックされました。しばらくしてから再試行してください。"
-            },
-            status=429,
-        )
-
-    allowed, _ = rate_limiter.check_ip_rate_limit(client_ip, max_requests=10, window=60)
-    if not allowed:
-        return JsonResponse(
-            {"message": "リクエストが多すぎます。しばらくしてから再試行してください。"},
-            status=429,
-        )
-
-    data = json_mod.loads(request.body)
-    email = data.get("email")
-
-    allowed, retry_after = rate_limiter.check_email_rate_limit(
-        email, max_requests=3, window=300
-    )
-    if not allowed:
-        return JsonResponse(
-            {
-                "message": f"このメールアドレスからのリクエストが多すぎます。{retry_after}秒後に再試行してください。"
-            },
-            status=429,
-        )
-
-    code = str(secrets.randbelow(900000) + 100000)
-
-    with connection.cursor() as c:
-        c.execute(
-            "REPLACE INTO verification_codes (email, code) VALUES (%s, %s)",
-            (email, code),
-        )
-
-    try:
-        msg = MIMEText(f"あなたの確認コードは {code} です。")
-        msg["Subject"] = "アカウント作成コード"
-        msg["From"] = settings.GMAIL_USER
-        msg["To"] = email
-        server = smtplib.SMTP_SSL("smtp.gmail.com", 465)
-        server.login(settings.GMAIL_USER, settings.GMAIL_PASS)
-        server.send_message(msg)
-        server.quit()
-        return JsonResponse({"message": "メールを送信しました"})
-    except Exception as e:
-        logger.error(f"Email send error: {e}")
-        return JsonResponse({"message": "メール送信に失敗しました"}, status=500)
-
-
 # ==========================================
 # CLERK OAUTH ENDPOINT
 # ==========================================
@@ -334,7 +105,6 @@ def clerk_auth(request):
     if not clerk_token:
         return JsonResponse({"message": "clerk_token is required"}, status=400)
 
-    # Fetch JWKS from Clerk
     clerk_issuer = os.getenv("CLERK_ISSUER", "https://absolute-hound-18.clerk.accounts.dev")
     jwks_url = f"{clerk_issuer}/.well-known/jwks.json"
     try:
@@ -345,7 +115,6 @@ def clerk_auth(request):
         logger.error(f"Clerk JWKS fetch error: {e}")
         return JsonResponse({"message": "Failed to verify token"}, status=500)
 
-    # Find the key matching the token header
     import jwt
     try:
         unverified_header = jwt.get_unverified_header(clerk_token)
@@ -361,7 +130,6 @@ def clerk_auth(request):
     if not rsa_key:
         return JsonResponse({"message": "Invalid token"}, status=401)
 
-    # Verify and decode
     try:
         from jwt.algorithms import RSAAlgorithm
         public_key = RSAAlgorithm.from_jwk(json_mod.dumps(rsa_key))
@@ -385,17 +153,33 @@ def clerk_auth(request):
     if not email:
         return JsonResponse({"message": "Email not found in token"}, status=400)
 
-    # Find or create user in local DB
     with connection.cursor() as c:
-        c.execute("SELECT * FROM users WHERE email = %s", (email,))
+        c.execute("SELECT * FROM users WHERE clerk_user_id = %s", (clerk_user_id,))
         user = dictfetchone(c)
+
+        if user:
+            if user["email"] != email:
+                old_email = user["email"]
+                c.execute("UPDATE users SET email = %s, username = %s WHERE clerk_user_id = %s", (email, username, clerk_user_id))
+                c.execute("UPDATE folders SET user_email = %s WHERE user_email = %s", (email, old_email))
+                c.execute("UPDATE folder_likes SET user_email = %s WHERE user_email = %s", (email, old_email))
+                c.execute("UPDATE folder_favorites SET user_email = %s WHERE user_email = %s", (email, old_email))
+                c.execute("SELECT * FROM users WHERE clerk_user_id = %s", (clerk_user_id,))
+                user = dictfetchone(c)
+        else:
+            c.execute("SELECT * FROM users WHERE email = %s", (email,))
+            user = dictfetchone(c)
+
+            if user:
+                c.execute("UPDATE users SET clerk_user_id = %s, username = %s WHERE email = %s", (clerk_user_id, username, email))
+                c.execute("SELECT * FROM users WHERE email = %s", (email,))
+                user = dictfetchone(c)
 
         if not user:
             try:
-                hashed_password = generate_password_hash(secrets.token_urlsafe(32))
                 c.execute(
-                    "INSERT INTO users (email, username, password) VALUES (%s, %s, %s)",
-                    (email, username, hashed_password),
+                    "INSERT INTO users (email, username, password, clerk_user_id) VALUES (%s, %s, NULL, %s)",
+                    (email, username, clerk_user_id),
                 )
                 c.execute("SELECT * FROM users WHERE email = %s", (email,))
                 user = dictfetchone(c)
@@ -411,6 +195,7 @@ def clerk_auth(request):
             "message": "ログイン成功！",
             "username": user["username"],
             "email": user["email"],
+            "clerkUserId": clerk_user_id,
             "csrfToken": csrf_token,
             "token": jwt_token,
         }
@@ -420,49 +205,6 @@ def clerk_auth(request):
 # ==========================================
 # USER ENDPOINTS
 # ==========================================
-
-
-@require_http_methods(["POST"])
-def change_password(request):
-  import json as json_mod
-
-  session_email = request.user_email
-  if not session_email:
-    return JsonResponse({"error": "認証されていません"}, status=401)
-
-  data = json_mod.loads(request.body)
-  current_password = data.get("currentPassword", "")
-  new_password = data.get("newPassword", "")
-
-  if not current_password or not new_password:
-    return JsonResponse({"error": "現在のパスワードと新しいパスワードを入力してください"}, status=400)
-  
-  if len(new_password) < 8:
-    return JsonResponse({"error": "パスワードは8文字以上で入力してください"}, status=400)
-
-  try:
-    with connection.cursor() as c:
-      c.execute("SELECT password FROM users WHERE email = %s", (session_email,))
-      user = dictfetchone(c)
-
-      if not user:
-        return JsonResponse({"error": "ユーザーが見つかりません"}, status=404)
-
-      if not check_password_hash(user["password"], current_password):
-        return JsonResponse(
-          {"error": "現在のパスワードが間違っています"}, status=401
-        )
-
-      hashed_password = generate_password_hash(new_password)
-      c.execute(
-        "UPDATE users SET password = %s WHERE email = %s",
-        (hashed_password, session_email),
-      )
-
-      return JsonResponse({"message": "パスワードを更新しました"})
-  except Exception as e:
-    logger.error(f"Password change error: {e}")
-    return JsonResponse({"error": "サーバーエラーが発生しました"}, status=500)
 
 
 @xframe_options_exempt
@@ -572,20 +314,17 @@ def get_folders(request):
         search_query = request.GET.get("q", "")
         page = int(request.GET.get("page", 1))
 
+        user_email = None
         auth_header = request.headers.get("Authorization", "")
         if auth_header.startswith("Bearer "):
             token = auth_header[7:]
             payload = verify_jwt_token(token)
             user_email = payload["email"] if payload else None
-        else:
-            user_email = None
-
-        if not user_email:
-            user_email = request.GET.get("userEmail", "") or None
 
         if tab == "my-folders" and not user_email:
             return JsonResponse(
-                {"folders": [], "totalPages": 1, "currentPage": 1}
+                {"data": None, "error": {"code": 401, "message": "Authorization token required"}},
+                status=401,
             )
 
         limit = 12
@@ -721,8 +460,8 @@ def update_folder(request):
             (title, data.get("visibility"), folder_id),
         )
 
-        connection.commit()
-        return JsonResponse({"message": "Success"})
+    connection.commit()
+    return JsonResponse({"message": "Success"})
 
 
 @csrf_exempt
@@ -911,29 +650,23 @@ def import_folder(request):
                 back_bg = card.get("back_bg", "")
                 tags = card.get("tags", "")
                 
-                c.execute(
-                    "INSERT INTO cards (folder_id, order_index, front_content, back_content, front_bg, back_bg, tags, srs_interval, srs_ease, srs_next_review) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-                    (
-                        folder_id,
-                        idx,
-                        front_content,
-                        back_content,
-                        front_bg,
-                        back_bg,
-                        tags,
-                        0,  # default srs_interval
-                        2.5,  # default srs_ease
-                        None,  # srs_next_review NULL
-                    ),
-                )
+            c.execute(
+                "INSERT INTO cards (folder_id, order_index, front_content, back_content, front_bg, back_bg, tags, srs_interval, srs_ease, srs_next_review) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                (
+                    folder_id,
+                    idx,
+                    front_content,
+                    back_content,
+                    front_bg,
+                    back_bg,
+                    tags,
+                    0,
+                    2.5,
+                    None,
+                ),
+            )
 
-            connection.commit()
-        
-        return JsonResponse({"message": "Import successful", "folderId": folder_id})
-        
-    except Exception as e:
-        logger.error(f"import_folder error: {e}")
-        return JsonResponse({"error": "Import failed"}, status=500)
+        connection.commit()
 
         return JsonResponse({"message": "Import successful", "folderId": folder_id})
     except Exception as e:
@@ -1018,16 +751,15 @@ def update_srs(request):
 
             new_ease = max(1.3, new_ease)
 
-            # Calculate next review date
-            # Simple: interval is in days
             from datetime import datetime, timedelta
 
             next_review = datetime.now() + timedelta(days=new_interval)
 
-        c.execute(
-            "UPDATE cards SET srs_interval = %s, srs_ease = %s, srs_next_review = %s WHERE id = %s",
-            (new_interval, new_ease, next_review, card_id),
-        )
+            c.execute(
+                "UPDATE cards SET srs_interval = %s, srs_ease = %s, srs_next_review = %s WHERE id = %s",
+                (new_interval, new_ease, next_review, card_id),
+            )
+
         connection.commit()
         return JsonResponse({"message": "SRS updated"})
     except Exception as e:
@@ -1094,22 +826,22 @@ def save_cards(request):
                 front_bg = card.get("frontBg", "")
                 back_bg = card.get("backBg", "")
 
-        c.execute(
-            "INSERT INTO cards (folder_id, order_index, front_content, back_content, front_bg, back_bg, tags, srs_interval, srs_ease, srs_next_review) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-            (
-                folder_id,
-                idx,
-                front_html,
-                back_html,
-                front_bg,
-                back_bg,
-                card.get("tags", ""),
-                0, # default srs_interval
-                2.5, # default srs_ease
-                None, # srs_next_review NULL
-            ),
-        )
-        
+                c.execute(
+                    "INSERT INTO cards (folder_id, order_index, front_content, back_content, front_bg, back_bg, tags, srs_interval, srs_ease, srs_next_review) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                    (
+                        folder_id,
+                        idx,
+                        front_html,
+                        back_html,
+                        front_bg,
+                        back_bg,
+                        card.get("tags", ""),
+                        0,
+                        2.5,
+                        None,
+                    ),
+                )
+
         connection.commit()
         logger.error(
             f"SAVE DEBUG - committed {len(cards_data)} cards for folder {folder_id}"
@@ -1120,69 +852,6 @@ def save_cards(request):
         logger.error(f"Save Error: {e}")
         logger.error(f"Save Error with stack trace: {e}\n{traceback.format_exc()}")
         return JsonResponse({"message": "カードの保存に失敗しました"}, status=500)
-
-
-@xframe_options_exempt
-def load_cards(request, folder_id):
-    login_id = request.GET.get("userEmail", "")
-    user_email = get_user_email_from_login_id(login_id) if login_id else ""
-
-    try:
-        with connection.cursor() as c:
-            c.execute(
-                "SELECT user_email, visibility FROM folders WHERE id = %s",
-                (folder_id,),
-            )
-            folder = dictfetchone(c)
-
-            if not folder:
-                return JsonResponse({"message": "フォルダが見つかりません"}, status=404)
-
-            if folder["visibility"] != "public" and folder["user_email"] != user_email:
-                return JsonResponse(
-                    {"message": "このフォルダにアクセスする権限がありません"},
-                    status=403,
-                )
-
-            c.execute(
-                "SELECT front_content, back_content, front_bg, back_bg, tags FROM cards WHERE folder_id = %s ORDER BY order_index",
-                (folder_id,),
-            )
-            rows = dictfetchall(c)
-
-        cards = []
-        for row in rows:
-            front = row.get("front_content", "")
-            back = row.get("back_content", "")
-            front_bg = row.get("front_bg", "")
-            back_bg = row.get("back_bg", "")
-            tags = row.get("tags", "")
-
-            if front and front.startswith('"') and front.endswith('"'):
-                try:
-                    front = json.loads(front)
-                except Exception:
-                    pass
-            if back and back.startswith('"') and back.endswith('"'):
-                try:
-                    back = json.loads(back)
-                except Exception:
-                    pass
-
-            cards.append(
-                {
-                    "front": front,
-                    "back": back,
-                    "frontBg": front_bg,
-                    "backBg": back_bg,
-                    "tags": tags,
-                }
-            )
-
-        return JsonResponse(cards, safe=False)
-    except Exception as e:
-        logger.error(f"Load Error: {e}")
-        return JsonResponse({"message": "データの読み込みに失敗しました"}, status=500)
 
 
 @xframe_options_exempt
@@ -1253,44 +922,6 @@ def delete_card(request):
     except Exception as e:
         logger.error(f"Delete card error: {e}")
         return JsonResponse({"error": "削除に失敗しました"}, status=500)
-
-
-# ==========================================
-# ADMIN ENDPOINTS
-# ==========================================
-
-
-@require_http_methods(["POST"])
-def admin_migrate_passwords(request):
-    import json as json_mod
-
-    try:
-        data = json_mod.loads(request.body)
-    except Exception:
-        data = {}
-    admin_key = request.headers.get("X-Admin-Key") or data.get("adminKey")
-    expected_key = settings.ADMIN_API_KEY
-
-    if not expected_key or admin_key != expected_key:
-        return JsonResponse({"error": "管理者権限が必要です"}, status=403)
-
-    with connection.cursor() as c:
-        c.execute("SELECT email, password FROM users")
-        users = dictfetchall(c)
-        for user in users:
-            stored_hash = user.get("password")
-            if not stored_hash:
-                continue
-            if stored_hash.startswith(("pbkdf2:sha256", "scrypt:", "bcrypt:")):
-                if check_password_hash(stored_hash, stored_hash):
-                    new_hash = generate_password_hash(stored_hash)
-                    c.execute(
-                        "UPDATE users SET password = %s WHERE email = %s",
-                        (new_hash, user["email"]),
-                    )
-                    logger.info(f"Fixed double-hash for: {user['email']}")
-
-    return JsonResponse({"message": "Password migration completed"})
 
 
 # ==========================================

@@ -4,18 +4,11 @@ from django.db import models
 class User(models.Model):
     email = models.CharField(max_length=255, primary_key=True)
     username = models.CharField(max_length=255)
-    password = models.CharField(max_length=255)
+    password = models.CharField(max_length=255, null=True, blank=True)
+    clerk_user_id = models.CharField(max_length=255, null=True, blank=True, unique=True)
 
     class Meta:
         db_table = "users"
-
-
-class VerificationCode(models.Model):
-    email = models.CharField(max_length=255, primary_key=True)
-    code = models.CharField(max_length=255)
-
-    class Meta:
-        db_table = "verification_codes"
 
 
 class Folder(models.Model):

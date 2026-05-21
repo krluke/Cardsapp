@@ -1,4 +1,4 @@
-from django.db import migrations
+from django.db import migrations, models
 
 
 def _dedupe_usernames(apps, schema_editor):
@@ -39,9 +39,10 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RunPython(_dedupe_usernames, reverse_code=migrations.RunPython.noop),
-        migrations.RunSQL(
-            sql="ALTER TABLE users ADD CONSTRAINT users_username_unique UNIQUE (username);",
-            reverse_sql="ALTER TABLE users DROP INDEX users_username_unique;",
+        migrations.AlterField(
+            model_name="user",
+            name="username",
+            field=models.CharField(max_length=255, unique=True),
         ),
     ]
 

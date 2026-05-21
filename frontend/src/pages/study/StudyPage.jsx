@@ -108,7 +108,7 @@ export default function StudyPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ cardId: card.id, quality, userEmail: user.email || user.id }),
+          body: JSON.stringify({ cardId: card.id, quality }),
       });
       } catch (e) { console.error(e); }
     }
