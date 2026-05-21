@@ -107,35 +107,21 @@ def clerk_auth(request):
 
     clerk_issuer = os.getenv("CLERK_ISSUER", "https://dear-boar-32.clerk.accounts.dev")
     jwks_url = f"{clerk_issuer}/.well-known/jwks.json"
-    try:
-        jwks_resp = http_requests.get(jwks_url, timeout=10)
-        jwks_resp.raise_for_status()
-        jwks = jwks_resp.json()
-    except Exception as e:
-        logger.error(f"Clerk JWKS fetch error: {e}")
-        return JsonResponse({"message": "Failed to verify token"}, status=500)
 
     import jwt
-    try:
-        unverified_header = jwt.get_unverified_header(clerk_token)
-        kid = unverified_header.get("kid")
-    except Exception:
-        return JsonResponse({"message": "Invalid token"}, status=401)
+    from jwt import PyJWKClient
 
-    rsa_key = None
-    for key in jwks.get("keys", []):
-        if key.get("kid") == kid:
-            rsa_key = key
-            break
-    if not rsa_key:
+    jwks_client = PyJWKClient(jwks_url, cache_keys=True, max_cached_keys=1)
+    try:
+        signing_key = jwks_client.get_signing_key_from_jwt(clerk_token)
+    except Exception as e:
+        logger.error(f"Clerk JWKS key lookup error: {e}")
         return JsonResponse({"message": "Invalid token"}, status=401)
 
     try:
-        from jwt.algorithms import RSAAlgorithm
-        public_key = RSAAlgorithm.from_jwk(json_mod.dumps(rsa_key))
         payload = jwt.decode(
             clerk_token,
-            public_key,
+            signing_key.key,
             algorithms=["RS256"],
             issuer=clerk_issuer,
             options={"verify_aud": False},
