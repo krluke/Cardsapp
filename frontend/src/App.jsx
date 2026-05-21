@@ -182,6 +182,7 @@ function HomePage() {
   const { isSignedIn, getToken } = useAuth()
   const clerk = useClerk()
   const exchangingRef = useRef(false)
+  const exchangeFailCount = useRef(0)
 
   const loadFolders = useCallback(async () => {
     if (activeTab === 'my-folders' && !user) {
@@ -240,8 +241,10 @@ function HomePage() {
       const data = await res.json()
       if (!res.ok) {
         console.error('Clerk auth failed:', data.message)
+        exchangeFailCount.current += 1
         return
       }
+      exchangeFailCount.current = 0
       const session = {
         user: { id: data.email, username: data.username, email: data.email, clerkUserId: data.clerkUserId },
         csrfToken: data.csrfToken,
@@ -252,13 +255,14 @@ function HomePage() {
       loadFolders()
     } catch (err) {
       console.error('Clerk token exchange error:', err)
+      exchangeFailCount.current += 1
     } finally {
       exchangingRef.current = false
     }
   }, [getToken, loadFolders])
 
   useEffect(() => {
-    if (isSignedIn && !user) {
+    if (isSignedIn && !user && exchangeFailCount.current < 3) {
       exchangeClerkToken()
     }
   }, [isSignedIn, user, exchangeClerkToken])
@@ -506,8 +510,8 @@ try {
             {authMenuOpen && (
               <div className="dropdown">
                 {!user ? (
-                  <button className="dropdown-item" onClick={() => { clerk.openSignIn(); setAuthMenuOpen(false) }}>
-                    <LogIn size={18} /> {t('menu_login')}
+                  <button className="dropdown-item" onClick={() => { if (!isSignedIn) { clerk.openSignIn() } else { exchangeClerkToken() }; setAuthMenuOpen(false) }}>
+                    <LogIn size={18} /> {!isSignedIn ? t('menu_login') : t('guest_login_btn')}
                   </button>
                 ) : (
                   <>
@@ -545,7 +549,7 @@ try {
         {activeTab === 'my-folders' && !user && (
           <div className="empty-state">
             <p>{t('guest_message')}</p>
-            <button className="primary-btn" onClick={() => clerk.openSignIn()}>{t('guest_login_btn')}</button>
+            <button className="primary-btn" onClick={() => { if (!isSignedIn) { clerk.openSignIn() } else { exchangeClerkToken() } }}>{t('guest_login_btn')}</button>
           </div>
         )}
 

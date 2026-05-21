@@ -137,13 +137,19 @@ def clerk_auth(request):
             clerk_token,
             public_key,
             algorithms=["RS256"],
-            audience=[os.getenv("CLERK_PUBLISHABLE_KEY", "")],
             issuer=clerk_issuer,
+            options={"verify_aud": False},
         )
     except jwt.ExpiredSignatureError:
         return JsonResponse({"message": "Token expired"}, status=401)
     except Exception as e:
         logger.error(f"Clerk token verification error: {e}")
+        return JsonResponse({"message": "Invalid token"}, status=401)
+
+    azp = payload.get("azp")
+    expected_azp = os.getenv("CLERK_PUBLISHABLE_KEY", "")
+    if expected_azp and azp != expected_azp:
+        logger.error(f"Clerk token azp mismatch: got {azp}, expected {expected_azp}")
         return JsonResponse({"message": "Invalid token"}, status=401)
 
     clerk_user_id = payload.get("sub")
