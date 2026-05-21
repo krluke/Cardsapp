@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, Link } from 'react-router-dom'
 import { X, FolderPlus, Palette, Globe, User, LogOut, LogIn, Settings, Trash2, Search, ChevronLeft, ChevronRight, BookOpen, Plus } from 'lucide-react'
-import { SignInButton, UserButton, useAuth, useClerk, SignedIn, SignedOut } from '@clerk/clerk-react'
+import { useAuth, useClerk } from '@clerk/clerk-react'
 import EditorPage from './pages/EditorPage'
 import ViewerPage from './pages/ViewerPage'
 import StudyPage from './pages/study/StudyPage'
@@ -160,8 +160,7 @@ function HomePage() {
   const navigate = useNavigate()
   const [user, setUser] = useState(null)
   const [activeTab, setActiveTab] = useState('my-folders')
-  const [showAuthModal, setShowAuthModal] = useState(false)
-  const [_message, _setMessage] = useState({ type: '', text: '' })
+
   const [folders, setFolders] = useState([])
   const [globalCards, setGlobalCards] = useState([])
   const [searchInput, setSearchInput] = useState('')
@@ -231,7 +230,7 @@ function HomePage() {
     if (exchangingRef.current) return
     exchangingRef.current = true
     try {
-      const clerkToken = await getToken({ template: 'default' })
+      const clerkToken = await getToken()
       if (!clerkToken) return
       const res = await fetch(`${API_BASE}/clerk-auth`, {
         method: 'POST',
@@ -250,7 +249,6 @@ function HomePage() {
       }
       localStorage.setItem('session', JSON.stringify(session))
       setUser(session.user)
-      setShowAuthModal(false)
       loadFolders()
     } catch (err) {
       console.error('Clerk token exchange error:', err)
@@ -508,7 +506,7 @@ try {
             {authMenuOpen && (
               <div className="dropdown">
                 {!user ? (
-                  <button className="dropdown-item" onClick={() => { setShowAuthModal(true); setAuthMenuOpen(false) }}>
+                  <button className="dropdown-item" onClick={() => { clerk.openSignIn(); setAuthMenuOpen(false) }}>
                     <LogIn size={18} /> {t('menu_login')}
                   </button>
                 ) : (
@@ -547,7 +545,7 @@ try {
         {activeTab === 'my-folders' && !user && (
           <div className="empty-state">
             <p>{t('guest_message')}</p>
-            <button className="primary-btn" onClick={() => setShowAuthModal(true)}>{t('guest_login_btn')}</button>
+            <button className="primary-btn" onClick={() => clerk.openSignIn()}>{t('guest_login_btn')}</button>
           </div>
         )}
 
@@ -625,28 +623,8 @@ try {
         © 2024-2025 Cardsapp. All rights reserved.
       </footer>
 
-  {showAuthModal && (
-    <div className="modal" onClick={() => setShowAuthModal(false)}>
-      <div className="auth-box" onClick={e => e.stopPropagation()}>
-        <button className="close-btn" onClick={() => setShowAuthModal(false)}><X size={20} /></button>
 
-        <div className="clerk-buttons">
-          <SignedIn>
-            <div>
-              <p className="clerk-signed-in-text">You are signed in</p>
-              <UserButton afterSignOutUrl="/" appearance={{ signUpUrl: '/' }} asChild={<button type="button" className="clerk-oauth-btn">Account</button>} />
-            </div>
-          </SignedIn>
-          <SignedOut>
-            <>
-              <SignInButton mode="modal" appearance={{ signUpUrl: '/' }} asChild><button type="button" className="clerk-oauth-btn">Googleで続ける</button></SignInButton>
-              <SignInButton mode="modal" appearance={{ signUpUrl: '/' }} asChild><button type="button" className="clerk-oauth-btn">GitHubで続ける</button></SignInButton>
-            </>
-          </SignedOut>
-        </div>
-      </div>
-    </div>
-  )}
+
 
        {showSettingsModal && editingFolder && (
          <div className="modal" onClick={() => setShowSettingsModal(false)}>
