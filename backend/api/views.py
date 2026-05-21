@@ -105,7 +105,7 @@ def clerk_auth(request):
     if not clerk_token:
         return JsonResponse({"message": "clerk_token is required"}, status=400)
 
-    clerk_issuer = os.getenv("CLERK_ISSUER", "https://absolute-hound-18.clerk.accounts.dev")
+    clerk_issuer = os.getenv("CLERK_ISSUER", "https://dear-boar-32.clerk.accounts.dev")
     jwks_url = f"{clerk_issuer}/.well-known/jwks.json"
     try:
         jwks_resp = http_requests.get(jwks_url, timeout=10)
@@ -146,12 +146,40 @@ def clerk_auth(request):
         logger.error(f"Clerk token verification error: {e}")
         return JsonResponse({"message": "Invalid token"}, status=401)
 
-    email = payload.get("email") or payload.get("primary_email_address")
-    username = payload.get("name") or payload.get("username") or email.split("@")[0]
     clerk_user_id = payload.get("sub")
+    if not clerk_user_id:
+        return JsonResponse({"message": "Invalid token: missing sub"}, status=401)
 
+    clerk_secret_key = os.getenv("CLERK_SECRET_KEY")
+    if not clerk_secret_key:
+        logger.error("CLERK_SECRET_KEY env var is not set")
+        return JsonResponse({"message": "Server configuration error"}, status=500)
+
+    try:
+        user_resp = http_requests.get(
+            f"https://api.clerk.com/v1/users/{clerk_user_id}",
+            headers={"Authorization": f"Bearer {clerk_secret_key}"},
+            timeout=10,
+        )
+        user_resp.raise_for_status()
+        clerk_user = user_resp.json()
+    except Exception as e:
+        logger.error(f"Clerk Backend API error: {e}")
+        return JsonResponse({"message": "Failed to fetch user from Clerk"}, status=502)
+
+    email = None
+    for addr in clerk_user.get("email_addresses", []):
+        if addr.get("id") == clerk_user.get("primary_email_address_id"):
+            email = addr.get("email_address")
+            break
+    if not email and clerk_user.get("email_addresses"):
+        email = clerk_user["email_addresses"][0].get("email_address")
     if not email:
-        return JsonResponse({"message": "Email not found in token"}, status=400)
+        return JsonResponse({"message": "Email not found in Clerk user"}, status=400)
+
+    first_name = clerk_user.get("first_name") or ""
+    last_name = clerk_user.get("last_name") or ""
+    username = (first_name + " " + last_name).strip() or email.split("@")[0]
 
     with connection.cursor() as c:
         c.execute("SELECT * FROM users WHERE clerk_user_id = %s", (clerk_user_id,))
