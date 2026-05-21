@@ -4,10 +4,6 @@ function getSession() {
   return JSON.parse(localStorage.getItem('session') || '{}')
 }
 
-function setSession(session) {
-  localStorage.setItem('session', JSON.stringify(session))
-}
-
 function getJwtToken() {
   return getSession().token || ''
 }

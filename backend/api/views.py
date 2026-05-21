@@ -460,8 +460,8 @@ def update_folder(request):
             (title, data.get("visibility"), folder_id),
         )
 
-        connection.commit()
-        return JsonResponse({"message": "Success"})
+    connection.commit()
+    return JsonResponse({"message": "Success"})
 
 
 @csrf_exempt
@@ -650,24 +650,24 @@ def import_folder(request):
                 back_bg = card.get("back_bg", "")
                 tags = card.get("tags", "")
                 
-                c.execute(
-                    "INSERT INTO cards (folder_id, order_index, front_content, back_content, front_bg, back_bg, tags, srs_interval, srs_ease, srs_next_review) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-                    (
-                        folder_id,
-                        idx,
-                        front_content,
-                        back_content,
-                        front_bg,
-                        back_bg,
-                        tags,
-                        0,  # default srs_interval
-                        2.5,  # default srs_ease
-                        None,  # srs_next_review NULL
-                    ),
-                )
+            c.execute(
+                "INSERT INTO cards (folder_id, order_index, front_content, back_content, front_bg, back_bg, tags, srs_interval, srs_ease, srs_next_review) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                (
+                    folder_id,
+                    idx,
+                    front_content,
+                    back_content,
+                    front_bg,
+                    back_bg,
+                    tags,
+                    0,
+                    2.5,
+                    None,
+                ),
+            )
 
-            connection.commit()
-        
+        connection.commit()
+
         return JsonResponse({"message": "Import successful", "folderId": folder_id})
     except Exception as e:
         logger.error(f"import_folder error: {e}")
@@ -751,16 +751,15 @@ def update_srs(request):
 
             new_ease = max(1.3, new_ease)
 
-            # Calculate next review date
-            # Simple: interval is in days
             from datetime import datetime, timedelta
 
             next_review = datetime.now() + timedelta(days=new_interval)
 
-        c.execute(
-            "UPDATE cards SET srs_interval = %s, srs_ease = %s, srs_next_review = %s WHERE id = %s",
-            (new_interval, new_ease, next_review, card_id),
-        )
+            c.execute(
+                "UPDATE cards SET srs_interval = %s, srs_ease = %s, srs_next_review = %s WHERE id = %s",
+                (new_interval, new_ease, next_review, card_id),
+            )
+
         connection.commit()
         return JsonResponse({"message": "SRS updated"})
     except Exception as e:
@@ -827,22 +826,22 @@ def save_cards(request):
                 front_bg = card.get("frontBg", "")
                 back_bg = card.get("backBg", "")
 
-        c.execute(
-            "INSERT INTO cards (folder_id, order_index, front_content, back_content, front_bg, back_bg, tags, srs_interval, srs_ease, srs_next_review) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-            (
-                folder_id,
-                idx,
-                front_html,
-                back_html,
-                front_bg,
-                back_bg,
-                card.get("tags", ""),
-                0, # default srs_interval
-                2.5, # default srs_ease
-                None, # srs_next_review NULL
-            ),
-        )
-        
+                c.execute(
+                    "INSERT INTO cards (folder_id, order_index, front_content, back_content, front_bg, back_bg, tags, srs_interval, srs_ease, srs_next_review) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                    (
+                        folder_id,
+                        idx,
+                        front_html,
+                        back_html,
+                        front_bg,
+                        back_bg,
+                        card.get("tags", ""),
+                        0,
+                        2.5,
+                        None,
+                    ),
+                )
+
         connection.commit()
         logger.error(
             f"SAVE DEBUG - committed {len(cards_data)} cards for folder {folder_id}"

@@ -7,7 +7,7 @@ import { EditorToolbar } from './editor/EditorToolbar';
 import { EditorSidebar } from './editor/EditorSidebar';
 import { CardCanvas } from './editor/CardCanvas';
 import { FloatingTextToolbar } from './editor/FloatingTextToolbar';
-import { apiFetch, API_BASE, getJwtToken, getCsrfToken } from '@/lib/api';
+import { apiFetch } from '@/lib/api';
 
 const TEMPLATES = {
   blank: { front: [], back: [] },

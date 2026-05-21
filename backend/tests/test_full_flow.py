@@ -1,12 +1,12 @@
 import json
-from django.test import TestCase, Client
+from django.test import TransactionTestCase, Client
 from django.db import connection
 from django.conf import settings
 
 from api.jwt_utils import generate_jwt_token
 
 
-class FullFlowTest(TestCase):
+class FullFlowTest(TransactionTestCase):
     def setUp(self):
         self.client = Client()
         self.email = "fullflow@example.com"

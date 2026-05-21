@@ -204,7 +204,7 @@ function HomePage() {
       } else if (data.message) {
         console.error('loadFolders error:', data.message)
       }
-    } catch (_e) { console.error(_e) }
+    } catch (e) { console.error(e) }
   }, [activeTab, page, searchInput, user])
 
   const loadGlobalCards = useCallback(async () => {
@@ -224,7 +224,7 @@ function HomePage() {
         setGlobalCards(filteredCards)
         setTotalPages(data.totalPages || 1)
       }
-    } catch (_e) { console.error(_e) }
+    } catch (e) { console.error(e) }
   }, [page, searchInput])
 
   const exchangeClerkToken = useCallback(async () => {
@@ -349,7 +349,7 @@ function HomePage() {
           showAlert(data.message || t('error_create_folder'))
         }
       }
-    } catch (_e) { showAlert(t('error_create_folder')) }
+    } catch { showAlert(t('error_create_folder')) }
   }
 
   const selectTheme = (newTheme) => {
@@ -388,7 +388,7 @@ function HomePage() {
         setShowSettingsModal(false)
         loadFolders()
       }
-    } catch (_e) { showAlert(t('error_save')) }
+    } catch { showAlert(t('error_save')) }
   }
 
   const exportFolder = async () => {
@@ -402,7 +402,7 @@ function HomePage() {
       a.href = url;
       a.download = `${editingFolder.title}.json`;
       a.click();
-    } catch (_e) { showAlert(t('error_export')) }
+    } catch { showAlert(t('error_export')) }
   }
 
   const importFolder = async () => {
@@ -427,7 +427,7 @@ function HomePage() {
             showAlert(t('success_import'))
             loadFolders();
           }
-        } catch (_e) { showAlert(t('error_import')) }
+        } catch { showAlert(t('error_import')) }
       };
       reader.readAsText(file);
     };
@@ -449,7 +449,7 @@ try {
         setShowSettingsModal(false)
         loadFolders()
       }
-    } catch (_e) { showAlert(t('error_delete')) }
+    } catch { showAlert(t('error_delete')) }
   }
 
   return (

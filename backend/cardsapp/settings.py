@@ -26,7 +26,7 @@ if not JWT_SECRET_KEY:
 ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "").split(",")
 if not ALLOWED_HOSTS or ALLOWED_HOSTS == [""]:
     if DEBUG or os.environ.get("RUNNING_IN_DOCKER"):
-        ALLOWED_HOSTS = ["localhost", "127.0.0.1", "backend", "frontend", "cardapp.qzz.io", "192.168.1.160", "0.0.0.0"]
+        ALLOWED_HOSTS = ["localhost", "127.0.0.1", "backend", "frontend", "cardapp.qzz.io", "192.168.1.160", "0.0.0.0", "testserver"]
     else:
         raise ValueError("ALLOWED_HOSTS environment variable must be set")
 
