@@ -317,13 +317,6 @@ function HomePage() {
   }, [loadFolders])
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      loadFolders()
-    }, 15000)
-    return () => clearInterval(interval)
-  }, [loadFolders])
-
-  useEffect(() => {
     const handleFocus = () => {
       loadFolders()
     }
