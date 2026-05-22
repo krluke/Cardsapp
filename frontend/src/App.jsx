@@ -5,7 +5,6 @@ import { useAuth, useClerk } from '@clerk/clerk-react'
 import EditorPage from './pages/EditorPage'
 import ViewerPage from './pages/ViewerPage'
 import StudyPage from './pages/study/StudyPage'
-import AccountPage from './pages/AccountPage'
 import { GlobalSearchModal } from './components/GlobalSearchModal'
 import { AddToFolderModal } from './components/AddToFolderModal'
 import { useModal, Modal } from './components/Modal'
@@ -144,9 +143,8 @@ export default function App() {
     <BrowserRouter>
       <Routes>
       <Route path="/" element={<Navigate to="/home" replace />} />
-      <Route path="/home" element={<HomePage />} />
-      <Route path="/account" element={<AccountPage />} />
-      <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+       <Route path="/home" element={<HomePage />} />
+       <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
       <Route path="/terms-of-service" element={<TermsOfServicePage />} />
       <Route path="/editor/:folderId" element={<EditorPage />} />
       <Route path="/viewer/:folderId" element={<ViewerPage />} />
@@ -177,6 +175,7 @@ function HomePage() {
   const [showAddToFolderModal, setShowAddToFolderModal] = useState(false)
   const [selectedCard, setSelectedCard] = useState(null)
   const [flippedCards, setFlippedCards] = useState({})
+  const [totalCards, setTotalCards] = useState(0)
   const { modalState, showAlert, showConfirm, showPrompt, closeModal, handleConfirm, handlePromptSubmit } = useModal()
 
   const { isSignedIn, getToken } = useAuth()
@@ -206,6 +205,17 @@ function HomePage() {
       }
     } catch (e) { console.error(e) }
   }, [activeTab, page, searchInput, user])
+
+  const loadTotalCards = useCallback(async () => {
+    if (!user) return
+    try {
+      const res = await apiFetch('/folders?tab=my-folders')
+      const data = await res.json()
+      if (data.folders) {
+        setTotalCards(data.folders.reduce((sum, f) => sum + (f.card_count || 0), 0))
+      }
+    } catch (e) { console.error(e) }
+  }, [user])
 
   const loadGlobalCards = useCallback(async () => {
     const params = new URLSearchParams({
@@ -253,6 +263,7 @@ function HomePage() {
       localStorage.setItem('session', JSON.stringify(session))
       setUser(session.user)
       loadFolders()
+      loadTotalCards()
     } catch (err) {
       console.error('Clerk token exchange error:', err)
       exchangeFailCount.current += 1
@@ -289,8 +300,11 @@ function HomePage() {
     document.documentElement.setAttribute('data-theme', savedTheme)
 
     const session = JSON.parse(localStorage.getItem('session') || '{}')
-    if (session.user) setUser(session.user)
-  }, [])
+    if (session.user) {
+      setUser(session.user)
+      loadTotalCards()
+    }
+  }, [loadTotalCards])
 
   useEffect(() => {
     loadFolders()
@@ -515,8 +529,11 @@ try {
                   </button>
                 ) : (
                   <>
-                    <div className="menu-header"><span style={{fontWeight:'bold'}}>{user.username}</span></div>
-                    <button className="dropdown-item" onClick={() => navigate('/account')}><User size={18} /> {t('menu_account_info')}</button>
+                    <div className="menu-header">
+                      <span style={{fontWeight:'bold'}}>{user.username}</span>
+                      <span style={{fontSize:'0.75rem', color:'var(--text-muted)'}}>{totalCards} cards</span>
+                    </div>
+                    <button className="dropdown-item" onClick={() => { clerk.openUserProfile(); setAuthMenuOpen(false) }}><User size={18} /> Manage Account</button>
                     <div className="dropdown-divider"></div>
                     <button className="dropdown-item logout-btn" onClick={handleLogout}><LogOut size={18} /> {t('menu_logout')}</button>
                   </>
