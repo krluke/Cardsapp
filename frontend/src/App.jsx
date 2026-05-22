@@ -2,10 +2,11 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, Link } from 'react-router-dom'
 import { X, FolderPlus, Palette, Globe, User, LogOut, LogIn, Settings, Trash2, Search, ChevronLeft, ChevronRight, BookOpen, Plus } from 'lucide-react'
 import { useAuth, useClerk } from '@clerk/clerk-react'
+
+import AccountPage from './pages/AccountPage'
 import EditorPage from './pages/EditorPage'
 import ViewerPage from './pages/ViewerPage'
 import StudyPage from './pages/study/StudyPage'
-import AccountPage from './pages/AccountPage'
 import { GlobalSearchModal } from './components/GlobalSearchModal'
 import { AddToFolderModal } from './components/AddToFolderModal'
 import { useModal, Modal } from './components/Modal'
@@ -272,7 +273,7 @@ function HomePage({ clerkAvailable, isSignedIn: isSignedInProp, getToken: getTok
       localStorage.setItem('session', JSON.stringify(session))
       setUser(session.user)
     } catch (err) {
-      console.error('Clerk token exchange error:', err)
+      console.warn('Clerk token exchange error:', err?.message || err)
       exchangeFailCount.current += 1
     } finally {
       exchangingRef.current = false
@@ -547,12 +548,12 @@ try {
             <LogIn size={18} /> {(!clerkAvailable || !isSignedIn) ? t('menu_login') : t('guest_login_btn')}
                   </button>
                 ) : (
-                  <>
-                    <div className="menu-header"><span style={{fontWeight:'bold'}}>{user.username}</span></div>
-                    <a href="/account" className="dropdown-item"><User size={18} /> {t('menu_account_info')}</a>
-                    <div className="dropdown-divider"></div>
-                    <button className="dropdown-item logout-btn" onClick={handleLogout}><LogOut size={18} /> {t('menu_logout')}</button>
-                  </>
+        <>
+          <div className="menu-header"><span style={{fontWeight:'bold'}}>{user.username}</span></div>
+          <a href="/account" className="dropdown-item"><User size={18} /> {t('menu_account_info')}</a>
+          <div className="dropdown-divider"></div>
+          <button className="dropdown-item logout-btn" onClick={handleLogout}><LogOut size={18} /> {t('menu_logout')}</button>
+        </>
                 )}
               </div>
             )}
