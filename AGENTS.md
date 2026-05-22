@@ -45,9 +45,10 @@ docker exec -it my-mariadb-db mariadb -u flashcard_user -pflashcards_db  # DB sh
 **Cloudflare Tunnel** runs outside docker-compose (systemd service or standalone `docker run`):
 
 ```bash
-# Standalone start
-docker run -d --restart always --name cloudflare-tunnel \
-  --network cardsapp-net --env-file .env \
+# Standalone start (CLOUDFLARE_TOKEN must be set in env)
+. .env && docker run -d --restart always --name cloudflare-tunnel \
+  --network cardsapp-net \
+  -e TUNNEL_TOKEN="$CLOUDFLARE_TOKEN" \
   cloudflare/cloudflared:latest tunnel --no-autoupdate run
 
 # Systemd (see infra/cloudflared.service)
@@ -63,7 +64,7 @@ docker start cloudflare-tunnel     # Start tunnel
 1. `git fetch origin && git reset --hard origin/main`
 2. `docker network inspect cardsapp-net >/dev/null 2>&1 || docker network create cardsapp-net`
 3. `docker-compose down --remove-orphans && docker-compose up -d --build --force-recreate`
-4. `docker rm -f cloudflare-tunnel && docker run -d --restart always --name cloudflare-tunnel --network cardsapp-net --env-file ~/server-project/.env cloudflare/cloudflared:latest tunnel --no-autoupdate run`
+4. `. ~/server-project/.env && docker rm -f cloudflare-tunnel && docker run -d --restart always --name cloudflare-tunnel --network cardsapp-net -e TUNNEL_TOKEN="$CLOUDFLARE_TOKEN" cloudflare/cloudflared:latest tunnel --no-autoupdate run`
 
 ## Architecture
 
