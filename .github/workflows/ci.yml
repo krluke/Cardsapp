@@ -1,14 +1,11 @@
 name: Python CI/CD
-
 on:
   push:
     branches: ["main"]
   pull_request:
     branches: ["main"]
-
 permissions:
   contents: write
-
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
@@ -20,27 +17,22 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.10"
           cache: 'pip'
-
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install flake8 pytest
-
       - name: Lint with Flake8
         run: |
           flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-
       - name: Run Tests
         run: |
           pytest || echo "No tests found, skipping"
-
   deploy:
     needs: build-and-test
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' || (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true)
@@ -51,7 +43,9 @@ jobs:
           cd ~/server-project
           git fetch origin
           git reset --hard origin/main
-
+      - name: Ensure Docker network exists
+        run: |
+          docker network inspect cardsapp-net >/dev/null 2>&1 || docker network create cardsapp-net
       - name: Restart Docker Containers
         run: |
           cd ~/server-project
@@ -60,12 +54,19 @@ jobs:
           docker-compose up -d --build --force-recreate
           sleep 10
           docker-compose ps
-
+      - name: Restart Cloudflare Tunnel
+        run: |
+          docker rm -f cloudflare-tunnel 2>/dev/null || true
+          docker run -d --restart always \
+            --name cloudflare-tunnel \
+            --network cardsapp-net \
+            --env-file ~/server-project/.env \
+            cloudflare/cloudflared:latest \
+            tunnel --no-autoupdate run
       - name: Verify Backend Health
         run: |
           cd ~/server-project
           docker-compose ps
-
       - name: Collect Static Files
         run: |
           cd ~/server-project
