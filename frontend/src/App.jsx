@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, Link } from 'react-router-dom'
 import { X, FolderPlus, Palette, Globe, User, LogOut, LogIn, Settings, Trash2, Search, ChevronLeft, ChevronRight, BookOpen, Plus } from 'lucide-react'
 import { useAuth, useClerk } from '@clerk/clerk-react'
+import ClerkGate from './components/ClerkGate'
 import AccountPage from './pages/AccountPage'
 import EditorPage from './pages/EditorPage'
 import ViewerPage from './pages/ViewerPage'
@@ -143,16 +144,24 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+        <Route path="/terms-of-service" element={<TermsOfServicePage />} />
+        <Route path="/*" element={<ClerkGate><AuthRoutes /></ClerkGate>} />
+      </Routes>
+    </BrowserRouter>
+  )
+}
+
+function AuthRoutes() {
+  return (
+    <Routes>
       <Route path="/" element={<Navigate to="/home" replace />} />
-       <Route path="/home" element={<HomePage />} />
-       <Route path="/account" element={<AccountPage />} />
-       <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
-      <Route path="/terms-of-service" element={<TermsOfServicePage />} />
+      <Route path="/home" element={<HomePage />} />
+      <Route path="/account" element={<AccountPage />} />
       <Route path="/editor/:folderId" element={<EditorPage />} />
       <Route path="/viewer/:folderId" element={<ViewerPage />} />
       <Route path="/study/:folderId" element={<StudyPage />} />
-      </Routes>
-    </BrowserRouter>
+    </Routes>
   )
 }
 
