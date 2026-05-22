@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, Link } from 'react-router-dom'
 import { X, FolderPlus, Palette, Globe, User, LogOut, LogIn, Settings, Trash2, Search, ChevronLeft, ChevronRight, BookOpen, Plus } from 'lucide-react'
 import { useAuth, useClerk } from '@clerk/clerk-react'
+import AccountPage from './pages/AccountPage'
 import EditorPage from './pages/EditorPage'
 import ViewerPage from './pages/ViewerPage'
 import StudyPage from './pages/study/StudyPage'
@@ -144,6 +145,7 @@ export default function App() {
       <Routes>
       <Route path="/" element={<Navigate to="/home" replace />} />
        <Route path="/home" element={<HomePage />} />
+       <Route path="/account" element={<AccountPage />} />
        <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
       <Route path="/terms-of-service" element={<TermsOfServicePage />} />
       <Route path="/editor/:folderId" element={<EditorPage />} />
@@ -533,7 +535,7 @@ try {
                       <span style={{fontWeight:'bold'}}>{user.username}</span>
                       <span style={{fontSize:'0.75rem', color:'var(--text-muted)'}}>{totalCards} cards</span>
                     </div>
-                    <button className="dropdown-item" onClick={() => { clerk.openUserProfile(); setAuthMenuOpen(false) }}><User size={18} /> Manage Account</button>
+                    <button className="dropdown-item" onClick={() => { navigate('/account'); setAuthMenuOpen(false) }}><User size={18} /> Manage Account</button>
                     <div className="dropdown-divider"></div>
                     <button className="dropdown-item logout-btn" onClick={handleLogout}><LogOut size={18} /> {t('menu_logout')}</button>
                   </>
