@@ -47,6 +47,7 @@ services:
       - "5000:5000"
     env_file:
       - /tmp/env/secrets
+      - .env
     environment:
       - DB_HOST=${DB_HOST:-db}
       - DB_USER=${DB_USER:-flashcard_user}

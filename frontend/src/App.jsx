@@ -657,9 +657,12 @@ try {
           )}
       </main>
 
-      <footer className="home-page-footer">
-        © 2024-2025 Cardsapp. All rights reserved.
-      </footer>
+        <footer className="home-page-footer">
+          © 2024-2025 Cardsapp. All rights reserved.{" "}
+          <a href="https://github.com/krluke/Cardsapp" target="_blank" rel="noopener noreferrer" className="footer-github-link">
+            &lt;/&gt;github
+          </a>
+        </footer>
 
 
 
