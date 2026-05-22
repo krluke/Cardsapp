@@ -598,6 +598,14 @@
   transform: rotateY(180deg);
 }
 
+.card-flip-wrapper.flipped .card-flip-front {
+  pointer-events: none;
+}
+
+.card-flip-wrapper:not(.flipped) .card-flip-back {
+  pointer-events: none;
+}
+
 .card-flip-back .card-canvas {
   border-color: #3b82f6;
 }
