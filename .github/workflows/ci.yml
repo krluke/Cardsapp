@@ -52,6 +52,10 @@ jobs:
           git fetch origin
           git reset --hard origin/main
 
+      - name: Ensure Docker network exists
+        run: |
+          docker network inspect cardsapp-net >/dev/null 2>&1 || docker network create cardsapp-net
+
       - name: Restart Docker Containers
         run: |
           cd ~/server-project
@@ -60,6 +64,17 @@ jobs:
           docker-compose up -d --build --force-recreate
           sleep 10
           docker-compose ps
+
+      - name: Restart Cloudflare Tunnel
+        run: |
+          docker rm -f cloudflare-tunnel 2>/dev/null || true
+          . ~/server-project/.env
+          docker run -d --restart always \
+            --name cloudflare-tunnel \
+            --network cardsapp-net \
+            -e TUNNEL_TOKEN="$CLOUDFLARE_TOKEN" \
+            cloudflare/cloudflared:latest \
+            tunnel --no-autoupdate run
 
       - name: Verify Backend Health
         run: |
