@@ -158,7 +158,10 @@ export default function App() {
 
 function HomePage() {
   const navigate = useNavigate()
-  const [user, setUser] = useState(null)
+  const [user, setUser] = useState(() => {
+    const session = JSON.parse(localStorage.getItem('session') || '{}')
+    return session.user || null
+  })
   const [activeTab, setActiveTab] = useState('my-folders')
 
   const [folders, setFolders] = useState([])
@@ -169,8 +172,8 @@ function HomePage() {
   const [themeMenuOpen, setThemeMenuOpen] = useState(false)
   const [langMenuOpen, setLangMenuOpen] = useState(false)
   const [authMenuOpen, setAuthMenuOpen] = useState(false)
-  const [theme, setTheme] = useState('light')
-  const [lang, setLang] = useState('ja')
+  const [theme, setTheme] = useState(() => localStorage.getItem('app-theme') || 'light')
+  const [lang, setLang] = useState(() => localStorage.getItem('app-lang') || 'ja')
   const [showSettingsModal, setShowSettingsModal] = useState(false)
   const [editingFolder, setEditingFolder] = useState(null)
   const [showSearchModal, setShowSearchModal] = useState(false)
@@ -181,10 +184,14 @@ function HomePage() {
 
   const { isSignedIn, getToken } = useAuth()
   const clerk = useClerk()
+  const [userLoading, setUserLoading] = useState(false)
   const exchangingRef = useRef(false)
   const exchangeFailCount = useRef(0)
+  const sessionExpiredRef = useRef(false)
 
   const loadFolders = useCallback(async () => {
+    if (sessionExpiredRef.current) return
+    if (userLoading) return
     if (activeTab === 'my-folders' && !user) {
       setFolders([])
       return
@@ -197,6 +204,7 @@ function HomePage() {
     })
     try {
       const res = await apiFetch(`${endpoint}?${params}`)
+      if (res.status === 401) return
       const data = await res.json()
       if (data.folders !== undefined) {
         setFolders(data.folders || [])
@@ -205,15 +213,17 @@ function HomePage() {
         console.error('loadFolders error:', data.message)
       }
     } catch (e) { console.error(e) }
-  }, [activeTab, page, searchInput, user])
+  }, [activeTab, page, searchInput, user, userLoading])
 
   const loadGlobalCards = useCallback(async () => {
+    if (sessionExpiredRef.current) return
     const params = new URLSearchParams({
       page,
       search: searchInput,
     })
     try {
       const res = await apiFetch(`/cards/public?${params}`)
+      if (res.status === 401) return
       const data = await res.json()
       if (data.cards) {
         const filteredCards = (data.cards || []).filter(card => {
@@ -230,6 +240,7 @@ function HomePage() {
   const exchangeClerkToken = useCallback(async () => {
     if (exchangingRef.current) return
     exchangingRef.current = true
+    setUserLoading(true)
     try {
       const clerkToken = await getToken()
       if (!clerkToken) return
@@ -245,6 +256,7 @@ function HomePage() {
         return
       }
       exchangeFailCount.current = 0
+      sessionExpiredRef.current = false
       const session = {
         user: { id: data.email, username: data.username, email: data.email, clerkUserId: data.clerkUserId },
         csrfToken: data.csrfToken,
@@ -252,23 +264,26 @@ function HomePage() {
       }
       localStorage.setItem('session', JSON.stringify(session))
       setUser(session.user)
-      loadFolders()
     } catch (err) {
       console.error('Clerk token exchange error:', err)
       exchangeFailCount.current += 1
     } finally {
       exchangingRef.current = false
+      setUserLoading(false)
     }
-  }, [getToken, loadFolders])
+  }, [getToken])
 
   useEffect(() => {
-    if (isSignedIn && !user && exchangeFailCount.current < 3) {
+    if (isSignedIn && !user && !userLoading && exchangeFailCount.current < 3) {
       exchangeClerkToken()
     }
-  }, [isSignedIn, user, exchangeClerkToken])
+    if (!isSignedIn) {
+      exchangeFailCount.current = 0
+    }
+  }, [isSignedIn, user, userLoading, exchangeClerkToken])
 
   useEffect(() => {
-    if (!clerk.addListener) return
+    if (typeof clerk?.addListener !== 'function') return
     const unsubscribe = clerk.addListener(({ event }) => {
       if (event === 'signedOut') {
         localStorage.removeItem('session')
@@ -276,45 +291,56 @@ function HomePage() {
         setFolders([])
         setGlobalCards([])
         setActiveTab('my-folders')
+        sessionExpiredRef.current = false
+        exchangeFailCount.current = 0
       }
     })
-    return unsubscribe
+    return () => { if (typeof unsubscribe === 'function') unsubscribe() }
   }, [clerk])
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem('app-theme') || 'light'
-    const savedLang = localStorage.getItem('app-lang') || 'ja'
-    setTheme(savedTheme)
-    setLang(savedLang)
-    document.documentElement.setAttribute('data-theme', savedTheme)
-
-    const session = JSON.parse(localStorage.getItem('session') || '{}')
-    if (session.user) setUser(session.user)
+    document.documentElement.setAttribute('data-theme', localStorage.getItem('app-theme') || 'light')
   }, [])
 
   useEffect(() => {
-    loadFolders()
-  }, [loadFolders])
+    const handleSessionExpired = async () => {
+      if (sessionExpiredRef.current) return
+      sessionExpiredRef.current = true
+      if (isSignedIn && exchangeFailCount.current < 3) {
+        exchangeFailCount.current = 0
+        await exchangeClerkToken()
+        if (!sessionExpiredRef.current) return
+      }
+      setUser(null)
+      setFolders([])
+      setGlobalCards([])
+      setActiveTab('my-folders')
+    }
+    window.addEventListener('session-expired', handleSessionExpired)
+    return () => window.removeEventListener('session-expired', handleSessionExpired)
+  }, [isSignedIn, exchangeClerkToken])
+
+  useEffect(() => {
+    if (!userLoading) requestAnimationFrame(() => loadFolders())
+  }, [loadFolders, userLoading])
 
   useEffect(() => {
     const interval = setInterval(() => {
-      loadFolders()
+      if (!document.hidden) loadFolders()
     }, 15000)
     return () => clearInterval(interval)
   }, [loadFolders])
 
   useEffect(() => {
     const handleFocus = () => {
-      loadFolders()
+      if (!document.hidden) loadFolders()
     }
     window.addEventListener('focus', handleFocus)
     return () => window.removeEventListener('focus', handleFocus)
   }, [loadFolders])
 
   useEffect(() => {
-    if (activeTab === 'global-cards') {
-      loadGlobalCards()
-    }
+    if (activeTab === 'global-cards') requestAnimationFrame(() => loadGlobalCards())
   }, [activeTab, loadGlobalCards])
 
   const handleLogout = () => {

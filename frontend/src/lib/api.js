@@ -30,7 +30,7 @@ export async function apiFetch(endpoint, options = {}) {
 
   if (res.status === 401 && jwtToken) {
     localStorage.removeItem('session')
-    window.location.reload()
+    window.dispatchEvent(new CustomEvent('session-expired'))
   }
 
   return res
