@@ -1,7 +1,11 @@
 const API_BASE = '/api'
 
 function getSession() {
-  return JSON.parse(localStorage.getItem('session') || '{}')
+  try {
+    return JSON.parse(localStorage.getItem('session') || '{}')
+  } catch {
+    return {}
+  }
 }
 
 function getJwtToken() {
@@ -33,7 +37,17 @@ export async function apiFetch(endpoint, options = {}) {
     window.location.reload()
   }
 
-  return res
+  if (!res.ok) {
+    return res
+  }
+
+  const ct = res.headers.get('content-type') || ''
+  if (ct.includes('application/json') || ct.includes('application/problem+json')) {
+    return res
+  }
+
+  const text = await res.text()
+  throw new Error(`API returned ${res.status} ${res.statusText}: ${text.slice(0, 200)}`)
 }
 
 export { API_BASE, getJwtToken, getCsrfToken }

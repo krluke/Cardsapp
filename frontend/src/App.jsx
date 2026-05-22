@@ -205,7 +205,11 @@ function HomePage() {
       } else if (data.message) {
         console.error('loadFolders error:', data.message)
       }
-    } catch (e) { console.error(e) }
+    } catch (e) {
+      if (activeTab === 'my-folders' || activeTab === 'global-folders') {
+        console.warn('loadFolders failed, will retry in 15s:', e?.message)
+      }
+    }
   }, [activeTab, page, searchInput, user])
 
   const loadTotalCards = useCallback(async () => {
@@ -216,7 +220,7 @@ function HomePage() {
       if (data.folders) {
         setTotalCards(data.folders.reduce((sum, f) => sum + (f.card_count || 0), 0))
       }
-    } catch (e) { console.error(e) }
+    } catch (e) { /* expected on transient failure */ }
   }, [user])
 
   const loadGlobalCards = useCallback(async () => {
@@ -267,7 +271,7 @@ function HomePage() {
       loadFolders()
       loadTotalCards()
     } catch (err) {
-      console.error('Clerk token exchange error:', err)
+      console.warn('Clerk token exchange error:', err?.message || err)
       exchangeFailCount.current += 1
     } finally {
       exchangingRef.current = false
