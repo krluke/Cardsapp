@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, Link } from 'react-router-dom'
 import { X, FolderPlus, Palette, Globe, User, LogOut, LogIn, Settings, Trash2, Search, ChevronLeft, ChevronRight, BookOpen, Plus } from 'lucide-react'
 import { useAuth, useClerk } from '@clerk/clerk-react'
-import ClerkGate from './components/ClerkGate'
+
 import AccountPage from './pages/AccountPage'
 import EditorPage from './pages/EditorPage'
 import ViewerPage from './pages/ViewerPage'
@@ -140,32 +140,30 @@ function t(key) {
   return translations[lang]?.[key] || key
 }
 
-export default function App() {
+export default function App({ clerkAvailable }) {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/" element={<Navigate to="/home" replace />} />
+        <Route path="/home" element={clerkAvailable ? <ClerkHomePage /> : <HomePage clerkAvailable={false} />} />
+        <Route path="/account" element={<AccountPage />} />
         <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
         <Route path="/terms-of-service" element={<TermsOfServicePage />} />
-        <Route path="/*" element={<ClerkGate><AuthRoutes /></ClerkGate>} />
+        <Route path="/editor/:folderId" element={<EditorPage />} />
+        <Route path="/viewer/:folderId" element={<ViewerPage />} />
+        <Route path="/study/:folderId" element={<StudyPage />} />
       </Routes>
     </BrowserRouter>
   )
 }
 
-function AuthRoutes() {
-  return (
-    <Routes>
-      <Route path="/" element={<Navigate to="/home" replace />} />
-      <Route path="/home" element={<HomePage />} />
-      <Route path="/account" element={<AccountPage />} />
-      <Route path="/editor/:folderId" element={<EditorPage />} />
-      <Route path="/viewer/:folderId" element={<ViewerPage />} />
-      <Route path="/study/:folderId" element={<StudyPage />} />
-    </Routes>
-  )
+function ClerkHomePage() {
+  const { isSignedIn, getToken } = useAuth()
+  const clerk = useClerk()
+  return <HomePage clerkAvailable={true} isSignedIn={isSignedIn} getToken={getToken} clerk={clerk} />
 }
 
-function HomePage() {
+function HomePage({ clerkAvailable, isSignedIn: isSignedInProp, getToken: getTokenProp, clerk: clerkProp }) {
   const navigate = useNavigate()
   const [user, setUser] = useState(() => {
     const session = JSON.parse(localStorage.getItem('session') || '{}')
@@ -189,12 +187,12 @@ function HomePage() {
   const [showAddToFolderModal, setShowAddToFolderModal] = useState(false)
   const [selectedCard, setSelectedCard] = useState(null)
   const [flippedCards, setFlippedCards] = useState({})
-  const [totalCards, setTotalCards] = useState(0)
+  const [userLoading, setUserLoading] = useState(false)
   const { modalState, showAlert, showConfirm, showPrompt, closeModal, handleConfirm, handlePromptSubmit } = useModal()
 
-  const { isSignedIn, getToken } = useAuth()
-  const clerk = useClerk()
-  const [userLoading, setUserLoading] = useState(false)
+  const isSignedIn = clerkAvailable ? isSignedInProp : false
+  const getToken = useMemo(() => clerkAvailable ? getTokenProp : async () => null, [clerkAvailable, getTokenProp])
+  const clerk = useMemo(() => clerkAvailable ? clerkProp : {}, [clerkAvailable, clerkProp])
   const exchangingRef = useRef(false)
   const exchangeFailCount = useRef(0)
   const sessionExpiredRef = useRef(false)
@@ -224,17 +222,6 @@ function HomePage() {
       }
     } catch (e) { console.error(e) }
   }, [activeTab, page, searchInput, user, userLoading])
-
-  const loadTotalCards = useCallback(async () => {
-    if (!user) return
-    try {
-      const res = await apiFetch('/folders?tab=my-folders')
-      const data = await res.json()
-      if (data.folders) {
-        setTotalCards(data.folders.reduce((sum, f) => sum + (f.card_count || 0), 0))
-      }
-    } catch (e) { /* expected on transient failure */ }
-  }, [user])
 
   const loadGlobalCards = useCallback(async () => {
     if (sessionExpiredRef.current) return
@@ -371,7 +358,7 @@ function HomePage() {
     setGlobalCards([])
     setActiveTab('my-folders')
     setAuthMenuOpen(false)
-    if (clerk.signOut) {
+    if (clerkAvailable && typeof clerk.signOut === 'function') {
       clerk.signOut({ redirectUrl: window.location.origin + '/home' })
     }
   }
@@ -557,19 +544,16 @@ try {
             {authMenuOpen && (
               <div className="dropdown">
                 {!user ? (
-                  <button className="dropdown-item" onClick={() => { if (!isSignedIn) { clerk.openSignIn() } else { exchangeClerkToken() }; setAuthMenuOpen(false) }}>
-                    <LogIn size={18} /> {!isSignedIn ? t('menu_login') : t('guest_login_btn')}
+          <button className="dropdown-item" onClick={() => { if (clerkAvailable && !isSignedIn && typeof clerk.openSignIn === 'function') { clerk.openSignIn() } else if (isSignedIn) { exchangeClerkToken() }; setAuthMenuOpen(false) }}>
+            <LogIn size={18} /> {(!clerkAvailable || !isSignedIn) ? t('menu_login') : t('guest_login_btn')}
                   </button>
                 ) : (
-                  <>
-                    <div className="menu-header">
-                      <span style={{fontWeight:'bold'}}>{user.username}</span>
-                      <span style={{fontSize:'0.75rem', color:'var(--text-muted)'}}>{totalCards} cards</span>
-                    </div>
-                    <button className="dropdown-item" onClick={() => { navigate('/account'); setAuthMenuOpen(false) }}><User size={18} /> Manage Account</button>
-                    <div className="dropdown-divider"></div>
-                    <button className="dropdown-item logout-btn" onClick={handleLogout}><LogOut size={18} /> {t('menu_logout')}</button>
-                  </>
+        <>
+          <div className="menu-header"><span style={{fontWeight:'bold'}}>{user.username}</span></div>
+          <a href="/account" className="dropdown-item"><User size={18} /> {t('menu_account_info')}</a>
+          <div className="dropdown-divider"></div>
+          <button className="dropdown-item logout-btn" onClick={handleLogout}><LogOut size={18} /> {t('menu_logout')}</button>
+        </>
                 )}
               </div>
             )}
@@ -599,7 +583,7 @@ try {
         {activeTab === 'my-folders' && !user && (
           <div className="empty-state">
             <p>{t('guest_message')}</p>
-            <button className="primary-btn" onClick={() => { if (!isSignedIn) { clerk.openSignIn() } else { exchangeClerkToken() } }}>{t('guest_login_btn')}</button>
+            <button className="primary-btn" onClick={() => { if (clerkAvailable && !isSignedIn && typeof clerk.openSignIn === 'function') { clerk.openSignIn() } else if (isSignedIn) { exchangeClerkToken() } }}>{t('guest_login_btn')}</button>
           </div>
         )}
 

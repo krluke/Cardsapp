@@ -1,5 +1,6 @@
 import { StrictMode, Component } from 'react'
 import { createRoot } from 'react-dom/client'
+import { ClerkProvider } from '@clerk/clerk-react'
 import './index.css'
 import './App.css'
 import App from './App.jsx'
@@ -31,12 +32,23 @@ class ErrorBoundary extends Component {
   }
 }
 
+const clerkKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
+const clerkAvailable = typeof clerkKey === 'string' && clerkKey.startsWith('pk_')
+
+const appElement = (
+  <ErrorBoundary>
+    <App clerkAvailable={clerkAvailable} />
+  </ErrorBoundary>
+)
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <ClerkProvider publishableKey={import.meta.env.VITE_CLERK_PUBLISHABLE_KEY} afterSignOutUrl="/">
-      <ErrorBoundary>
-        <App />
-      </ErrorBoundary>
-    </ClerkProvider>
+    {clerkAvailable ? (
+      <ClerkProvider publishableKey={clerkKey} afterSignOutUrl="/">
+        {appElement}
+      </ClerkProvider>
+    ) : (
+      appElement
+    )}
   </StrictMode>,
 )
