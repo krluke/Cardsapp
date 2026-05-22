@@ -7,13 +7,12 @@ Requires=docker.service
 Restart=always
 RestartSec=5
 ExecStartPre=-/usr/bin/docker rm -f cloudflare-tunnel
-EnvironmentFile=~/server-project/.env
-ExecStart=/usr/bin/docker run --rm \
+ExecStart=/bin/sh -c '. ~/server-project/.env && exec docker run --rm \
   --name cloudflare-tunnel \
   --network cardsapp-net \
-  -e CLOUDFLARE_TOKEN \
+  -e TUNNEL_TOKEN="$CLOUDFLARE_TOKEN" \
   cloudflare/cloudflared:latest \
-  tunnel --no-autoupdate run
+  tunnel --no-autoupdate run'
 ExecStop=/usr/bin/docker stop cloudflare-tunnel
 
 [Install]

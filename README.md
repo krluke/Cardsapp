@@ -81,10 +81,10 @@ The service loads `CLOUDFLARE_TOKEN` from `~/server-project/.env` via systemd `E
 **Option B — Docker run (quick start):**
 
 ```bash
-docker run -d --restart always \
+. .env && docker run -d --restart always \
   --name cloudflare-tunnel \
   --network cardsapp-net \
-  --env-file .env \
+  -e TUNNEL_TOKEN="$CLOUDFLARE_TOKEN" \
   cloudflare/cloudflared:latest \
   tunnel --no-autoupdate run
 ```
