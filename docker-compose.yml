@@ -1,10 +1,16 @@
 version: "3.8"
 
+networks:
+  cardsapp-net:
+    external: true
+
 services:
   db:
     image: mariadb:11.4
     container_name: my-mariadb-db
     restart: always
+    networks:
+      - cardsapp-net
     environment:
       MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
       MARIADB_DATABASE: flashcards_db
@@ -35,6 +41,8 @@ services:
     build: ./backend
     container_name: my-backend
     restart: always
+    networks:
+      - cardsapp-net
     ports:
       - "5000:5000"
     env_file:
@@ -68,15 +76,12 @@ services:
       
     container_name: my-frontend
     restart: always
+    networks:
+      - cardsapp-net
     ports:
       - "8080:80"
     depends_on:
       - backend
 
-  cloudflared:
-    image: cloudflare/cloudflared:latest
-    container_name: cloudflare-tunnel
-    restart: always
-    command: tunnel --no-autoupdate run
-    environment:
-      - TUNNEL_TOKEN=${CLOUDFLARE_TOKEN}
+  # cloudflared moved to standalone systemd service (infra/cloudflared.service)
+  # to survive docker-compose restarts without tunnel reconnection delays.

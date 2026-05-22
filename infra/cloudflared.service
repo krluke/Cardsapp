@@ -1,0 +1,20 @@
+[Unit]
+Description=Cloudflare Tunnel for Cardsapp
+After=docker.service
+Requires=docker.service
+
+[Service]
+Restart=always
+RestartSec=5
+ExecStartPre=-/usr/bin/docker rm -f cloudflare-tunnel
+EnvironmentFile=~/server-project/.env
+ExecStart=/usr/bin/docker run --rm \
+  --name cloudflare-tunnel \
+  --network cardsapp-net \
+  -e CLOUDFLARE_TOKEN \
+  cloudflare/cloudflared:latest \
+  tunnel --no-autoupdate run
+ExecStop=/usr/bin/docker stop cloudflare-tunnel
+
+[Install]
+WantedBy=multi-user.target

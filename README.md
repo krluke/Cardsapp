@@ -2,130 +2,149 @@
 
 A modern web application for managing and studying flashcards. Built with a focus on a clean user interface, seamless deployment, and reliable infrastructure.
 
-## 🚀 Tech Stack
+## Tech Stack
 
-- **Backend:** Python 3.10, Django 4.2
-- **Database:** MariaDB 11.4
-- **Frontend:** React 18, Vite 6, Tailwind CSS v4
-- **Infrastructure:** Docker & Docker Compose
-- **CI/CD:** GitHub Actions (Automated Linting with Flake8, Testing with Pytest, and Self-hosted Auto-Deploy)
+- **Backend:** Python 3.9 (Docker) / 3.10 (CI), Django 4.2
+- **Database:** MariaDB 11.4 (auto-fallback to SQLite for tests)
+- **Frontend:** React 18, Vite 6, Tailwind CSS v4, shadcn/ui
+- **Auth:** Clerk (OAuth) + custom JWT (HS256)
+- **Infrastructure:** Docker & Docker Compose, nginx, Cloudflare Tunnel
+- **CI/CD:** GitHub Actions (Flake8 lint, Pytest, self-hosted auto-deploy)
 
-## 📋 Requirements
+## Requirements
 
 - **Docker** (version 20.10 or higher)
 - **Docker Compose** (version 2.x or higher)
-- **Git** (for cloning the repository)
+- **Git**
 
-## 🛠️ Setup Instructions
+## Setup Instructions
 
 ### 1. Clone the repository
 
 ```bash
 git clone <repository-url>
-cd server-project
+cd Cardsapp
 ```
 
 ### 2. Configure environment variables
 
-Copy the example environment file and update it with your settings:
-
 ```bash
 cp .env.example .env
+cp .env.frontend.example .env.frontend   # after creating frontend/.env.example locally
 ```
 
-Edit `.env` with your desired values. Required variables:
+Edit `.env` with your desired values:
 
 | Variable | Description |
 |----------|-------------|
-| `MARIADB_ROOT_PASSWORD` | Password for MariaDB root user |
-| `MARIADB_PASSWORD` | Password for the `flashcard_user` |
+| `MARIADB_ROOT_PASSWORD` | MariaDB root password |
+| `MARIADB_PASSWORD` | Password for `flashcard_user` |
 | `GMAIL_USER` | Gmail address for sending emails |
 | `GMAIL_PASS` | App password for Gmail |
 | `ADMIN_API_KEY` | Secret key for admin API |
 | `SECRET_KEY` | Django secret key |
 | `JWT_SECRET_KEY` | JWT authentication secret |
+| `CLERK_SECRET_KEY` | Clerk API secret key |
+| `CLERK_ISSUER` | Clerk instance issuer URL |
+| `VITE_CLERK_PUBLISHABLE_KEY` | Clerk publishable key (also needed in `.env.frontend`) |
 | `DEBUG` | Set to `False` for production |
-| `ALLOWED_HOSTS` | Comma-separated list of allowed hosts |
+| `ALLOWED_HOSTS` | Comma-separated allowed hosts |
 
-### 3. Start the application
+### 3. Create the Docker network (one-time)
 
-Build and start all Docker containers:
+```bash
+docker network create cardsapp-net
+```
+
+This external network persists across `docker-compose down`, so internal DNS stays stable and the tunnel reconnects faster.
+
+### 4. Start the application
 
 ```bash
 docker-compose up -d --build
 ```
 
-### 4. Access the application
+### 5. Start the Cloudflare Tunnel (run once outside compose)
 
-Once containers are running, open your browser:
+The tunnel runs independently so compose restarts never touch it.
+
+**Option A — Systemd (production):**
+
+```bash
+sudo cp infra/cloudflared.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now cloudflared
+```
+
+The service loads `CLOUDFLARE_TOKEN` from `~/server-project/.env` via systemd `EnvironmentFile=` (expands `~` automatically). Adjust the path in the service file if your deploy location differs.
+
+**Option B — Docker run (quick start):**
+
+```bash
+docker run -d --restart always \
+  --name cloudflare-tunnel \
+  --network cardsapp-net \
+  --env-file .env \
+  cloudflare/cloudflared:latest \
+  tunnel --no-autoupdate run
+```
+
+### 6. Access the application
 
 - **Frontend:** http://localhost:8080
 - **Backend API:** http://localhost:5000
 
-### 5. Stop the application
+### 7. Stop
 
 ```bash
-docker-compose down
+docker-compose down              # Stops db + backend + frontend; tunnel stays up
+docker stop cloudflare-tunnel    # Stop tunnel separately if needed
 ```
 
-## 🔧 Development Commands
+## Development Commands
 
-### Start all services
+### Docker
 
 ```bash
-docker-compose up -d
+docker-compose up -d              # Start all services
+docker-compose logs -f backend    # Backend logs
+docker-compose exec backend python manage.py migrate  # Run migrations
 ```
 
-### View logs
+### Backend (from `backend/`)
 
 ```bash
-# All services
-docker-compose logs -f
-
-# Specific service
-docker-compose logs -f backend
-docker-compose logs -f db
+python manage.py runserver                          # Dev server (port 5000)
+python manage.py makemigrations && python manage.py migrate --noinput
+flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics  # Lint
+python -m pytest backend/tests/                     # Run all tests
+python -m pytest backend/tests/test_full_flow.py -v # Single test file
 ```
 
-### Run database migrations
+### Frontend (from `frontend/`)
 
 ```bash
-docker-compose exec backend python manage.py migrate
+npm run dev     # Vite dev server (port 5173, proxies /api/ to backend)
+npm run build   # Production build
+npm run lint    # ESLint
 ```
 
-### Run tests
+## Features
 
-```bash
-cd backend
-python -m pytest tests/
-```
-
-### Lint code
-
-```bash
-# Backend (flake8)
-cd backend
-flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-
-# Frontend (ESLint)
-cd frontend
-npm run lint
-```
-
-## ✨ Current Features
-
-- **User Authentication:** Secure sign-up and log-in system with JWT tokens
-- **Flashcard Management:** Create, edit, and organize flashcards into folders
-- **Folder System:** Public and private folders with like/favorite functionality
-- **Spaced Repetition System (SRS):** SM-2 algorithm for optimized card review scheduling
+- **Authentication:** Clerk OAuth + custom JWT, sign-up/login with email or username
+- **Flashcard Editor:** WYSIWYG canvas-based card creation with templates (blank, title/subtitle, QA, cloze), image upload
+- **Folder System:** Public/private folders with like/favorite functionality, global browse
+- **Spaced Repetition (SRS):** SM-2 algorithm for optimized review scheduling
 - **Search:** Global search across public folders and cards
-- **Import/Export:** Export folders as JSON, import from JSON
-- **Responsive UI:** Clean and intuitive React-based design
-- **Automated CI/CD:** Every push to main is automatically linted, tested, and deployed to the production server
+- **Import/Export:** Export/import folders as JSON
+- **i18n:** Japanese and English, switchable from UI
+- **Themes:** Sand & Cream, Dark Mode, Blue
+- **Responsive UI:** Clean, intuitive React-based design
+- **CI/CD:** Auto-lint, test, and deploy on push to main
 
-## 🗺️ Roadmap (Future Features)
+## Roadmap
 
-- [ ] **Administrator page:** Reports from users and website management
-- [ ] **Report function:** Flag inappropriate public card sets
-- [ ] **Batch creation:** Create cards from Google Sheets or Excel layouts
-- [ ] **Learning mode:** Progress tracking with time-based card memorization tracking
+- Administrator page with user reports and website management
+- Report function to flag inappropriate public card sets
+- Batch creation from Google Sheets or Excel layouts
+- Learning mode with progress tracking
