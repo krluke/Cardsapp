@@ -1,21 +1,21 @@
 import { useState, useEffect, useRef } from 'react';
 import { Trash2, Move, RotateCw, Volume2 } from 'lucide-react';
 
-export function DraggableText({ element, isSelected, onSelect, onUpdate, onDelete, t }) {
-  const elementRef = useRef(null);
-  const contentRef = useRef(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [isResizing, setIsResizing] = useState(false);
-  const [isRotating, setIsRotating] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const dragStartRef = useRef({ x: 0, y: 0, left: 0, top: 0, width: 0, height: 0, rotation: 0, startAngle: 0 });
+export function DraggableText({ element, isSelected, onSelect, onUpdate, onDelete, t, canvasRef }) {
+const elementRef = useRef(null);
+const contentRef = useRef(null);
+const [isDragging, setIsDragging] = useState(false);
+const [isResizing, setIsResizing] = useState(false);
+const [isRotating, setIsRotating] = useState(false);
+const [isEditing, setIsEditing] = useState(false);
+const dragStartRef = useRef({ x: 0, y: 0, left: 0, top: 0, width: 0, height: 0, rotation: 0, startAngle: 0 });
 
-  const getCanvasDimensions = () => {
-    const canvas = document.querySelector('.card-canvas');
-    if (!canvas) return { width: 640, height: 427 };
-    const rect = canvas.getBoundingClientRect();
-    return { width: rect.width, height: rect.height };
-  };
+const getCanvasDimensions = () => {
+const canvas = canvasRef?.current;
+if (!canvas) return { width: 640, height: 427 };
+const rect = canvas.getBoundingClientRect();
+return { width: rect.width, height: rect.height };
+};
 
   const getCenter = () => {
     if (!elementRef.current) return { x: 0, y: 0 };
@@ -173,7 +173,7 @@ const handleContentClick = (e) => {
     textDecoration: element.textDecoration || 'none',
     textAlign: element.textAlign || 'left',
     color: element.color || '#000000',
-    backgroundColor: element.highlightColor || 'transparent',
+    backgroundColor: element.backgroundColor || 'transparent',
     outline: 'none',
     minHeight: '20px',
     padding: '8px',
@@ -336,17 +336,17 @@ const handleContentClick = (e) => {
   );
 }
 
-export function DraggableImage({ element, isSelected, onSelect, onUpdate, onDelete }) {
-  const [isDragging, setIsDragging] = useState(false);
-  const [isResizing, setIsResizing] = useState(false);
-  const dragStartRef = useRef({ x: 0, y: 0, left: 0, top: 0, width: 0, height: 0, canvasWidth: 640, canvasHeight: 427, aspect: 1.67 });
+export function DraggableImage({ element, isSelected, onSelect, onUpdate, onDelete, canvasRef }) {
+const [isDragging, setIsDragging] = useState(false);
+const [isResizing, setIsResizing] = useState(false);
+const dragStartRef = useRef({ x: 0, y: 0, left: 0, top: 0, width: 0, height: 0, canvasWidth: 640, canvasHeight: 427, aspect: 1.67 });
 
-  const getCanvasDimensions = () => {
-    const canvas = document.querySelector('.card-canvas');
-    if (!canvas) return { width: 640, height: 427 };
-    const rect = canvas.getBoundingClientRect();
-    return { width: rect.width, height: rect.height };
-  };
+const getCanvasDimensions = () => {
+const canvas = canvasRef?.current;
+if (!canvas) return { width: 640, height: 427 };
+const rect = canvas.getBoundingClientRect();
+return { width: rect.width, height: rect.height };
+};
 
   const handleMouseDown = (e) => {
     if (e.target.tagName === 'IMG') return;

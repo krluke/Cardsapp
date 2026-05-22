@@ -67,7 +67,9 @@ def sanitize_html(html):
             "font-size",
             "font-weight",
             "font-style",
+            "font-family",
             "text-decoration",
+            "text-align",
             "left",
             "top",
             "width",
@@ -77,6 +79,7 @@ def sanitize_html(html):
             "background-color",
             "position",
             "z-index",
+            "transform",
         ]
     )
     return bleach.clean(
