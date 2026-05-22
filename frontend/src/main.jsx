@@ -25,7 +25,7 @@ createRoot(document.getElementById('root')).render(
     },
     elements: {
       card: { boxShadow: 'var(--shadow-md)' },
-      modalBackdrop: { backdropFilter: 'blur(4px)', backgroundColor: 'rgba(0,0,0,0.6)' },
+      modalBackdrop: { backgroundColor: 'rgba(0,0,0,0.6)' },
     },
   }}
 >
