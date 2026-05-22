@@ -9,6 +9,7 @@ import ViewerPage from './pages/ViewerPage'
 import StudyPage from './pages/study/StudyPage'
 import { GlobalSearchModal } from './components/GlobalSearchModal'
 import { AddToFolderModal } from './components/AddToFolderModal'
+import { CardPreview } from './components/CardPreview'
 import { useModal, Modal } from './components/Modal'
 import { apiFetch, API_BASE } from './lib/api'
 import './i18n'
@@ -635,17 +636,13 @@ try {
 <div key={card.id} className="global-card-tile" onClick={() => setFlippedCards(prev => ({...prev, [card.id]: !prev[card.id]}))}>
           <div className={`global-card-inner ${flippedCards[card.id] ? 'flipped' : ''}`}>
           <div className="global-card-front" style={{ backgroundColor: card.frontBg || '#ffffff' }}>
-            <div className="global-card-scaled">
-              <div className="global-card-content" dangerouslySetInnerHTML={{ __html: card.front || '<p>Empty</p>' }} />
-            </div>
+            <CardPreview html={card.front} />
             <div className="global-card-folder-info">
               {card.folder_title} • {card.folder_owner}
             </div>
           </div>
           <div className="global-card-back" style={{ backgroundColor: card.backBg || '#ffffff' }}>
-            <div className="global-card-scaled">
-              <div className="global-card-content" dangerouslySetInnerHTML={{ __html: card.back || '<p>Empty</p>' }} />
-            </div>
+            <CardPreview html={card.back} />
           </div>
           </div>
                   <button className="global-card-add-btn" onClick={(e) => { e.stopPropagation(); setSelectedCard(card); setShowAddToFolderModal(true) }} title={t('btn_add_to_folder')}>

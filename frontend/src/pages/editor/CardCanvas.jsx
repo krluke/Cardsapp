@@ -2,28 +2,27 @@ import { useRef } from 'react';
 import { DraggableText, DraggableImage } from './DraggableElement';
 
 export function CardCanvas({ elements, bgColor, isSelected, onSelect, onUpdate, onDelete, t }) {
-  const canvasRef = useRef(null);
+const canvasRef = useRef(null);
 
-  const handleCanvasClick = (e) => {
-    if (e.target === canvasRef.current) {
-      // Deselect when clicking on canvas
-      onSelect(null);
-    }
-  };
+const handleCanvasClick = (e) => {
+if (e.target === canvasRef.current) {
+onSelect(null);
+}
+};
 
-  return (
-    <div 
-      ref={canvasRef} 
-      className="card-canvas" 
-      style={{ backgroundColor: bgColor }} 
-      onClick={handleCanvasClick}
-    >
-      {elements.map(el => {
-        if (el.type === 'text') return <DraggableText key={el.id} element={el} isSelected={isSelected === el.id} onSelect={onSelect} onUpdate={onUpdate} onDelete={onDelete} t={t} />;
-        if (el.type === 'image') return <DraggableImage key={el.id} element={el} isSelected={isSelected === el.id} onSelect={onSelect} onUpdate={onUpdate} onDelete={onDelete} />;
-        return null;
-      })}
-      <div className="canvas-hint">{t('btn_add_text')}</div>
-    </div>
-  );
+return (
+<div
+ref={canvasRef}
+className="card-canvas"
+style={{ backgroundColor: bgColor }}
+onClick={handleCanvasClick}
+>
+{elements.map(el => {
+if (el.type === 'text') return <DraggableText key={el.id} element={el} isSelected={isSelected === el.id} onSelect={onSelect} onUpdate={onUpdate} onDelete={onDelete} t={t} canvasRef={canvasRef} />;
+if (el.type === 'image') return <DraggableImage key={el.id} element={el} isSelected={isSelected === el.id} onSelect={onSelect} onUpdate={onUpdate} onDelete={onDelete} canvasRef={canvasRef} />;
+return null;
+})}
+<div className="canvas-hint">{t('btn_add_text')}</div>
+</div>
+);
 }
