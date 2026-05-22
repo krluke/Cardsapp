@@ -516,7 +516,7 @@ try {
                 ) : (
                   <>
                     <div className="menu-header"><span style={{fontWeight:'bold'}}>{user.username}</span></div>
-                    <a href="/account" className="dropdown-item"><User size={18} /> {t('menu_account_info')}</a>
+                    <button className="dropdown-item" onClick={() => navigate('/account')}><User size={18} /> {t('menu_account_info')}</button>
                     <div className="dropdown-divider"></div>
                     <button className="dropdown-item logout-btn" onClick={handleLogout}><LogOut size={18} /> {t('menu_logout')}</button>
                   </>
