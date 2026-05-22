@@ -1,0 +1,17 @@
+.account-page {
+  min-height: calc(100vh - 70px);
+}
+
+.account-header {
+  display: flex;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.account-main {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+}
