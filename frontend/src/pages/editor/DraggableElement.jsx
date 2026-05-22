@@ -162,8 +162,8 @@ const handleContentClick = (e) => {
     transformOrigin: 'center center',
     cursor: isDragging ? 'grabbing' : 'default',
     zIndex: isSelected ? 100 : 1,
-    userSelect: 'none'
-  };
+  userSelect: isEditing ? 'text' : 'none'
+};
 
   const contentStyle = {
     fontSize: `${element.fontSize || 16}px`,

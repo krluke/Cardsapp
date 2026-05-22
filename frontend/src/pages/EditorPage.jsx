@@ -777,7 +777,7 @@ const res = await apiFetch('/cards/save', {
                   elements={currentCard?.front || []}
                   bgColor={currentCard?.frontBg || '#ffffff'}
                   isSelected={!state.isFlipped ? state.selectedElement : null}
-                  onSelect={(id) => !state.isFlipped && dispatch({ type: 'SET_SELECTED_ELEMENT', payload: id })}
+                  onSelect={(id) => { if (!state.isFlipped) dispatch({ type: 'SET_SELECTED_ELEMENT', payload: id }); }}
                   onUpdate={(id, updates) => updateElementInCard(id, updates, 'front')}
                   onDelete={(id) => deleteElementInCard(id, 'front')}
                   t={t}
@@ -788,7 +788,7 @@ const res = await apiFetch('/cards/save', {
                   elements={currentCard?.back || []}
                   bgColor={currentCard?.backBg || '#ffffff'}
                   isSelected={state.isFlipped ? state.selectedElement : null}
-                  onSelect={(id) => state.isFlipped && dispatch({ type: 'SET_SELECTED_ELEMENT', payload: id })}
+                  onSelect={(id) => { if (state.isFlipped) dispatch({ type: 'SET_SELECTED_ELEMENT', payload: id }); }}
                   onUpdate={(id, updates) => updateElementInCard(id, updates, 'back')}
                   onDelete={(id) => deleteElementInCard(id, 'back')}
                   t={t}
