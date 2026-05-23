@@ -1044,7 +1044,7 @@ try {
   navigate(canEdit ? `/editor/${folder.id}` : `/viewer/${folder.id}`, { state: { fromTab: activeTab } });
 }}>
   <div className="folder-actions" onClick={e => e.stopPropagation()}>
-  <button className="folder-settings-icon" onClick={() => navigate(`/study/${folder.id}`, { state: { canEdit: user && activeTab === 'my-folders' } })} title="Study">
+  <button className="folder-settings-icon" onClick={() => navigate(`/study/${folder.id}`, { state: { canEdit: user && activeTab === 'my-folders', fromTab: activeTab } })} title="Study">
                        <BookOpen size={16} />
                      </button>
                      {isOwner && (

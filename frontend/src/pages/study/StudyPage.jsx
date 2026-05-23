@@ -14,6 +14,7 @@ export default function StudyPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const canEdit = location.state?.canEdit ?? false;
+  const fromTab = location.state?.fromTab || 'my-folders';
   const [cards, setCards] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
@@ -159,7 +160,7 @@ if (cards.length === 0) return (
   <div className="study-container">
     <h2>No cards to study! 🎉</h2>
     <div className="finished-buttons">
-      <button className="primary-btn" onClick={() => navigate('/home')}>Back to My Drive</button>
+      <button className="primary-btn" onClick={() => navigate(`/home?tab=${fromTab}`)}>Back</button>
       </div>
       </div>
   );
@@ -179,7 +180,7 @@ if (cards.length === 0) return (
         </div>
         <div className="finished-buttons">
         <button className="primary-btn" onClick={() => { setStats({ again: 0, hard: 0, good: 0, easy: 0, total: 0 }); loadCards(studyMode, shuffled); }}>Study Again</button>
-        <button className="secondary-btn" onClick={() => navigate('/home')}>Back to My Drive</button>
+        <button className="secondary-btn" onClick={() => navigate(`/home?tab=${fromTab}`)}>Back</button>
         </div>
       </div>
     );
@@ -191,7 +192,7 @@ if (cards.length === 0) return (
   return (
     <div className="study-container">
       <header className="study-header">
-        <button className="toolbar-btn" onClick={() => navigate('/home')}><ArrowLeft size={18} /> Back</button>
+        <button className="toolbar-btn" onClick={() => navigate(`/home?tab=${fromTab}`)}><ArrowLeft size={18} /> Back</button>
         <div className="study-mode-toggle">
           <button className={`mode-btn ${studyMode === 'due' ? 'active' : ''}`} onClick={() => setStudyMode('due')}>Due</button>
           <button className={`mode-btn ${studyMode === 'all' ? 'active' : ''}`} onClick={() => setStudyMode('all')}>All</button>
