@@ -673,8 +673,7 @@ def get_study_cards(request):
                 SELECT c.id, c.front_content, c.back_content, c.front_bg, c.back_bg
                 FROM cards c
                 JOIN folders f ON c.folder_id = f.id
-                WHERE f.id = %s AND f.user_email = %s 
-                -- Include cards that have never been reviewed (NULL next review) so new cards appear in due mode
+                WHERE f.id = %s AND (f.user_email = %s OR f.visibility = 'public')
                 AND (c.srs_next_review IS NULL OR c.srs_next_review <= CURRENT_TIMESTAMP)
                 AND (c.front_content IS NOT NULL AND c.front_content != '')
                 AND (c.back_content IS NOT NULL AND c.back_content != '')
