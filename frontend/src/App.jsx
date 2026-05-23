@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
-import { BrowserRouter, Routes, Route, Navigate, useNavigate, Link } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation, Link } from 'react-router-dom'
 import { X, FolderPlus, Palette, Globe, User, LogOut, LogIn, Settings, Trash2, Search, ChevronLeft, ChevronRight, BookOpen, Plus } from 'lucide-react'
 import { ClerkProvider, useAuth, useClerk } from '@clerk/clerk-react'
 
@@ -519,11 +519,20 @@ function ClerkHomePage() {
 
 function HomePage({ clerkAvailable, isSignedIn: isSignedInProp, getToken: getTokenProp, clerk: clerkProp }) {
   const navigate = useNavigate()
+  const location = useLocation()
   const [user, setUser] = useState(() => {
     const session = JSON.parse(localStorage.getItem('session') || '{}')
     return session.user || null
   })
   const [activeTab, setActiveTab] = useState('my-folders')
+
+  useEffect(() => {
+    if (location.state?.tab) {
+      setActiveTab(location.state.tab)
+      setPage(1)
+      window.history.replaceState({}, '')
+    }
+  }, [location.state])
 
   const [folders, setFolders] = useState([])
   const [globalCards, setGlobalCards] = useState([])
@@ -1027,12 +1036,12 @@ try {
             {folders.map(folder => {
                const isOwner = activeTab === 'my-folders' || folder.username === user?.username;
                return (
-                 <div key={folder.id} className="folder-tile" onClick={() => {
-            const canEdit = user && activeTab === 'my-folders';
-            navigate(canEdit ? `/editor/${folder.id}` : `/viewer/${folder.id}`);
-                 }}>
-                   <div className="folder-actions" onClick={e => e.stopPropagation()}>
-                     <button className="folder-settings-icon" onClick={() => navigate(`/study/${folder.id}`, { state: { canEdit: user && activeTab === 'my-folders' } })} title="Study">
+  <div key={folder.id} className="folder-tile" onClick={() => {
+  const canEdit = user && activeTab === 'my-folders';
+  navigate(canEdit ? `/editor/${folder.id}` : `/viewer/${folder.id}`, { state: { fromTab: activeTab } });
+}}>
+  <div className="folder-actions" onClick={e => e.stopPropagation()}>
+  <button className="folder-settings-icon" onClick={() => navigate(`/study/${folder.id}`, { state: { canEdit: user && activeTab === 'my-folders' } })} title="Study">
                        <BookOpen size={16} />
                      </button>
                      {isOwner && (

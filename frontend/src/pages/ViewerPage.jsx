@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react'
 import { apiFetch } from '@/lib/api'
 import './Viewer.css'
@@ -7,6 +7,8 @@ import './Viewer.css'
 export default function ViewerPage() {
   const { folderId } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
+  const backTab = location.state?.fromTab
   const [folder, setFolder] = useState(null)
   const [cards, setCards] = useState([])
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -60,15 +62,12 @@ export default function ViewerPage() {
     return (
       <div className="viewer-container">
         <header className="viewer-header">
-          <button className="back-btn" onClick={() => navigate('/home')}>
+          <button className="back-btn" onClick={() => navigate('/home', { state: { tab: backTab || 'global-folders' } })}>
             <ArrowLeft size={20} /> Back
           </button>
         </header>
         <div className="viewer-empty">
           <p>No cards in this folder</p>
-          <button className="create-cards-btn" onClick={() => navigate(`/editor/${folderId}`)}>
-            Create Cards
-          </button>
         </div>
       </div>
     )
@@ -79,7 +78,7 @@ export default function ViewerPage() {
   return (
     <div className="viewer-container">
       <header className="viewer-header">
-        <button className="back-btn" onClick={() => navigate('/home')}>
+        <button className="back-btn" onClick={() => navigate('/home', { state: { tab: backTab || 'global-folders' } })}>
           <ArrowLeft size={20} /> Back
         </button>
         <h1 className="viewer-title">{folder?.title || 'Viewer'}</h1>
