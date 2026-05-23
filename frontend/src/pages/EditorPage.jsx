@@ -9,38 +9,52 @@ import { CardCanvas } from './editor/CardCanvas';
 import { FloatingTextToolbar } from './editor/FloatingTextToolbar';
 import { apiFetch } from '@/lib/api';
 
+const TEXT_DEFAULTS = {
+  type: 'text',
+  height: 'auto',
+  fontSize: 16,
+  fontFamily: 'sans-serif',
+  fontWeight: 'normal',
+  fontStyle: 'normal',
+  textDecoration: 'none',
+  textAlign: 'left',
+  color: '#000000',
+  backgroundColor: 'transparent',
+  rotation: 0
+};
+
 const TEMPLATES = {
   blank: { front: [], back: [] },
   title_subtitle: {
     front: [
-      { id: '1', type: 'text', content: 'タイトル', left: 10, top: 15, width: 80, fontSize: 28, fontWeight: 'bold', textAlign: 'center' },
-      { id: '2', type: 'text', content: 'サブタイトル', left: 10, top: 50, width: 80, fontSize: 16, textAlign: 'center' }
+      { ...TEXT_DEFAULTS, id: '1', content: 'タイトル', left: 10, top: 15, width: 80, fontSize: 28, fontWeight: 'bold', textAlign: 'center' },
+      { ...TEXT_DEFAULTS, id: '2', content: 'サブタイトル', left: 10, top: 50, width: 80, fontSize: 16, textAlign: 'center' }
     ],
     back: []
   },
   qa: {
     front: [
-      { id: '1', type: 'text', content: 'Q: 質問', left: 5, top: 10, width: 90, fontSize: 20, fontWeight: 'bold' }
+      { ...TEXT_DEFAULTS, id: '1', content: 'Q: 質問', left: 5, top: 10, width: 90, fontSize: 20, fontWeight: 'bold' }
     ],
     back: [
-      { id: '2', type: 'text', content: 'A: 回答', left: 5, top: 10, width: 90, fontSize: 18 }
+      { ...TEXT_DEFAULTS, id: '2', content: 'A: 回答', left: 5, top: 10, width: 90, fontSize: 18 }
     ]
   },
   cloze: {
     front: [
-      { id: '1', type: 'text', content: '[...] の部分は何か？', left: 10, top: 40, width: 80, fontSize: 20, textAlign: 'center' }
+      { ...TEXT_DEFAULTS, id: '1', content: '[...] の部分は何か？', left: 10, top: 40, width: 80, fontSize: 20, textAlign: 'center' }
     ],
     back: [
-      { id: '2', type: 'text', content: '正解: [答え]', left: 10, top: 40, width: 80, fontSize: 20, fontWeight: 'bold', textAlign: 'center', color: '#D97757' }
+      { ...TEXT_DEFAULTS, id: '2', content: '正解: [答え]', left: 10, top: 40, width: 80, fontSize: 20, fontWeight: 'bold', textAlign: 'center', color: '#D97757' }
     ]
   },
   image_focus: {
     front: [
-      { id: '1', type: 'text', content: 'この画像は何？', left: 30, top: 10, width: 40, fontSize: 18, textAlign: 'center' },
+      { ...TEXT_DEFAULTS, id: '1', content: 'この画像は何？', left: 30, top: 10, width: 40, fontSize: 18, textAlign: 'center' },
       { id: '2', type: 'image', src: 'https://via.placeholder.com/150', left: 25, top: 30, width: 50, height: 40 }
     ],
     back: [
-      { id: '3', type: 'text', content: '正解: [画像の説明]', left: 10, top: 40, width: 80, fontSize: 20, textAlign: 'center' }
+      { ...TEXT_DEFAULTS, id: '3', content: '正解: [画像の説明]', left: 10, top: 40, width: 80, fontSize: 20, textAlign: 'center' }
     ]
   }
 };
@@ -473,36 +487,35 @@ export default function EditorPage() {
             const textContent = el.textContent;
             const rotationMatch = style.match(/transform:\s*rotate\((\d+)deg\)/);
             
-            // Try different ways to get styles
-            const leftMatch = style.match(/left:\s*(\d+)%/);
-            const topMatch = style.match(/top:\s*(\d+)%/);
-            const widthMatch = style.match(/width:\s*(\d+)%/);
-const heightMatch = style.match(/height:\s*(\d+(?:\.\d+)?)%/);
+            const leftMatch = style.match(/left:\s*(\d+(?:\.\d+)?)%/);
+            const topMatch = style.match(/top:\s*(\d+(?:\.\d+)?)%/);
+            const widthMatch = style.match(/width:\s*(\d+(?:\.\d+)?)%/);
+            const heightMatch = style.match(/height:\s*(\d+(?:\.\d+)?)%/);
             const fontSizeMatch = style.match(/font-size:\s*(\d+)px/);
-            const fontFamilyMatch = style.match(/font-family:\s*([^;]+)/);
+            const fontFamilyMatch = style.match(/font-family:\s*"?([^";]+)"?/);
             const fontWeightMatch = style.match(/font-weight:\s*(\w+)/);
             const fontStyleMatch = style.match(/font-style:\s*(\w+)/);
             const textDecorationMatch = style.match(/text-decoration:\s*(\w+)/);
             const textAlignMatch = style.match(/text-align:\s*(\w+)/);
-            const colorMatch = style.match(/color:\s*(#[0-9a-fA-F]+)/);
+            const colorMatch = style.match(/color:\s*(#[0-9a-fA-F]+|rgb\([^)]+\))/);
             const bgColorMatch = style.match(/background-color:\s*([^;]+)/);
 
             elements.push({
               id: `text-${Date.now()}-${elements.length}`,
               type: 'text',
               content: textContent.trim(),
-              left: leftMatch ? parseInt(leftMatch[1]) : 10,
-              top: topMatch ? parseInt(topMatch[1]) : 20,
-              width: widthMatch ? parseInt(widthMatch[1]) : 40,
+              left: leftMatch ? parseFloat(leftMatch[1]) : 10,
+              top: topMatch ? parseFloat(topMatch[1]) : 20,
+              width: widthMatch ? parseFloat(widthMatch[1]) : 40,
               height: heightMatch ? parseFloat(heightMatch[1]) : 'auto',
               fontSize: fontSizeMatch ? parseInt(fontSizeMatch[1]) : 16,
-              fontFamily: fontFamilyMatch ? fontFamilyMatch[1] : 'sans-serif',
+              fontFamily: fontFamilyMatch ? fontFamilyMatch[1].trim() : 'sans-serif',
               fontWeight: fontWeightMatch ? fontWeightMatch[1] : 'normal',
               fontStyle: fontStyleMatch ? fontStyleMatch[1] : 'normal',
               textDecoration: textDecorationMatch ? textDecorationMatch[1] : 'none',
               textAlign: textAlignMatch ? textAlignMatch[1] : 'left',
               color: colorMatch ? colorMatch[1] : '#000000',
-              backgroundColor: bgColorMatch ? bgColorMatch[1] : 'transparent',
+              backgroundColor: bgColorMatch ? bgColorMatch[1].trim() : 'transparent',
               rotation: rotationMatch ? parseInt(rotationMatch[1]) : 0
             });
           }
@@ -514,19 +527,19 @@ const heightMatch = style.match(/height:\s*(\d+(?:\.\d+)?)%/);
           if (!parent) return;
           
           const style = parent.getAttribute('style') || '';
-          const leftMatch = style.match(/left:\s*(\d+)%/);
-          const topMatch = style.match(/top:\s*(\d+)%/);
-          const widthMatch = style.match(/width:\s*(\d+)%/);
-          const heightMatch = style.match(/height:\s*(\d+)%/);
+          const leftMatch = style.match(/left:\s*(\d+(?:\.\d+)?)%/);
+          const topMatch = style.match(/top:\s*(\d+(?:\.\d+)?)%/);
+          const widthMatch = style.match(/width:\s*(\d+(?:\.\d+)?)%/);
+          const heightMatch = style.match(/height:\s*(\d+(?:\.\d+)?)%/);
 
           elements.push({
             id: `img-${Date.now()}-${elements.length}`,
             type: 'image',
             src: img.src,
-            left: leftMatch ? parseInt(leftMatch[1]) : 20,
-            top: topMatch ? parseInt(topMatch[1]) : 20,
-            width: widthMatch ? parseInt(widthMatch[1]) : 50,
-            height: heightMatch ? parseInt(heightMatch[1]) : 30
+            left: leftMatch ? parseFloat(leftMatch[1]) : 20,
+            top: topMatch ? parseFloat(topMatch[1]) : 20,
+            width: widthMatch ? parseFloat(widthMatch[1]) : 50,
+            height: heightMatch ? parseFloat(heightMatch[1]) : 30
           });
         });
       } catch (e) {
@@ -549,16 +562,24 @@ const heightMatch = style.match(/height:\s*(\d+(?:\.\d+)?)%/);
     return elements;
   };
 
-  const serializeElements = (elements) => {
-    return elements.map(el => {
-      if (el.type === 'text') {
-        // Sanitize content to prevent XSS - escape HTML tags
-        const sanitizedContent = el.content 
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;');
-        return `<div class="draggable-text" style="position:absolute;left:${el.left}%;top:${el.top}%;width:${el.width}%;height:${typeof el.height === 'number' ? el.height + '%' : (el.height || 'auto')};font-size:${el.fontSize}px;font-family:${el.fontFamily};font-weight:${el.fontWeight};font-style:${el.fontStyle || 'normal'};text-decoration:${el.textDecoration || 'none'};text-align:${el.textAlign || 'left'};color:${el.color};background-color:${el.backgroundColor || 'transparent'};transform:rotate(${el.rotation || 0}deg)">${sanitizedContent}</div>`;
-      }
+const serializeElements = (elements) => {
+  return elements.map(el => {
+    if (el.type === 'text') {
+      const sanitizedContent = el.content
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+      const h = typeof el.height === 'number' ? el.height + '%' : (el.height || 'auto');
+      const ff = el.fontFamily || 'sans-serif';
+      const fw = el.fontWeight || 'normal';
+      const fs = el.fontStyle || 'normal';
+      const td = el.textDecoration || 'none';
+      const ta = el.textAlign || 'left';
+      const c = el.color || '#000000';
+      const bg = el.backgroundColor || 'transparent';
+      const r = el.rotation || 0;
+      return `<div class="draggable-text" style="position:absolute;left:${el.left}%;top:${el.top}%;width:${el.width}%;height:${h};font-size:${el.fontSize}px;font-family:"${ff}";font-weight:${fw};font-style:${fs};text-decoration:${td};text-align:${ta};color:${c};background-color:${bg};transform:rotate(${r}deg)">${sanitizedContent}</div>`;
+    }
       if (el.type === 'image') {
         return `<div class="draggable-image" style="position:absolute;left:${el.left}%;top:${el.top}%;width:${el.width}%;height:${el.height}%;"><img src="${el.src}" style="width:100%;height:100%;object-fit:contain;" /></div>`;
       }
