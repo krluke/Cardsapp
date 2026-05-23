@@ -18,8 +18,8 @@ const TEXT_DEFAULTS = {
   fontStyle: 'normal',
   textDecoration: 'none',
   textAlign: 'left',
-  color: '#000000',
-  backgroundColor: 'transparent',
+  color: '',
+  backgroundColor: '',
   rotation: 0
 };
 
@@ -202,8 +202,8 @@ case 'UPDATE_ELEMENT': {
         fontStyle: 'normal',
         textDecoration: 'none',
         textAlign: 'left',
-        color: textColor,
-backgroundColor: bgColor || 'transparent',
+          color: textColor || '',
+          backgroundColor: bgColor || '',
         rotation: 0
       };
       const newCards = [...stateWithHistory.cards];
@@ -276,7 +276,7 @@ backgroundColor: bgColor || 'transparent',
     }
     case 'ADD_CARD': {
       const stateWithHistory = pushHistory(state);
-      const newCard = { front: [], back: [], frontBg: '#ffffff', backBg: '#ffffff' };
+      const newCard = { front: [], back: [], frontBg: '', backBg: '' };
       return { 
         ...stateWithHistory, 
         cards: [...stateWithHistory.cards, newCard], 
@@ -300,7 +300,7 @@ backgroundColor: bgColor || 'transparent',
       const { templateKey } = action.payload;
       const template = TEMPLATES[templateKey];
       const newCards = [...stateWithHistory.cards];
-      newCards[stateWithHistory.currentIndex] = { ...template, frontBg: '#ffffff', backBg: '#ffffff' };
+      newCards[stateWithHistory.currentIndex] = { ...template, frontBg: '', backBg: '' };
       return { ...stateWithHistory, cards: newCards, showTemplateMenu: false, selectedElement: null };
     }
     case 'DUPLICATE_CARD': {
@@ -323,7 +323,7 @@ backgroundColor: bgColor || 'transparent',
 }
 
 const initialState = {
-  cards: [{ front: [], back: [], frontBg: '#ffffff', backBg: '#ffffff' }],
+  cards: [{ front: [], back: [], frontBg: '', backBg: '' }],
   history: [],
   historyIndex: -1,
   currentIndex: 0,
@@ -335,8 +335,8 @@ const initialState = {
   imageUrl: '',
   fontSize: 16,
   fontFamily: 'sans-serif',
-  textColor: '#000000',
-textBoxBgColor: 'transparent',
+  textColor: '',
+  textBoxBgColor: '',
 };
 
 export default function EditorPage() {
@@ -400,8 +400,8 @@ export default function EditorPage() {
         const parsedCards = data.map(card => ({
           front: parseElements(card.front),
           back: parseElements(card.back),
-          frontBg: card.frontBg || '#ffffff',
-          backBg: card.backBg || '#ffffff',
+          frontBg: card.frontBg || '',
+          backBg: card.backBg || '',
           tags: card.tags || ''
         }));
         dispatch({ type: 'SET_CARDS', payload: parsedCards });
@@ -444,7 +444,7 @@ export default function EditorPage() {
           fontSize: parseInt(fontSizeMatch?.[1] || '16'),
           fontFamily: 'sans-serif',
           fontWeight: 'normal',
-          color: '#000000'
+          color: '',
         });
       });
 
@@ -514,8 +514,8 @@ export default function EditorPage() {
               fontStyle: fontStyleMatch ? fontStyleMatch[1] : 'normal',
               textDecoration: textDecorationMatch ? textDecorationMatch[1] : 'none',
               textAlign: textAlignMatch ? textAlignMatch[1] : 'left',
-              color: colorMatch ? colorMatch[1] : '#000000',
-              backgroundColor: bgColorMatch ? bgColorMatch[1].trim() : 'transparent',
+              color: colorMatch ? colorMatch[1] : '',
+              backgroundColor: bgColorMatch ? bgColorMatch[1].trim() : '',
               rotation: rotationMatch ? parseInt(rotationMatch[1]) : 0
             });
           }
@@ -775,7 +775,7 @@ const res = await apiFetch('/cards/save', {
         fontSize={state.fontSize}
         fontFamily={state.fontFamily}
         textColor={state.textColor}
-        backgroundColor={selectedEl?.backgroundColor || 'transparent'}
+        backgroundColor={selectedEl?.backgroundColor || ''}
         t={t}
       />
       <div className="editor-main">
@@ -794,7 +794,7 @@ const res = await apiFetch('/cards/save', {
               <div className="card-flip-front">
                 <CardCanvas
                   elements={currentCard?.front || []}
-                  bgColor={currentCard?.frontBg || '#ffffff'}
+                  bgColor={currentCard?.frontBg || 'var(--bg-surface)'}
                   isSelected={!state.isFlipped ? state.selectedElement : null}
                   onSelect={(id) => { if (!state.isFlipped) dispatch({ type: 'SET_SELECTED_ELEMENT', payload: id }); }}
                   onUpdate={(id, updates) => updateElementInCard(id, updates, 'front')}
@@ -805,7 +805,7 @@ const res = await apiFetch('/cards/save', {
               <div className="card-flip-back">
                 <CardCanvas
                   elements={currentCard?.back || []}
-                  bgColor={currentCard?.backBg || '#ffffff'}
+                  bgColor={currentCard?.backBg || 'var(--bg-surface)'}
                   isSelected={state.isFlipped ? state.selectedElement : null}
                   onSelect={(id) => { if (state.isFlipped) dispatch({ type: 'SET_SELECTED_ELEMENT', payload: id }); }}
                   onUpdate={(id, updates) => updateElementInCard(id, updates, 'back')}

@@ -208,12 +208,12 @@ if (cards.length === 0) return (
 
       <div className={`study-card ${isFlipped ? 'flipped' : ''}`} onClick={() => setIsFlipped(!isFlipped)}>
         <div className="study-card-inner">
-          <div className="study-card-front" style={{ backgroundColor: currentCard.front_bg || '#ffffff' }}>
+          <div className="study-card-front" style={{ backgroundColor: currentCard.front_bg || 'var(--bg-surface)' }}>
             <div className="study-content" dangerouslySetInnerHTML={{ __html: currentCard.front_content }} />
             <button className="speak-btn" onClick={(e) => speak(e, currentCard.front_content)}><Volume2 size={20} /></button>
             <div className="flip-hint">Click or press Space to flip</div>
           </div>
-          <div className="study-card-back" style={{ backgroundColor: currentCard.back_bg || '#ffffff' }}>
+          <div className="study-card-back" style={{ backgroundColor: currentCard.back_bg || 'var(--bg-surface)' }}>
             <div className="study-content" dangerouslySetInnerHTML={{ __html: currentCard.back_content }} />
             <button className="speak-btn" onClick={(e) => speak(e, currentCard.back_content)}><Volume2 size={20} /></button>
           </div>

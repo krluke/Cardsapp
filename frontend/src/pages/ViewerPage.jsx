@@ -89,11 +89,11 @@ export default function ViewerPage() {
       <main className="viewer-main">
         <div className="flashcard-container" onClick={() => setFlipped(!flipped)}>
           <div className={`flashcard ${flipped ? 'flipped' : ''}`}>
-            <div className="flashcard-front" style={{ backgroundColor: currentCard.frontBg || '#ffffff' }}>
-              <div className="flashcard-content" dangerouslySetInnerHTML={{ __html: currentCard.front || '<p>Empty</p>' }} />
-              <div className="flip-hint">Click to flip</div>
-            </div>
-            <div className="flashcard-back" style={{ backgroundColor: currentCard.backBg || '#ffffff' }}>
+        <div className="flashcard-front" style={{ backgroundColor: currentCard.frontBg || 'var(--bg-surface)' }}>
+          <div className="flashcard-content" dangerouslySetInnerHTML={{ __html: currentCard.front || '<p>Empty</p>' }} />
+          <div className="flip-hint">Click to flip</div>
+        </div>
+        <div className="flashcard-back" style={{ backgroundColor: currentCard.backBg || 'var(--bg-surface)' }}>
               <div className="flashcard-content" dangerouslySetInnerHTML={{ __html: currentCard.back || '<p>Empty</p>' }} />
               <div className="flip-hint">Click to flip</div>
             </div>

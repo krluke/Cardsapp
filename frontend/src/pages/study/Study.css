@@ -127,6 +127,10 @@
   overflow: auto;
 }
 
+.study-content .draggable-text {
+  color: var(--text-main);
+}
+
 .speak-btn {
   position: absolute;
   top: 16px;

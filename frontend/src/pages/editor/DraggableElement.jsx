@@ -172,7 +172,7 @@ const handleContentClick = (e) => {
     fontStyle: element.fontStyle || 'normal',
     textDecoration: element.textDecoration || 'none',
     textAlign: element.textAlign || 'left',
-    color: element.color || '#000000',
+    color: element.color || 'var(--text-main)',
     backgroundColor: element.backgroundColor || 'transparent',
     outline: 'none',
     minHeight: '20px',
