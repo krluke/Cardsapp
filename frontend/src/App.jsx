@@ -36,6 +36,83 @@ const CLERK_THEMES = {
     dangerColor: '#E05252', dangerHover: '#C93E3E',
     shadowMd: '0 8px 24px rgba(0,0,0,0.3)',
   },
+  sakura: {
+    bgCanvas: '#FFF5F6', bgSurface: '#FFFFFF', bgSurfaceHover: '#FFF0F2',
+    textMain: '#4A3B3F', textMuted: '#8A7579', borderColor: '#F0D5D8',
+    accentColor: '#D4727A', accentHover: '#B85C64', accentLight: 'rgba(212,114,122,0.1)',
+    dangerColor: '#E05252', dangerHover: '#C93E3E',
+    shadowMd: '0 8px 24px rgba(74,59,63,0.08)',
+  },
+  forest: {
+    bgCanvas: '#F4F1EB', bgSurface: '#FFFFFF', bgSurfaceHover: '#F0EDE6',
+    textMain: '#2D3A2E', textMuted: '#6E7D6F', borderColor: '#D5DFD0',
+    accentColor: '#2D6A4F', accentHover: '#1B4332', accentLight: 'rgba(45,106,79,0.1)',
+    dangerColor: '#E05252', dangerHover: '#C93E3E',
+    shadowMd: '0 8px 24px rgba(45,58,46,0.08)',
+  },
+  autumn: {
+    bgCanvas: '#FBF5EE', bgSurface: '#FFFFFF', bgSurfaceHover: '#F7EDE0',
+    textMain: '#3D3225', textMuted: '#8A7A65', borderColor: '#E8DBC5',
+    accentColor: '#B45309', accentHover: '#92400E', accentLight: 'rgba(180,83,9,0.1)',
+    dangerColor: '#E05252', dangerHover: '#C93E3E',
+    shadowMd: '0 8px 24px rgba(61,50,37,0.08)',
+  },
+  nord: {
+    bgCanvas: '#F0F3F8', bgSurface: '#FFFFFF', bgSurfaceHover: '#E8ECF4',
+    textMain: '#3B4252', textMuted: '#7B8394', borderColor: '#D8DEE9',
+    accentColor: '#5E81AC', accentHover: '#4C6B91', accentLight: 'rgba(94,129,172,0.1)',
+    dangerColor: '#E05252', dangerHover: '#C93E3E',
+    shadowMd: '0 8px 24px rgba(59,66,82,0.08)',
+  },
+  lavender: {
+    bgCanvas: '#F6F3FB', bgSurface: '#FFFFFF', bgSurfaceHover: '#F0EBFA',
+    textMain: '#3B3450', textMuted: '#7E7599', borderColor: '#DDD6F3',
+    accentColor: '#7C3AED', accentHover: '#6D28D9', accentLight: 'rgba(124,58,237,0.1)',
+    dangerColor: '#E05252', dangerHover: '#C93E3E',
+    shadowMd: '0 8px 24px rgba(59,52,80,0.08)',
+  },
+  matcha: {
+    bgCanvas: '#F2EFE6', bgSurface: '#FFFFFF', bgSurfaceHover: '#EDE9DE',
+    textMain: '#3D3D2E', textMuted: '#7A7A66', borderColor: '#D8D5C4',
+    accentColor: '#7C8B6A', accentHover: '#5F6D4F', accentLight: 'rgba(124,139,106,0.1)',
+    dangerColor: '#E05252', dangerHover: '#C93E3E',
+    shadowMd: '0 8px 24px rgba(61,61,46,0.08)',
+  },
+  sunset: {
+    bgCanvas: '#FFF7ED', bgSurface: '#FFFFFF', bgSurfaceHover: '#FFF0DB',
+    textMain: '#3D2E1E', textMuted: '#8A7A65', borderColor: '#F0DCC5',
+    accentColor: '#E8722A', accentHover: '#C25A16', accentLight: 'rgba(232,114,42,0.1)',
+    dangerColor: '#E05252', dangerHover: '#C93E3E',
+    shadowMd: '0 8px 24px rgba(61,46,30,0.08)',
+  },
+  monochrome: {
+    bgCanvas: '#F5F5F5', bgSurface: '#FFFFFF', bgSurfaceHover: '#EDEDED',
+    textMain: '#1A1A1A', textMuted: '#6B6B6B', borderColor: '#D4D4D4',
+    accentColor: '#6B7280', accentHover: '#4B5563', accentLight: 'rgba(107,114,128,0.1)',
+    dangerColor: '#E05252', dangerHover: '#C93E3E',
+    shadowMd: '0 8px 24px rgba(26,26,26,0.08)',
+  },
+  ocean: {
+    bgCanvas: '#0A1929', bgSurface: '#132F4C', bgSurfaceHover: '#1A3A5C',
+    textMain: '#C9D8EC', textMuted: '#8BA3C4', borderColor: '#2E4A6B',
+    accentColor: '#06B6D4', accentHover: '#0891B2', accentLight: 'rgba(6,182,212,0.15)',
+    dangerColor: '#E05252', dangerHover: '#C93E3E',
+    shadowMd: '0 8px 24px rgba(0,0,0,0.3)',
+  },
+  cyberpunk: {
+    bgCanvas: '#0D0D1A', bgSurface: '#1A1A2E', bgSurfaceHover: '#252540',
+    textMain: '#E0E0FF', textMuted: '#9898CC', borderColor: '#3A3A5C',
+    accentColor: '#FF00FF', accentHover: '#CC00CC', accentLight: 'rgba(255,0,255,0.15)',
+    dangerColor: '#FF4444', dangerHover: '#CC3333',
+    shadowMd: '0 8px 24px rgba(0,0,0,0.4)',
+  },
+  'wabi-sabi': {
+    bgCanvas: '#E8E2D8', bgSurface: '#DFD8CB', bgSurfaceHover: '#D5CEBF',
+    textMain: '#3E3830', textMuted: '#7D756A', borderColor: '#C8C0B2',
+    accentColor: '#A8966A', accentHover: '#8E7D56', accentLight: 'rgba(168,150,106,0.12)',
+    dangerColor: '#B85C5C', dangerHover: '#A04848',
+    shadowMd: '0 8px 24px rgba(62,56,48,0.1)',
+  },
 }
 
 const FONT_FAMILY = '"Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif'
@@ -195,9 +272,20 @@ function t(key) {
   const translations = {
     ja: {
       btn_create_folder: "新規作成",
-      theme_sand: "サンド＆クリーム",
-      theme_dark: "ダークモード",
-      theme_blue: "青",
+    theme_sand: "サンド＆クリーム",
+    theme_dark: "ダークモード",
+    theme_blue: "青",
+    theme_sakura: "桜",
+    theme_forest: "森",
+    theme_autumn: "秋",
+    theme_nord: "ノード",
+    theme_lavender: "ラベンダー",
+    theme_matcha: "抹茶",
+    theme_sunset: "夕焼け",
+    theme_monochrome: "モノクローム",
+    theme_ocean: "オーシャン",
+    theme_cyberpunk: "サイバーパンク",
+    theme_wabi_sabi: "侘寂",
       menu_login: "ログイン/登録",
       menu_account_info: "アカウント情報",
       menu_logout: "ログアウト",
@@ -255,9 +343,20 @@ function t(key) {
     },
     en: {
       btn_create_folder: "New Folder",
-      theme_sand: "Sand & Cream",
-      theme_dark: "Dark Mode",
-      theme_blue: "Blue",
+    theme_sand: "Sand & Cream",
+    theme_dark: "Dark Mode",
+    theme_blue: "Blue",
+    theme_sakura: "Sakura",
+    theme_forest: "Forest",
+    theme_autumn: "Autumn",
+    theme_nord: "Nord",
+    theme_lavender: "Lavender",
+    theme_matcha: "Matcha",
+    theme_sunset: "Sunset",
+    theme_monochrome: "Monochrome",
+    theme_ocean: "Ocean",
+    theme_cyberpunk: "Cyberpunk",
+    theme_wabi_sabi: "Wabi-Sabi",
       menu_login: "Login / Register",
       menu_account_info: "Account Info",
       menu_logout: "Logout",
@@ -710,18 +809,62 @@ try {
             </button>
             {themeMenuOpen && (
               <div className="theme-dropdown">
-                <button className={`theme-option ${theme === 'light' ? 'active' : ''}`} onClick={() => selectTheme('light')}>
-                  <span className="theme-dots"><span style={{background:'#F4F0EB'}}></span><span style={{background:'#D97757'}}></span><span style={{background:'#E05252'}}></span></span>
-                  <span>{t('theme_sand')}</span>
-                </button>
-                <button className={`theme-option ${theme === 'dark' ? 'active' : ''}`} onClick={() => selectTheme('dark')}>
-                  <span className="theme-dots"><span style={{background:'#1E1B18'}}></span><span style={{background:'#D97757'}}></span><span style={{background:'#383430'}}></span></span>
-                  <span>{t('theme_dark')}</span>
-                </button>
-                <button className={`theme-option ${theme === 'blue' ? 'active' : ''}`} onClick={() => selectTheme('blue')}>
-                  <span className="theme-dots"><span style={{background:'#1B3A6B'}}></span><span style={{background:'#3B8BEB'}}></span><span style={{background:'#D94F6E'}}></span></span>
-                  <span>{t('theme_blue')}</span>
-                </button>
+            <button className={`theme-option ${theme === 'light' ? 'active' : ''}`} onClick={() => selectTheme('light')}>
+              <span className="theme-dots"><span style={{background:'#F4F0EB'}}></span><span style={{background:'#D97757'}}></span><span style={{background:'#E05252'}}></span></span>
+              <span>{t('theme_sand')}</span>
+            </button>
+            <button className={`theme-option ${theme === 'dark' ? 'active' : ''}`} onClick={() => selectTheme('dark')}>
+              <span className="theme-dots"><span style={{background:'#1E1B18'}}></span><span style={{background:'#D97757'}}></span><span style={{background:'#383430'}}></span></span>
+              <span>{t('theme_dark')}</span>
+            </button>
+            <button className={`theme-option ${theme === 'blue' ? 'active' : ''}`} onClick={() => selectTheme('blue')}>
+              <span className="theme-dots"><span style={{background:'#1B3A6B'}}></span><span style={{background:'#3B8BEB'}}></span><span style={{background:'#D94F6E'}}></span></span>
+              <span>{t('theme_blue')}</span>
+            </button>
+            <button className={`theme-option ${theme === 'sakura' ? 'active' : ''}`} onClick={() => selectTheme('sakura')}>
+              <span className="theme-dots"><span style={{background:'#FFF5F6'}}></span><span style={{background:'#D4727A'}}></span><span style={{background:'#FFF0F2'}}></span></span>
+              <span>{t('theme_sakura')}</span>
+            </button>
+            <button className={`theme-option ${theme === 'forest' ? 'active' : ''}`} onClick={() => selectTheme('forest')}>
+              <span className="theme-dots"><span style={{background:'#F4F1EB'}}></span><span style={{background:'#2D6A4F'}}></span><span style={{background:'#D5DFD0'}}></span></span>
+              <span>{t('theme_forest')}</span>
+            </button>
+            <button className={`theme-option ${theme === 'autumn' ? 'active' : ''}`} onClick={() => selectTheme('autumn')}>
+              <span className="theme-dots"><span style={{background:'#FBF5EE'}}></span><span style={{background:'#B45309'}}></span><span style={{background:'#E8DBC5'}}></span></span>
+              <span>{t('theme_autumn')}</span>
+            </button>
+            <button className={`theme-option ${theme === 'nord' ? 'active' : ''}`} onClick={() => selectTheme('nord')}>
+              <span className="theme-dots"><span style={{background:'#F0F3F8'}}></span><span style={{background:'#5E81AC'}}></span><span style={{background:'#D8DEE9'}}></span></span>
+              <span>{t('theme_nord')}</span>
+            </button>
+            <button className={`theme-option ${theme === 'lavender' ? 'active' : ''}`} onClick={() => selectTheme('lavender')}>
+              <span className="theme-dots"><span style={{background:'#F6F3FB'}}></span><span style={{background:'#7C3AED'}}></span><span style={{background:'#DDD6F3'}}></span></span>
+              <span>{t('theme_lavender')}</span>
+            </button>
+            <button className={`theme-option ${theme === 'matcha' ? 'active' : ''}`} onClick={() => selectTheme('matcha')}>
+              <span className="theme-dots"><span style={{background:'#F2EFE6'}}></span><span style={{background:'#7C8B6A'}}></span><span style={{background:'#D8D5C4'}}></span></span>
+              <span>{t('theme_matcha')}</span>
+            </button>
+            <button className={`theme-option ${theme === 'sunset' ? 'active' : ''}`} onClick={() => selectTheme('sunset')}>
+              <span className="theme-dots"><span style={{background:'#FFF7ED'}}></span><span style={{background:'#E8722A'}}></span><span style={{background:'#F0DCC5'}}></span></span>
+              <span>{t('theme_sunset')}</span>
+            </button>
+            <button className={`theme-option ${theme === 'monochrome' ? 'active' : ''}`} onClick={() => selectTheme('monochrome')}>
+              <span className="theme-dots"><span style={{background:'#F5F5F5'}}></span><span style={{background:'#6B7280'}}></span><span style={{background:'#D4D4D4'}}></span></span>
+              <span>{t('theme_monochrome')}</span>
+            </button>
+            <button className={`theme-option ${theme === 'ocean' ? 'active' : ''}`} onClick={() => selectTheme('ocean')}>
+              <span className="theme-dots"><span style={{background:'#0A1929'}}></span><span style={{background:'#06B6D4'}}></span><span style={{background:'#132F4C'}}></span></span>
+              <span>{t('theme_ocean')}</span>
+            </button>
+            <button className={`theme-option ${theme === 'cyberpunk' ? 'active' : ''}`} onClick={() => selectTheme('cyberpunk')}>
+              <span className="theme-dots"><span style={{background:'#0D0D1A'}}></span><span style={{background:'#FF00FF'}}></span><span style={{background:'#1A1A2E'}}></span></span>
+              <span>{t('theme_cyberpunk')}</span>
+            </button>
+            <button className={`theme-option ${theme === 'wabi-sabi' ? 'active' : ''}`} onClick={() => selectTheme('wabi-sabi')}>
+              <span className="theme-dots"><span style={{background:'#E8E2D8'}}></span><span style={{background:'#A8966A'}}></span><span style={{background:'#D5CEBF'}}></span></span>
+              <span>{t('theme_wabi_sabi')}</span>
+            </button>
               </div>
             )}
           </div>
