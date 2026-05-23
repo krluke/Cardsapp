@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { UserProfile } from '@clerk/clerk-react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
@@ -5,6 +6,10 @@ import './AccountPage.css'
 
 export default function AccountPage() {
   const navigate = useNavigate()
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', localStorage.getItem('app-theme') || 'light')
+  }, [])
 
   return (
     <div className="account-page">

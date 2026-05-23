@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, Link } from 'react-router-dom'
 import { X, FolderPlus, Palette, Globe, User, LogOut, LogIn, Settings, Trash2, Search, ChevronLeft, ChevronRight, BookOpen, Plus } from 'lucide-react'
-import { useAuth, useClerk } from '@clerk/clerk-react'
+import { ClerkProvider, useAuth, useClerk } from '@clerk/clerk-react'
 
 import AccountPage from './pages/AccountPage'
 import EditorPage from './pages/EditorPage'
@@ -13,6 +13,182 @@ import { CardPreview } from './components/CardPreview'
 import { useModal, Modal } from './components/Modal'
 import { apiFetch, API_BASE } from './lib/api'
 import './App.css'
+
+const CLERK_THEMES = {
+  light: {
+    bgCanvas: '#F4F0EB', bgSurface: '#FFFFFF', bgSurfaceHover: '#FAF8F5',
+    textMain: '#3D3935', textMuted: '#8A847C', borderColor: '#E2DCD0',
+    accentColor: '#D97757', accentHover: '#C06040', accentLight: 'rgba(217,119,87,0.1)',
+    dangerColor: '#E05252', dangerHover: '#C93E3E',
+    shadowMd: '0 8px 24px rgba(61,57,53,0.08)',
+  },
+  dark: {
+    bgCanvas: '#1E1B18', bgSurface: '#2D2A26', bgSurfaceHover: '#383430',
+    textMain: '#EAE6DF', textMuted: '#9E9891', borderColor: '#4A453F',
+    accentColor: '#D97757', accentHover: '#C06040', accentLight: 'rgba(217,119,87,0.15)',
+    dangerColor: '#E05252', dangerHover: '#C93E3E',
+    shadowMd: '0 8px 24px rgba(0,0,0,0.3)',
+  },
+  blue: {
+    bgCanvas: '#0D1B3E', bgSurface: '#223768', bgSurfaceHover: '#324063',
+    textMain: '#c7cbdd', textMuted: '#b1b8c9', borderColor: '#65779c',
+    accentColor: '#D94F6E', accentHover: '#BF3A58', accentLight: 'rgba(217,79,110,0.15)',
+    dangerColor: '#E05252', dangerHover: '#C93E3E',
+    shadowMd: '0 8px 24px rgba(0,0,0,0.3)',
+  },
+}
+
+const FONT_FAMILY = '"Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif'
+
+function buildClerkAppearance(theme) {
+  const c = CLERK_THEMES[theme] || CLERK_THEMES.light
+  return {
+    variables: {
+      colorPrimary: c.accentColor,
+      colorPrimaryHover: c.accentHover,
+      colorPrimaryActive: c.accentHover,
+      colorPrimaryOnBackground: c.accentColor,
+      colorBackground: c.bgSurface,
+      colorBackgroundHover: c.bgSurfaceHover,
+      colorInputBackground: c.bgSurface,
+      colorInputText: c.textMain,
+      colorText: c.textMain,
+      colorTextSecondary: c.textMuted,
+      colorTextOnPrimary: '#FFFFFF',
+      colorBorder: c.borderColor,
+      colorDanger: c.dangerColor,
+      colorDangerHover: c.dangerHover,
+      colorSuccess: '#10b981',
+      borderRadius: '12px',
+      borderRadiussm: '6px',
+      borderRadiuslg: '24px',
+      fontFamily: FONT_FAMILY,
+      fontSize: '14px',
+    },
+    elements: {
+      card: {
+        boxShadow: c.shadowMd,
+        border: `1px solid ${c.borderColor}`,
+      },
+      modalBackdrop: {
+        backgroundColor: 'rgba(0,0,0,0.6)',
+      },
+      modalContent: {
+        boxShadow: '0 16px 40px rgba(0,0,0,0.2)',
+      },
+      rootBox: {
+        boxShadow: c.shadowMd,
+      },
+      formButtonPrimary: {
+        backgroundColor: c.accentColor,
+        color: '#FFFFFF',
+        borderRadius: '12px',
+        fontSize: '14px',
+        fontWeight: '600',
+        transition: 'background-color 0.2s',
+        '&:hover': {
+          backgroundColor: c.accentHover,
+        },
+        '&:active': {
+          backgroundColor: c.accentHover,
+        },
+      },
+      formButtonSecondary: {
+        backgroundColor: c.bgSurfaceHover,
+        color: c.textMain,
+        borderRadius: '12px',
+        border: `1px solid ${c.borderColor}`,
+        fontSize: '14px',
+        fontWeight: '500',
+        transition: 'background-color 0.2s',
+        '&:hover': {
+          backgroundColor: c.borderColor,
+        },
+      },
+      formFieldInput: {
+        backgroundColor: c.bgSurface,
+        color: c.textMain,
+        borderRadius: '6px',
+        border: `1px solid ${c.borderColor}`,
+        fontSize: '14px',
+        transition: 'border-color 0.2s, box-shadow 0.2s',
+        '&:focus': {
+          borderColor: c.accentColor,
+          boxShadow: `0 0 0 3px ${c.accentLight}`,
+        },
+      },
+      formFieldLabel: {
+        color: c.textMain,
+        fontSize: '13px',
+        fontWeight: '600',
+      },
+      formFieldHintText: {
+        color: c.textMuted,
+        fontSize: '12px',
+      },
+      formHeaderTitle: {
+        color: c.textMain,
+        fontSize: '20px',
+        fontWeight: '700',
+      },
+      formHeaderSubtitle: {
+        color: c.textMuted,
+        fontSize: '14px',
+      },
+      socialButtonsBlockButton: {
+        backgroundColor: c.bgSurfaceHover,
+        color: c.textMain,
+        borderRadius: '12px',
+        border: `1px solid ${c.borderColor}`,
+        fontSize: '14px',
+        fontWeight: '500',
+        transition: 'background-color 0.2s',
+        '&:hover': {
+          backgroundColor: c.borderColor,
+        },
+      },
+      socialButtonsBlockButtonText: {
+        color: c.textMain,
+      },
+      dividerLine: {
+        backgroundColor: c.borderColor,
+      },
+      dividerText: {
+        color: c.textMuted,
+        fontSize: '13px',
+      },
+      alertText: {
+        fontSize: '13px',
+      },
+      navbar: {
+        backgroundColor: c.bgSurface,
+        borderBottom: `1px solid ${c.borderColor}`,
+      },
+      navbarButton: {
+        color: c.textMuted,
+        '&:hover': {
+          color: c.textMain,
+        },
+      },
+      userButtonAvatarBox: {
+        border: `2px solid ${c.accentColor}`,
+      },
+      userButtonPopoverCard: {
+        boxShadow: c.shadowMd,
+        border: `1px solid ${c.borderColor}`,
+      },
+      userProfileCard: {
+        border: `1px solid ${c.borderColor}`,
+        boxShadow: c.shadowMd,
+      },
+      pages: {
+        theme: {
+          backgroundColor: c.bgCanvas,
+        },
+      },
+    },
+  }
+}
 
 function t(key) {
   const lang = localStorage.getItem('app-lang') || 'ja'
@@ -142,18 +318,42 @@ function t(key) {
 }
 
 export default function App({ clerkAvailable }) {
+  const [theme, setTheme] = useState(() => localStorage.getItem('app-theme') || 'light')
+  const clerkKey = clerkAvailable ? import.meta.env.VITE_CLERK_PUBLISHABLE_KEY : null
+  const clerkAppearance = useMemo(() => buildClerkAppearance(theme), [theme])
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.detail?.theme) {
+        setTheme(e.detail.theme)
+      }
+    }
+    window.addEventListener('theme-changed', handler)
+    return () => window.removeEventListener('theme-changed', handler)
+  }, [])
+
+  const routes = (
+    <Routes>
+      <Route path="/" element={<Navigate to="/home" replace />} />
+      <Route path="/home" element={clerkAvailable ? <ClerkHomePage /> : <HomePage clerkAvailable={false} />} />
+      <Route path="/account" element={<AccountPage />} />
+      <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+      <Route path="/terms-of-service" element={<TermsOfServicePage />} />
+      <Route path="/editor/:folderId" element={<EditorPage />} />
+      <Route path="/viewer/:folderId" element={<ViewerPage />} />
+      <Route path="/study/:folderId" element={<StudyPage />} />
+    </Routes>
+  )
+
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Navigate to="/home" replace />} />
-        <Route path="/home" element={clerkAvailable ? <ClerkHomePage /> : <HomePage clerkAvailable={false} />} />
-        <Route path="/account" element={<AccountPage />} />
-        <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
-        <Route path="/terms-of-service" element={<TermsOfServicePage />} />
-        <Route path="/editor/:folderId" element={<EditorPage />} />
-        <Route path="/viewer/:folderId" element={<ViewerPage />} />
-        <Route path="/study/:folderId" element={<StudyPage />} />
-      </Routes>
+      {clerkAvailable && clerkKey ? (
+        <ClerkProvider publishableKey={clerkKey} afterSignOutUrl="/" appearance={clerkAppearance}>
+          {routes}
+        </ClerkProvider>
+      ) : (
+        routes
+      )}
     </BrowserRouter>
   )
 }
@@ -393,6 +593,7 @@ function HomePage({ clerkAvailable, isSignedIn: isSignedInProp, getToken: getTok
     setTheme(newTheme)
     localStorage.setItem('app-theme', newTheme)
     document.documentElement.setAttribute('data-theme', newTheme)
+    window.dispatchEvent(new CustomEvent('theme-changed', { detail: { theme: newTheme } }))
     setThemeMenuOpen(false)
   }
 
