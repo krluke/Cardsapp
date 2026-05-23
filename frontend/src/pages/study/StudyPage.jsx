@@ -159,11 +159,10 @@ if (cards.length === 0) return (
   <div className="study-container">
     <h2>No cards to study! 🎉</h2>
     <div className="finished-buttons">
-      <button className="primary-btn" onClick={() => navigate(canEdit ? `/editor/${folderId}` : `/viewer/${folderId}`)}>{canEdit ? 'Back to Editor' : 'Back to Viewer'}</button>
-      <button className="secondary-btn" onClick={() => navigate('/home')}>Home</button>
-    </div>
-  </div>
-);
+      <button className="primary-btn" onClick={() => navigate('/home')}>Back to My Drive</button>
+      </div>
+      </div>
+  );
 
   if (finished) {
     const accuracy = stats.total > 0 ? Math.round(((stats.good + stats.easy) / stats.total) * 100) : 0;
@@ -171,17 +170,16 @@ if (cards.length === 0) return (
       <div className="study-container">
         <h2>Study Session Complete! 🌟</h2>
         <div className="session-stats">
-          <div className="stat-item"><span className="stat-value">{stats.total}</span><span className="stat-label">Cards Reviewed</span></div>
-          <div className="stat-item"><span className="stat-value">{accuracy}%</span><span className="stat-label">Accuracy</span></div>
-          <div className="stat-item stat-easy"><span className="stat-value">{stats.easy}</span><span className="stat-label">Easy</span></div>
-          <div className="stat-item stat-good"><span className="stat-value">{stats.good}</span><span className="stat-label">Good</span></div>
-          <div className="stat-item stat-hard"><span className="stat-value">{stats.hard}</span><span className="stat-label">Hard</span></div>
-          <div className="stat-item stat-again"><span className="stat-value">{stats.again}</span><span className="stat-label">Again</span></div>
+        <div className="stat-item"><span className="stat-value">{stats.total}</span><span className="stat-label">Cards Reviewed</span></div>
+        <div className="stat-item"><span className="stat-value">{accuracy}%</span><span className="stat-label">Accuracy</span></div>
+        <div className="stat-item stat-easy"><span className="stat-value">{stats.easy}</span><span className="stat-label">Easy</span></div>
+        <div className="stat-item stat-good"><span className="stat-value">{stats.good}</span><span className="stat-label">Good</span></div>
+        <div className="stat-item stat-hard"><span className="stat-value">{stats.hard}</span><span className="stat-label">Hard</span></div>
+        <div className="stat-item stat-again"><span className="stat-value">{stats.again}</span><span className="stat-label">Again</span></div>
         </div>
         <div className="finished-buttons">
-          <button className="primary-btn" onClick={() => { setStats({ again: 0, hard: 0, good: 0, easy: 0, total: 0 }); loadCards(studyMode, shuffled); }}>Study Again</button>
-          <button className="secondary-btn" onClick={() => navigate(canEdit ? `/editor/${folderId}` : `/viewer/${folderId}`)}>{canEdit ? 'Back to Editor' : 'Back to Viewer'}</button>
-          <button className="secondary-btn" onClick={() => navigate('/home')}>Home</button>
+        <button className="primary-btn" onClick={() => { setStats({ again: 0, hard: 0, good: 0, easy: 0, total: 0 }); loadCards(studyMode, shuffled); }}>Study Again</button>
+        <button className="secondary-btn" onClick={() => navigate('/home')}>Back to My Drive</button>
         </div>
       </div>
     );
@@ -193,7 +191,7 @@ if (cards.length === 0) return (
   return (
     <div className="study-container">
       <header className="study-header">
-        <button className="toolbar-btn" onClick={() => navigate(canEdit ? `/editor/${folderId}` : `/viewer/${folderId}`)}><ArrowLeft size={18} /> Back</button>
+        <button className="toolbar-btn" onClick={() => navigate('/home')}><ArrowLeft size={18} /> Back</button>
         <div className="study-mode-toggle">
           <button className={`mode-btn ${studyMode === 'due' ? 'active' : ''}`} onClick={() => setStudyMode('due')}>Due</button>
           <button className={`mode-btn ${studyMode === 'all' ? 'active' : ''}`} onClick={() => setStudyMode('all')}>All</button>
