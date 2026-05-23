@@ -43,9 +43,16 @@ export default function StudyPage() {
         return;
       }
       
-      if (mode === 'all' && Array.isArray(data)) {
-        data = data.map((c, i) => ({ ...c, id: c.id || i + 1000 }));
-      }
+  if (mode === 'all' && Array.isArray(data)) {
+    data = data.map((c, i) => ({
+      ...c,
+      id: c.id || i + 1000,
+      front_content: c.front_content || c.front || '',
+      back_content: c.back_content || c.back || '',
+      front_bg: c.front_bg || c.frontBg || null,
+      back_bg: c.back_bg || c.backBg || null,
+    }));
+  }
       
       if (shuffle && Array.isArray(data)) {
         data = [...data].sort(() => Math.random() - 0.5);
@@ -55,6 +62,10 @@ export default function StudyPage() {
       setCurrentIndex(0);
       setIsFlipped(false);
       setFinished(false);
+
+      if (mode === 'due' && Array.isArray(data) && data.length === 0) {
+        setStudyMode('all');
+      }
     } catch (e) { 
       console.error(e); 
       setCards([]);
