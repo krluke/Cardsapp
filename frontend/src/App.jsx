@@ -978,13 +978,13 @@ try {
               {globalCards.map(card => (
 <div key={card.id} className="global-card-tile" onClick={() => setFlippedCards(prev => ({...prev, [card.id]: !prev[card.id]}))}>
           <div className={`global-card-inner ${flippedCards[card.id] ? 'flipped' : ''}`}>
-          <div className="global-card-front" style={{ backgroundColor: card.frontBg || '#ffffff' }}>
-            <CardPreview html={card.front} />
-            <div className="global-card-folder-info">
-              {card.folder_title} • {card.folder_owner}
-            </div>
+        <div className="global-card-front" style={{ backgroundColor: card.frontBg || 'var(--bg-surface)' }}>
+          <CardPreview html={card.front} />
+          <div className="global-card-folder-info">
+            {card.folder_title} • {card.folder_owner}
           </div>
-          <div className="global-card-back" style={{ backgroundColor: card.backBg || '#ffffff' }}>
+        </div>
+        <div className="global-card-back" style={{ backgroundColor: card.backBg || 'var(--bg-surface)' }}>
             <CardPreview html={card.back} />
           </div>
           </div>

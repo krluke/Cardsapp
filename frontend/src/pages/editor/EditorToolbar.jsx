@@ -29,7 +29,7 @@ export function EditorToolbar({
       
       
       
-      <div className="color-picker-group"><label>{t('label_bg_color')}</label><input type="color" value={currentBg} onChange={(e) => updateBgColor(e.target.value)} /></div>
+      <div className="color-picker-group"><label>{t('label_bg_color')}</label><input type="color" value={currentBg || '#ffffff'} onChange={(e) => updateBgColor(e.target.value)} /></div>
       
       <div className="image-input-group" style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
         <label className="toolbar-btn" style={{ cursor: 'pointer', padding: '8px' }}>

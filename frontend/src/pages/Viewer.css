@@ -86,6 +86,7 @@ overflow: hidden;
   display: flex;
   align-items: flex-start;
   justify-content: flex-start;
+  color: var(--text-main);
 }
 
 .flashcard-content .draggable-text .text-content {

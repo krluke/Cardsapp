@@ -134,8 +134,8 @@ export function FloatingTextToolbar({
       <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Text</span>
       <input
         type="color"
-        value={textColor}
-        onChange={(e) => onTextColorChange(e.target.value)}
+          value={textColor || '#000000'}
+          onChange={(e) => onTextColorChange(e.target.value)}
         title="Text Color"
         style={{ width: '28px', height: '28px', padding: '0', border: '1px solid var(--border-color)', borderRadius: '4px', cursor: 'pointer' }}
       />
@@ -144,7 +144,7 @@ export function FloatingTextToolbar({
       <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Fill</span>
       <input
         type="color"
-        value={backgroundColor === 'transparent' ? '#ffffff' : backgroundColor}
+          value={backgroundColor || '#ffffff'}
         onChange={(e) => onBackgroundColorChange(e.target.value)}
         title="Background Color"
         style={{ width: '28px', height: '28px', padding: '0', border: '1px solid var(--border-color)', borderRadius: '4px', cursor: 'pointer' }}
