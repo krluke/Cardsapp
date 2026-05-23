@@ -137,8 +137,8 @@ function editorReducer(state, action) {
     case 'SET_TEXT_COLOR':
       return { ...state, textColor: action.payload };
     case 'SET_TEXT_BG_COLOR':
-      return { ...state, textBoxBgColor: action.payload };
-    case 'UPDATE_ELEMENT': {
+return { ...state, textBoxBgColor: action.payload };
+case 'UPDATE_ELEMENT': {
       const stateWithHistory = pushHistory(state);
       const { elementId, updates } = action.payload;
       const newCards = [...stateWithHistory.cards];
@@ -173,7 +173,7 @@ function editorReducer(state, action) {
     }
     case 'ADD_TEXT': {
       const stateWithHistory = pushHistory(state);
-      const { x, y, fontSize, textColor, bgColor, highlightColor } = action.payload;
+      const { x, y, fontSize, textColor, bgColor } = action.payload;
       const newElement = {
         id: `text-${Date.now()}`,
         type: 'text',
@@ -189,8 +189,7 @@ function editorReducer(state, action) {
         textDecoration: 'none',
         textAlign: 'left',
         color: textColor,
-        backgroundColor: bgColor || 'transparent',
-        highlightColor: highlightColor || 'transparent',
+backgroundColor: bgColor || 'transparent',
         rotation: 0
       };
       const newCards = [...stateWithHistory.cards];
@@ -323,7 +322,7 @@ const initialState = {
   fontSize: 16,
   fontFamily: 'sans-serif',
   textColor: '#000000',
-  textBoxBgColor: 'transparent',
+textBoxBgColor: 'transparent',
 };
 
 export default function EditorPage() {
@@ -478,7 +477,7 @@ export default function EditorPage() {
             const leftMatch = style.match(/left:\s*(\d+)%/);
             const topMatch = style.match(/top:\s*(\d+)%/);
             const widthMatch = style.match(/width:\s*(\d+)%/);
-            const heightMatch = style.match(/height:\s*(\d+)%/);
+const heightMatch = style.match(/height:\s*(\d+(?:\.\d+)?)%/);
             const fontSizeMatch = style.match(/font-size:\s*(\d+)px/);
             const fontFamilyMatch = style.match(/font-family:\s*([^;]+)/);
             const fontWeightMatch = style.match(/font-weight:\s*(\w+)/);
@@ -495,7 +494,7 @@ export default function EditorPage() {
               left: leftMatch ? parseInt(leftMatch[1]) : 10,
               top: topMatch ? parseInt(topMatch[1]) : 20,
               width: widthMatch ? parseInt(widthMatch[1]) : 40,
-              height: heightMatch ? parseInt(heightMatch[1]) : 'auto',
+              height: heightMatch ? parseFloat(heightMatch[1]) : 'auto',
               fontSize: fontSizeMatch ? parseInt(fontSizeMatch[1]) : 16,
               fontFamily: fontFamilyMatch ? fontFamilyMatch[1] : 'sans-serif',
               fontWeight: fontWeightMatch ? fontWeightMatch[1] : 'normal',
@@ -558,7 +557,7 @@ export default function EditorPage() {
           .replace(/&/g, '&amp;')
           .replace(/</g, '&lt;')
           .replace(/>/g, '&gt;');
-        return `<div class="draggable-text" style="position:absolute;left:${el.left}%;top:${el.top}%;width:${el.width}%;height:${el.height || 'auto'};font-size:${el.fontSize}px;font-family:${el.fontFamily};font-weight:${el.fontWeight};font-style:${el.fontStyle || 'normal'};text-decoration:${el.textDecoration || 'none'};text-align:${el.textAlign || 'left'};color:${el.color};background-color:${el.backgroundColor || 'transparent'};transform:rotate(${el.rotation || 0}deg)">${sanitizedContent}</div>`;
+        return `<div class="draggable-text" style="position:absolute;left:${el.left}%;top:${el.top}%;width:${el.width}%;height:${typeof el.height === 'number' ? el.height + '%' : (el.height || 'auto')};font-size:${el.fontSize}px;font-family:${el.fontFamily};font-weight:${el.fontWeight};font-style:${el.fontStyle || 'normal'};text-decoration:${el.textDecoration || 'none'};text-align:${el.textAlign || 'left'};color:${el.color};background-color:${el.backgroundColor || 'transparent'};transform:rotate(${el.rotation || 0}deg)">${sanitizedContent}</div>`;
       }
       if (el.type === 'image') {
         return `<div class="draggable-image" style="position:absolute;left:${el.left}%;top:${el.top}%;width:${el.width}%;height:${el.height}%;"><img src="${el.src}" style="width:100%;height:100%;object-fit:contain;" /></div>`;
@@ -580,8 +579,8 @@ const addText = (x = 30, y = 40) => {
       y,
       fontSize: state.fontSize,
       textColor: state.textColor,
-      bgColor: state.textBoxBgColor,
-      highlightColor: 'transparent'
+bgColor: state.textBoxBgColor,
+highlightColor: 'transparent'
     }
   });
 };
