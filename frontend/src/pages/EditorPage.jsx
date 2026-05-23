@@ -579,7 +579,8 @@ const addText = (x = 30, y = 40) => {
       y,
       fontSize: state.fontSize,
       textColor: state.textColor,
-      bgColor: state.textBoxBgColor
+bgColor: state.textBoxBgColor,
+highlightColor: 'transparent'
     }
   });
 };
