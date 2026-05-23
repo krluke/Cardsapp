@@ -4,7 +4,6 @@ import json
 import logging
 import traceback
 
-from django.conf import settings
 from django.db import connection
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
@@ -14,7 +13,6 @@ from django.core.files.storage import FileSystemStorage
 import bleach
 from bleach.css_sanitizer import CSSSanitizer
 
-from api.rate_limiter import rate_limiter
 from api.csrf import csrf_protector
 from api.jwt_utils import (
     generate_jwt_token,
@@ -23,10 +21,6 @@ from api.jwt_utils import (
 )
 
 logger = logging.getLogger(__name__)
-
-
-def get_db():
-    return connection
 
 
 def dictfetchall(cursor):
@@ -97,10 +91,10 @@ def sanitize_html(html):
 @require_http_methods(["POST"])
 def clerk_auth(request):
     """Verify Clerk JWT, find/create local user, return internal session."""
-    import json as json_mod
-    import requests as http_requests
+    
+    import requests
 
-    data = json_mod.loads(request.body)
+    data = json.loads(request.body)
     clerk_token = data.get("clerk_token")
     if not clerk_token:
         return JsonResponse({"message": "clerk_token is required"}, status=400)
@@ -148,7 +142,7 @@ def clerk_auth(request):
         return JsonResponse({"message": "Server configuration error"}, status=500)
 
     try:
-        user_resp = http_requests.get(
+        user_resp = requests.get(
             f"https://api.clerk.com/v1/users/{clerk_user_id}",
             headers={"Authorization": f"Bearer {clerk_secret_key}"},
             timeout=10,
@@ -283,9 +277,9 @@ def get_user_stats(request):
 @jwt_required
 @require_http_methods(["POST"])
 def create_folder(request):
-    import json as json_mod
+    
 
-    data = json_mod.loads(request.body)
+    data = json.loads(request.body)
     user_email = request.user_email
     raw_title = data.get("title", "無題のフォルダ")
     title = bleach.clean(raw_title, tags=[], strip=True)
@@ -307,24 +301,6 @@ def create_folder(request):
         folder_id = c.lastrowid
 
     return JsonResponse({"message": "フォルダ作成完了", "folderId": folder_id})
-
-
-@xframe_options_exempt
-@jwt_required
-def list_folders(request):
-    user_email = request.user_email
-
-    try:
-        with connection.cursor() as c:
-            c.execute(
-                "SELECT id, title, visibility, likes FROM folders WHERE user_email = %s",
-                (user_email,),
-            )
-            folders = dictfetchall(c)
-        return JsonResponse(folders, safe=False)
-    except Exception as e:
-        logger.error(f"list_folders error: {e}")
-        return JsonResponse({"message": "フォルダ一覧の取得に失敗しました"}, status=500)
 
 
 @xframe_options_exempt
@@ -422,33 +398,13 @@ def get_folders(request):
         return JsonResponse({"message": "フォルダ一覧の取得に失敗しました"}, status=500)
 
 
-@xframe_options_exempt
-def list_global_folders(request):
-    try:
-        with connection.cursor() as c:
-            query = """
-                SELECT f.id, f.title, f.visibility,
-                       COALESCE(u.username, f.user_email) AS username
-                FROM folders f
-                LEFT JOIN users u ON f.user_email = u.email OR f.user_email = u.username
-                WHERE f.visibility = 'public'
-                ORDER BY f.id DESC
-            """
-            c.execute(query)
-            folders = dictfetchall(c)
-        return JsonResponse(folders, safe=False)
-    except Exception as e:
-        logger.error(f"Global folders fetch error: {e}")
-        return JsonResponse({"message": "公開データの取得に失敗しました"}, status=500)
-
-
 @csrf_exempt
 @jwt_required
 @require_http_methods(["POST"])
 def update_folder(request):
-    import json as json_mod
+    
 
-    data = json_mod.loads(request.body)
+    data = json.loads(request.body)
     folder_id = data.get("folderId")
     raw_title = data.get("title")
     title = bleach.clean(raw_title, tags=[], strip=True) if raw_title else None
@@ -488,9 +444,9 @@ def update_folder(request):
 @jwt_required
 @require_http_methods(["POST"])
 def delete_folder(request):
-    import json as json_mod
+    
 
-    data = json_mod.loads(request.body)
+    data = json.loads(request.body)
     folder_id = data.get("folderId")
     user_email = request.user_email
 
@@ -514,9 +470,9 @@ def delete_folder(request):
 @jwt_required
 @require_http_methods(["POST"])
 def toggle_action(request):
-    import json as json_mod
+    
 
-    data = json_mod.loads(request.body)
+    data = json.loads(request.body)
     folder_id = data.get("folderId")
     action = data.get("action")
     user_email = request.user_email
@@ -640,9 +596,9 @@ def export_folder(request):
 @jwt_required
 @require_http_methods(["POST"])
 def import_folder(request):
-    import json as json_mod
+    
 
-    data = json_mod.loads(request.body)
+    data = json.loads(request.body)
     folder_data = data.get("folderData")
     user_email = request.user_email
 
@@ -734,9 +690,9 @@ def get_study_cards(request):
 @jwt_required
 @require_http_methods(["POST"])
 def update_srs(request):
-    import json as json_mod
+    
 
-    data = json_mod.loads(request.body)
+    data = json.loads(request.body)
     card_id = data.get("cardId")
     quality = data.get("quality")  # 0-5
     user_email = request.user_email
@@ -814,10 +770,10 @@ def upload_image(request):
 @jwt_required
 @require_http_methods(["POST"])
 def save_cards(request):
-    import json as json_mod
+    
 
     try:
-        data = json_mod.loads(request.body)
+        data = json.loads(request.body)
         folder_id = data.get("folderId")
         cards_data = data.get("cards")
         user_email = request.user_email
@@ -874,47 +830,13 @@ def save_cards(request):
         return JsonResponse({"message": "カードの保存に失敗しました"}, status=500)
 
 
-@xframe_options_exempt
-def load_cards_public(request, folder_id):
-    """Public read-only loader for public folders only."""
-    try:
-        with connection.cursor() as c:
-            c.execute("SELECT visibility FROM folders WHERE id = %s", (folder_id,))
-            folder = dictfetchone(c)
-            if not folder:
-                return JsonResponse({"message": "Folder not found"}, status=404)
-            if folder["visibility"] != "public":
-                return JsonResponse({"message": "Access denied"}, status=403)
-
-            c.execute(
-                """
-                SELECT c.id,
-                       c.front_content as front,
-                       c.back_content as back,
-                       c.front_bg as frontBg,
-                       c.back_bg as backBg,
-                       c.tags as tags
-                FROM cards c
-                WHERE c.folder_id = %s
-                ORDER BY c.order_index
-                """,
-                (folder_id,),
-            )
-            cards = dictfetchall(c)
-
-        return JsonResponse(cards, safe=False)
-    except Exception as e:
-        logger.error(f"load_cards_public error: {e}")
-        return JsonResponse({"message": "Failed to load cards"}, status=500)
-
-
 @csrf_exempt
 @jwt_required
 @require_http_methods(["POST"])
 def delete_card(request):
-    import json as json_mod
+    
 
-    data = json_mod.loads(request.body)
+    data = json.loads(request.body)
     card_id = data.get("cardId")
     user_email = request.user_email
 
@@ -942,21 +864,6 @@ def delete_card(request):
     except Exception as e:
         logger.error(f"Delete card error: {e}")
         return JsonResponse({"error": "削除に失敗しました"}, status=500)
-
-
-# ==========================================
-# EDITOR ROUTE
-# ==========================================
-
-from django.shortcuts import render
-
-
-def editor(request, folder_id):
-    return render(request, "editor.html", {"folder_id": folder_id})
-
-
-def viewer(request, folder_id):
-    return render(request, "viewer.html", {"folder_id": folder_id})
 
 
 @xframe_options_exempt

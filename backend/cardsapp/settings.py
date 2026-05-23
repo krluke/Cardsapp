@@ -142,7 +142,3 @@ CORS_ALLOWED_ORIGINS = [
     "https://cardapp.qzz.io",
 ]
 CORS_ALLOW_CREDENTIALS = True
-
-GMAIL_USER = os.environ.get("GMAIL_USER") or ""
-GMAIL_PASS = os.environ.get("GMAIL_PASS") or ""
-ADMIN_API_KEY = os.environ.get("ADMIN_API_KEY") or ""

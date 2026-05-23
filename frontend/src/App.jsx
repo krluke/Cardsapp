@@ -11,7 +11,7 @@ import { GlobalSearchModal } from './components/GlobalSearchModal'
 import { AddToFolderModal } from './components/AddToFolderModal'
 import { useModal, Modal } from './components/Modal'
 import { apiFetch, API_BASE } from './lib/api'
-import './i18n'
+import './App.css'
 
 function t(key) {
   const lang = localStorage.getItem('app-lang') || 'ja'
@@ -605,9 +605,7 @@ try {
                const isOwner = activeTab === 'my-folders' || folder.username === user?.username;
                return (
                  <div key={folder.id} className="folder-tile" onClick={() => {
-                    const canEdit = user && activeTab === 'my-folders';
-                    console.log('click:', activeTab, user?.username, folder.username, canEdit);
-                    navigate(canEdit ? `/editor/${folder.id}` : `/viewer/${folder.id}`);
+            navigate(canEdit ? `/editor/${folder.id}` : `/viewer/${folder.id}`);
                  }}>
                    <div className="folder-actions" onClick={e => e.stopPropagation()}>
                      <button className="folder-settings-icon" onClick={() => navigate(`/study/${folder.id}`, { state: { canEdit: user && activeTab === 'my-folders' } })} title="Study">

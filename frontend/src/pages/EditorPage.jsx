@@ -138,8 +138,6 @@ function editorReducer(state, action) {
       return { ...state, textColor: action.payload };
     case 'SET_TEXT_BG_COLOR':
       return { ...state, textBoxBgColor: action.payload };
-    case 'SET_TEXT_HIGHLIGHT_COLOR':
-      return { ...state, textHighlightColor: action.payload };
     case 'UPDATE_ELEMENT': {
       const stateWithHistory = pushHistory(state);
       const { elementId, updates } = action.payload;
@@ -326,7 +324,6 @@ const initialState = {
   fontFamily: 'sans-serif',
   textColor: '#000000',
   textBoxBgColor: 'transparent',
-  textHighlightColor: 'transparent',
 };
 
 export default function EditorPage() {
@@ -584,7 +581,7 @@ const addText = (x = 30, y = 40) => {
       fontSize: state.fontSize,
       textColor: state.textColor,
       bgColor: state.textBoxBgColor,
-      highlightColor: state.textHighlightColor
+      highlightColor: 'transparent'
     }
   });
 };

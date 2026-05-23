@@ -7,10 +7,8 @@ urlpatterns = [
     # User
     path("user/stats", views.get_user_stats, name="user_stats"),
     # Folders
-    path("folders/list", views.list_folders, name="list_folders"),
     path("folders/create", views.create_folder, name="create_folder"),
     path("folders", views.get_folders, name="get_folders"),
-    path("folders/global", views.list_global_folders, name="global_folders"),
     path("folders/update", views.update_folder, name="update_folder"),
     path("folders/delete", views.delete_folder, name="delete_folder"),
     path("folders/toggle-action", views.toggle_action, name="toggle_action"),
@@ -25,13 +23,7 @@ urlpatterns = [
     # Cards
     path("cards/upload", views.upload_image, name="upload_image"),
     path("cards/save", views.save_cards, name="save_cards"),
-    # Public read-only load (public folders only)
-    path("cards/load/<int:folder_id>", views.load_cards_public, name="load_cards_public"),
-    # Authenticated load (private + public, with access checks)
     path("cards/load-auth/<int:folder_id>", views.load_cards_fixed, name="load_cards_auth"),
     path("cards/public", views.get_public_cards, name="get_public_cards"),
     path("cards/delete", views.delete_card, name="delete_card"),
-    # Editor/Viewer pages
-    path("editor/<int:folder_id>", views.editor, name="editor"),
-    path("viewer/<int:folder_id>", views.viewer, name="viewer"),
 ]

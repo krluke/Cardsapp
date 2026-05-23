@@ -1,6 +1,6 @@
-import { 
-  ArrowLeft, Save, Type, Image, Layout,
-  Copy, Undo, Redo, Upload
+import {
+  ArrowLeft, Save, Type, Layout,
+  Undo, Redo, Upload
 } from 'lucide-react';
 
 export function EditorToolbar({ 
