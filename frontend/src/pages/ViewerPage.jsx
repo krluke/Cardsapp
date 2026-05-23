@@ -8,7 +8,7 @@ export default function ViewerPage() {
   const { folderId } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
-  const backTab = location.state?.fromTab
+  const fromTab = location.state?.fromTab || 'global-folders'
   const [folder, setFolder] = useState(null)
   const [cards, setCards] = useState([])
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -62,7 +62,7 @@ export default function ViewerPage() {
     return (
       <div className="viewer-container">
         <header className="viewer-header">
-          <button className="back-btn" onClick={() => navigate('/home', { state: { tab: backTab || 'global-folders' } })}>
+          <button className="back-btn" onClick={() => navigate(`/home?tab=${fromTab}`)}>
             <ArrowLeft size={20} /> Back
           </button>
         </header>
@@ -78,7 +78,7 @@ export default function ViewerPage() {
   return (
     <div className="viewer-container">
       <header className="viewer-header">
-        <button className="back-btn" onClick={() => navigate('/home', { state: { tab: backTab || 'global-folders' } })}>
+        <button className="back-btn" onClick={() => navigate(`/home?tab=${fromTab}`)}>
           <ArrowLeft size={20} /> Back
         </button>
         <h1 className="viewer-title">{folder?.title || 'Viewer'}</h1>
