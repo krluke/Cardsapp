@@ -16,8 +16,6 @@ services:
       MARIADB_DATABASE: flashcards_db
       MARIADB_USER: flashcard_user
       MARIADB_PASSWORD: ${MARIADB_PASSWORD}
-    ports:
-      - "3306:3306"
     volumes:
       - ./db_data:/var/lib/mysql
     healthcheck:
@@ -58,7 +56,7 @@ services:
       - ADMIN_API_KEY=${ADMIN_API_KEY}
       - CLERK_SECRET_KEY=${CLERK_SECRET_KEY}
       - CLERK_ISSUER=${CLERK_ISSUER:-https://dear-boar-32.clerk.accounts.dev}
-      - DEBUG=${DEBUG:-True}
+      - DEBUG=${DEBUG:-False}
       - RUNNING_IN_DOCKER=1
     volumes:
       - ./backend:/app

@@ -7,28 +7,30 @@ sys.path.insert(0, os.path.dirname(BASE_DIR))
 
 SECRET_KEY = os.environ.get("SECRET_KEY")
 if not SECRET_KEY:
-    if os.environ.get("DEBUG") == "True" or os.environ.get("RUNNING_IN_DOCKER"):
+    _build_commands = {"collectstatic", "makemigrations", "migrate", "help", "--help"}
+    if _build_commands.intersection(sys.argv):
         SECRET_KEY = "django-insecure-dev-key-for-build-time-only"
+    elif os.environ.get("DEBUG") == "True":
+        SECRET_KEY = "django-insecure-dev-key-for-debug-only"
     else:
-        raise ValueError("SECRET_KEY environment variable must be set")
+        raise ValueError("SECRET_KEY environment variable must be set in production")
 
 DEBUG = os.environ.get("DEBUG", "False") == "True"
 
 JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY")
 if not JWT_SECRET_KEY:
-    if DEBUG or os.environ.get("RUNNING_IN_DOCKER") or "test" in sys.argv:
-        # Dev/test fallback to avoid hard-coded secrets in code.
+    if DEBUG or "test" in sys.argv:
         JWT_SECRET_KEY = SECRET_KEY
     else:
-        raise ValueError("JWT_SECRET_KEY environment variable must be set")
+        raise ValueError("JWT_SECRET_KEY environment variable must be set in production")
 
 
 ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "").split(",")
 if not ALLOWED_HOSTS or ALLOWED_HOSTS == [""]:
-    if DEBUG or os.environ.get("RUNNING_IN_DOCKER"):
-        ALLOWED_HOSTS = ["localhost", "127.0.0.1", "backend", "frontend", "cardapp.qzz.io", "192.168.1.160", "0.0.0.0", "testserver"]
+    if DEBUG:
+        ALLOWED_HOSTS = ["localhost", "127.0.0.1", "backend", "frontend", "testserver"]
     else:
-        raise ValueError("ALLOWED_HOSTS environment variable must be set")
+        raise ValueError("ALLOWED_HOSTS environment variable must be set in production")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -137,8 +139,11 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "http://localhost:3000",
     "https://cardapp.qzz.io",
 ]
+if DEBUG:
+    CORS_ALLOWED_ORIGINS += [
+        "http://localhost:5173",
+        "http://localhost:3000",
+    ]
 CORS_ALLOW_CREDENTIALS = True

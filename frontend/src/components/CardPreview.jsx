@@ -1,4 +1,5 @@
 import { useRef, useEffect, useState } from 'react';
+import { sanitizeHtmlForDisplay } from '@/lib/sanitize';
 
 export function CardPreview({ html }) {
   const containerRef = useRef(null);
@@ -27,7 +28,7 @@ export function CardPreview({ html }) {
       <div
         className="global-card-content"
         style={{ transform: `scale(${scale})` }}
-        dangerouslySetInnerHTML={{ __html: html || '<p>Empty</p>' }}
+          dangerouslySetInnerHTML={{ __html: sanitizeHtmlForDisplay(html) || '<p>Empty</p>' }}
       />
     </div>
   );

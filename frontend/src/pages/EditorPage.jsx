@@ -1,4 +1,4 @@
-import { useReducer, useEffect } from 'react';
+import { useReducer, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Trash2, ChevronLeft, ChevronRight, Copy } from 'lucide-react';
 import './Editor.css';
@@ -343,6 +343,7 @@ export default function EditorPage() {
   const { folderId } = useParams();
   const navigate = useNavigate();
   const [state, dispatch] = useReducer(editorReducer, initialState);
+  const saveCardsRef = useRef(null);
 
   const session = JSON.parse(localStorage.getItem('session') || '{}');
   const user = session.user;
@@ -356,7 +357,7 @@ export default function EditorPage() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      saveCards();
+      if (saveCardsRef.current) saveCardsRef.current();
     }, 3000);
     return () => clearTimeout(timer);
   }, [state.cards]);
@@ -385,7 +386,7 @@ export default function EditorPage() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [state.selectedElement]);
+  }, [state.selectedElement, saveCards]);
 
   const loadData = async () => {
     try {
@@ -582,8 +583,9 @@ const serializeElements = (elements) => {
       const bgStyle = bg ? `background-color:${bg};` : '';
       return `<div class="draggable-text" style="position:absolute;left:${el.left}%;top:${el.top}%;width:${el.width}%;height:${h};font-size:${el.fontSize}px;font-family:"${ff}";font-weight:${fw};font-style:${fs};text-decoration:${td};text-align:${ta};${colorStyle}${bgStyle}transform:rotate(${r}deg)">${sanitizedContent}</div>`;
     }
-      if (el.type === 'image') {
-        return `<div class="draggable-image" style="position:absolute;left:${el.left}%;top:${el.top}%;width:${el.width}%;height:${el.height}%;"><img src="${el.src}" style="width:100%;height:100%;object-fit:contain;" /></div>`;
+    if (el.type === 'image') {
+      const safeSrc = el.src.replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      return `<div class="draggable-image" style="position:absolute;left:${el.left}%;top:${el.top}%;width:${el.width}%;height:${el.height}%;"><img src="${safeSrc}" style="width:100%;height:100%;object-fit:contain;" /></div>`;
       }
       return '';
     }).join('');
@@ -706,7 +708,7 @@ body: formData,
     dispatch({ type: 'UPDATE_BG_COLOR', payload: { color } });
   };
 
-  const saveCards = async () => {
+  const saveCards = useCallback(async () => {
     dispatch({ type: 'SET_SAVING', payload: true });
     try {
       const serializedCards = state.cards.map(card => ({
@@ -715,17 +717,19 @@ body: formData,
         frontBg: card.frontBg,
         backBg: card.backBg,
         tags: card.tags || ''
-}));
-const res = await apiFetch('/cards/save', {
+      }));
+      await apiFetch('/cards/save', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ folderId: parseInt(folderId), cards: serializedCards }), // userEmail is extracted from JWT token in backend
-    });
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ folderId: parseInt(folderId), cards: serializedCards }),
+      });
     } catch (e) { console.error('Save error:', e); }
     finally { dispatch({ type: 'SET_SAVING', payload: false }); }
-  };
+  }, [state.cards, folderId]);
+
+  useEffect(() => {
+    saveCardsRef.current = saveCards;
+  });
 
   const goToHome = () => { navigate('/home'); };
 

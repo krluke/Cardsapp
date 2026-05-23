@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, CheckCircle, XCircle, HelpCircle, RotateCcw, Volume2, Shuffle } from 'lucide-react';
 import { apiFetch, API_BASE } from '@/lib/api';
+import { sanitizeHtmlForDisplay } from '@/lib/sanitize';
 import './Study.css';
 
 function getNextReviewText(quality, currentInterval) {
@@ -81,7 +82,7 @@ export default function StudyPage() {
   useEffect(() => {
     if (!user) { navigate('/home'); return; }
     loadCards(studyMode, shuffled);
-  }, [folderId, studyMode, shuffled]);
+  }, [folderId, studyMode, shuffled, loadCards]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -219,12 +220,12 @@ if (cards.length === 0) return (
       <div className={`study-card ${isFlipped ? 'flipped' : ''}`} onClick={() => setIsFlipped(!isFlipped)}>
         <div className="study-card-inner">
           <div className="study-card-front" style={{ backgroundColor: currentCard.front_bg || 'var(--bg-surface)' }}>
-            <div className="study-content" dangerouslySetInnerHTML={{ __html: currentCard.front_content }} />
-            <button className="speak-btn" onClick={(e) => speak(e, currentCard.front_content)}><Volume2 size={20} /></button>
-            <div className="flip-hint">Click or press Space to flip</div>
-          </div>
-          <div className="study-card-back" style={{ backgroundColor: currentCard.back_bg || 'var(--bg-surface)' }}>
-            <div className="study-content" dangerouslySetInnerHTML={{ __html: currentCard.back_content }} />
+          <div className="study-content" dangerouslySetInnerHTML={{ __html: sanitizeHtmlForDisplay(currentCard.front_content) }} />
+          <button className="speak-btn" onClick={(e) => speak(e, currentCard.front_content)}><Volume2 size={20} /></button>
+          <div className="flip-hint">Click or press Space to flip</div>
+        </div>
+        <div className="study-card-back" style={{ backgroundColor: currentCard.back_bg || 'var(--bg-surface)' }}>
+          <div className="study-content" dangerouslySetInnerHTML={{ __html: sanitizeHtmlForDisplay(currentCard.back_content) }} />
             <button className="speak-btn" onClick={(e) => speak(e, currentCard.back_content)}><Volume2 size={20} /></button>
           </div>
         </div>

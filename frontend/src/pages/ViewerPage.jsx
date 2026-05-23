@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react'
 import { apiFetch } from '@/lib/api'
+import { sanitizeHtmlForDisplay } from '@/lib/sanitize'
 import './Viewer.css'
 
 export default function ViewerPage() {
@@ -89,11 +90,11 @@ export default function ViewerPage() {
         <div className="flashcard-container" onClick={() => setFlipped(!flipped)}>
           <div className={`flashcard ${flipped ? 'flipped' : ''}`}>
         <div className="flashcard-front" style={{ backgroundColor: currentCard.frontBg || 'var(--bg-surface)' }}>
-          <div className="flashcard-content" dangerouslySetInnerHTML={{ __html: currentCard.front || '<p>Empty</p>' }} />
-          <div className="flip-hint">Click to flip</div>
-        </div>
-        <div className="flashcard-back" style={{ backgroundColor: currentCard.backBg || 'var(--bg-surface)' }}>
-              <div className="flashcard-content" dangerouslySetInnerHTML={{ __html: currentCard.back || '<p>Empty</p>' }} />
+        <div className="flashcard-content" dangerouslySetInnerHTML={{ __html: sanitizeHtmlForDisplay(currentCard.front) || '<p>Empty</p>' }} />
+        <div className="flip-hint">Click to flip</div>
+      </div>
+      <div className="flashcard-back" style={{ backgroundColor: currentCard.backBg || 'var(--bg-surface)' }}>
+        <div className="flashcard-content" dangerouslySetInnerHTML={{ __html: sanitizeHtmlForDisplay(currentCard.back) || '<p>Empty</p>' }} />
               <div className="flip-hint">Click to flip</div>
             </div>
           </div>
