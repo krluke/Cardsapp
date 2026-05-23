@@ -113,6 +113,48 @@ const CLERK_THEMES = {
     dangerColor: '#B85C5C', dangerHover: '#A04848',
     shadowMd: '0 8px 24px rgba(62,56,48,0.1)',
   },
+  eclipse: {
+    bgCanvas: '#2A1520', bgSurface: '#3D2232', bgSurfaceHover: '#4D2E40',
+    textMain: '#F0D5DA', textMuted: '#B08890', borderColor: '#5A3348',
+    accentColor: '#D4727A', accentHover: '#B85C64', accentLight: 'rgba(212,114,122,0.15)',
+    dangerColor: '#E05252', dangerHover: '#C93E3E',
+    shadowMd: '0 8px 24px rgba(0,0,0,0.35)',
+  },
+  midnight: {
+    bgCanvas: '#0D1A12', bgSurface: '#162B1E', bgSurfaceHover: '#1E3A28',
+    textMain: '#C5D8C0', textMuted: '#7FA878', borderColor: '#2E4A38',
+    accentColor: '#40916C', accentHover: '#2D6A4F', accentLight: 'rgba(64,145,108,0.15)',
+    dangerColor: '#E05252', dangerHover: '#C93E3E',
+    shadowMd: '0 8px 24px rgba(0,0,0,0.35)',
+  },
+  shadow: {
+    bgCanvas: '#1A1208', bgSurface: '#2C2010', bgSurfaceHover: '#3A2C18',
+    textMain: '#E8D5BC', textMuted: '#A89070', borderColor: '#4A3A28',
+    accentColor: '#D97706', accentHover: '#B45309', accentLight: 'rgba(217,119,6,0.15)',
+    dangerColor: '#E05252', dangerHover: '#C93E3E',
+    shadowMd: '0 8px 24px rgba(0,0,0,0.35)',
+  },
+  polar: {
+    bgCanvas: '#181D28', bgSurface: '#222A3A', bgSurfaceHover: '#2A3448',
+    textMain: '#C8D0E0', textMuted: '#8898B0', borderColor: '#3A4458',
+    accentColor: '#81A1C1', accentHover: '#5E81AC', accentLight: 'rgba(129,161,193,0.15)',
+    dangerColor: '#E05252', dangerHover: '#C93E3E',
+    shadowMd: '0 8px 24px rgba(0,0,0,0.35)',
+  },
+  amethyst: {
+    bgCanvas: '#1A1228', bgSurface: '#261E3A', bgSurfaceHover: '#302848',
+    textMain: '#D8CCF0', textMuted: '#9888C0', borderColor: '#3E3458',
+    accentColor: '#A78BFA', accentHover: '#7C3AED', accentLight: 'rgba(167,139,250,0.15)',
+    dangerColor: '#E05252', dangerHover: '#C93E3E',
+    shadowMd: '0 8px 24px rgba(0,0,0,0.35)',
+  },
+  moss: {
+    bgCanvas: '#161610', bgSurface: '#222218', bgSurfaceHover: '#2C2C22',
+    textMain: '#D0D0B8', textMuted: '#908870', borderColor: '#3A3A2E',
+    accentColor: '#8FA87C', accentHover: '#7C8B6A', accentLight: 'rgba(143,168,124,0.15)',
+    dangerColor: '#E05252', dangerHover: '#C93E3E',
+    shadowMd: '0 8px 24px rgba(0,0,0,0.35)',
+  },
 }
 
 const FONT_FAMILY = '"Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif'
@@ -286,6 +328,12 @@ function t(key) {
     theme_ocean: "オーシャン",
     theme_cyberpunk: "サイバーパンク",
     theme_wabi_sabi: "侘寂",
+    theme_eclipse: "エクリプス",
+    theme_midnight: "ミッドナイト",
+    theme_shadow: "シャドウ",
+    theme_polar: "ポーラー",
+    theme_amethyst: "アメジスト",
+    theme_moss: "モス",
       menu_login: "ログイン/登録",
       menu_account_info: "アカウント情報",
       menu_logout: "ログアウト",
@@ -357,6 +405,12 @@ function t(key) {
     theme_ocean: "Ocean",
     theme_cyberpunk: "Cyberpunk",
     theme_wabi_sabi: "Wabi-Sabi",
+    theme_eclipse: "Eclipse",
+    theme_midnight: "Midnight",
+    theme_shadow: "Shadow",
+    theme_polar: "Polar",
+    theme_amethyst: "Amethyst",
+    theme_moss: "Moss",
       menu_login: "Login / Register",
       menu_account_info: "Account Info",
       menu_logout: "Logout",
@@ -864,6 +918,30 @@ try {
             <button className={`theme-option ${theme === 'wabi-sabi' ? 'active' : ''}`} onClick={() => selectTheme('wabi-sabi')}>
               <span className="theme-dots"><span style={{background:'#E8E2D8'}}></span><span style={{background:'#A8966A'}}></span><span style={{background:'#D5CEBF'}}></span></span>
               <span>{t('theme_wabi_sabi')}</span>
+            </button>
+            <button className={`theme-option ${theme === 'eclipse' ? 'active' : ''}`} onClick={() => selectTheme('eclipse')}>
+              <span className="theme-dots"><span style={{background:'#2A1520'}}></span><span style={{background:'#D4727A'}}></span><span style={{background:'#3D2232'}}></span></span>
+              <span>{t('theme_eclipse')}</span>
+            </button>
+            <button className={`theme-option ${theme === 'midnight' ? 'active' : ''}`} onClick={() => selectTheme('midnight')}>
+              <span className="theme-dots"><span style={{background:'#0D1A12'}}></span><span style={{background:'#40916C'}}></span><span style={{background:'#162B1E'}}></span></span>
+              <span>{t('theme_midnight')}</span>
+            </button>
+            <button className={`theme-option ${theme === 'shadow' ? 'active' : ''}`} onClick={() => selectTheme('shadow')}>
+              <span className="theme-dots"><span style={{background:'#1A1208'}}></span><span style={{background:'#D97706'}}></span><span style={{background:'#2C2010'}}></span></span>
+              <span>{t('theme_shadow')}</span>
+            </button>
+            <button className={`theme-option ${theme === 'polar' ? 'active' : ''}`} onClick={() => selectTheme('polar')}>
+              <span className="theme-dots"><span style={{background:'#181D28'}}></span><span style={{background:'#81A1C1'}}></span><span style={{background:'#222A3A'}}></span></span>
+              <span>{t('theme_polar')}</span>
+            </button>
+            <button className={`theme-option ${theme === 'amethyst' ? 'active' : ''}`} onClick={() => selectTheme('amethyst')}>
+              <span className="theme-dots"><span style={{background:'#1A1228'}}></span><span style={{background:'#A78BFA'}}></span><span style={{background:'#261E3A'}}></span></span>
+              <span>{t('theme_amethyst')}</span>
+            </button>
+            <button className={`theme-option ${theme === 'moss' ? 'active' : ''}`} onClick={() => selectTheme('moss')}>
+              <span className="theme-dots"><span style={{background:'#161610'}}></span><span style={{background:'#8FA87C'}}></span><span style={{background:'#222218'}}></span></span>
+              <span>{t('theme_moss')}</span>
             </button>
               </div>
             )}
