@@ -950,6 +950,7 @@ try {
                const isOwner = activeTab === 'my-folders' || folder.username === user?.username;
                return (
                  <div key={folder.id} className="folder-tile" onClick={() => {
+            const canEdit = user && activeTab === 'my-folders';
             navigate(canEdit ? `/editor/${folder.id}` : `/viewer/${folder.id}`);
                  }}>
                    <div className="folder-actions" onClick={e => e.stopPropagation()}>
