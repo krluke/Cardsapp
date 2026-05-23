@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
-import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation, Link } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { X, FolderPlus, Palette, Globe, User, LogOut, LogIn, Settings, Trash2, Search, ChevronLeft, ChevronRight, BookOpen, Plus } from 'lucide-react'
 import { ClerkProvider, useAuth, useClerk } from '@clerk/clerk-react'
 
@@ -519,20 +519,23 @@ function ClerkHomePage() {
 
 function HomePage({ clerkAvailable, isSignedIn: isSignedInProp, getToken: getTokenProp, clerk: clerkProp }) {
   const navigate = useNavigate()
-  const location = useLocation()
+  const [searchParams] = useSearchParams()
   const [user, setUser] = useState(() => {
     const session = JSON.parse(localStorage.getItem('session') || '{}')
     return session.user || null
   })
-  const [activeTab, setActiveTab] = useState('my-folders')
+  const [activeTab, setActiveTab] = useState(() => {
+    const tab = searchParams.get('tab')
+    return tab === 'global-folders' || tab === 'global-cards' ? tab : 'my-folders'
+  })
 
   useEffect(() => {
-    if (location.state?.tab) {
-      setActiveTab(location.state.tab)
+    const tab = searchParams.get('tab')
+    if (tab === 'global-folders' || tab === 'global-cards') {
+      setActiveTab(tab)
       setPage(1)
-      window.history.replaceState({}, '')
     }
-  }, [location.state])
+  }, [searchParams])
 
   const [folders, setFolders] = useState([])
   const [globalCards, setGlobalCards] = useState([])
