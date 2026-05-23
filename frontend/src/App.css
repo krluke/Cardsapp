@@ -75,6 +75,7 @@
 .global-card-content [class*="draggable"] {
   position: absolute !important;
   overflow: hidden;
+  color: var(--text-main);
 }
 
 .global-card-content img {

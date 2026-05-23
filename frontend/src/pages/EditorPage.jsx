@@ -575,10 +575,12 @@ const serializeElements = (elements) => {
       const fs = el.fontStyle || 'normal';
       const td = el.textDecoration || 'none';
       const ta = el.textAlign || 'left';
-      const c = el.color || '#000000';
-      const bg = el.backgroundColor || 'transparent';
+      const c = el.color && el.color !== '#000000' ? el.color : '';
+      const bg = el.backgroundColor && el.backgroundColor !== 'transparent' ? el.backgroundColor : '';
       const r = el.rotation || 0;
-      return `<div class="draggable-text" style="position:absolute;left:${el.left}%;top:${el.top}%;width:${el.width}%;height:${h};font-size:${el.fontSize}px;font-family:"${ff}";font-weight:${fw};font-style:${fs};text-decoration:${td};text-align:${ta};color:${c};background-color:${bg};transform:rotate(${r}deg)">${sanitizedContent}</div>`;
+      const colorStyle = c ? `color:${c};` : '';
+      const bgStyle = bg ? `background-color:${bg};` : '';
+      return `<div class="draggable-text" style="position:absolute;left:${el.left}%;top:${el.top}%;width:${el.width}%;height:${h};font-size:${el.fontSize}px;font-family:"${ff}";font-weight:${fw};font-style:${fs};text-decoration:${td};text-align:${ta};${colorStyle}${bgStyle}transform:rotate(${r}deg)">${sanitizedContent}</div>`;
     }
       if (el.type === 'image') {
         return `<div class="draggable-image" style="position:absolute;left:${el.left}%;top:${el.top}%;width:${el.width}%;height:${el.height}%;"><img src="${el.src}" style="width:100%;height:100%;object-fit:contain;" /></div>`;
