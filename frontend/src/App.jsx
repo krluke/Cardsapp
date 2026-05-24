@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useSearchParams, Link } from 'react-router-dom'
-import { X, FolderPlus, Palette, Globe, User, LogOut, LogIn, Settings, Trash2, Search, ChevronLeft, ChevronRight, BookOpen, Plus } from 'lucide-react'
+import { X, FolderPlus, Palette, Globe, User, LogOut, LogIn, Settings, Trash2, Search, ChevronLeft, ChevronRight, BookOpen, Plus, Bookmark } from 'lucide-react'
 import { ClerkProvider, useAuth, useClerk } from '@clerk/clerk-react'
 
 import AccountPage from './pages/AccountPage'
@@ -589,6 +589,31 @@ function HomePage({ clerkAvailable, isSignedIn: isSignedInProp, getToken: getTok
     } catch (e) { console.error(e) }
   }, [activeTab, page, searchInput, user, userLoading])
 
+  const toggleFavorite = async (folderId) => {
+    if (!user) return
+    setFolders(prev => {
+      const updated = prev.map(f =>
+        f.id === folderId ? { ...f, is_favorite: !f.is_favorite } : f
+      )
+      return updated.sort((a, b) => (b.is_favorite ? 1 : 0) - (a.is_favorite ? 1 : 0) || b.id - a.id)
+    })
+    try {
+      await apiFetch('/folders/toggle-action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ folderId, action: 'favorite' }),
+      })
+    } catch (e) {
+      console.error(e)
+      setFolders(prev => {
+        const reverted = prev.map(f =>
+          f.id === folderId ? { ...f, is_favorite: !f.is_favorite } : f
+        )
+        return reverted.sort((a, b) => (b.is_favorite ? 1 : 0) - (a.is_favorite ? 1 : 0) || b.id - a.id)
+      })
+    }
+  }
+
   const loadGlobalCards = useCallback(async () => {
     if (sessionExpiredRef.current) return
     const params = new URLSearchParams({
@@ -1043,12 +1068,21 @@ try {
   const canEdit = user && activeTab === 'my-folders';
   navigate(canEdit ? `/editor/${folder.id}` : `/viewer/${folder.id}`, { state: { fromTab: activeTab } });
 }}>
-  <div className="folder-actions" onClick={e => e.stopPropagation()}>
-  {(folder.card_count || folder.cardCount) > 0 && (
-  <button className="folder-settings-icon" onClick={() => navigate(`/study/${folder.id}`, { state: { canEdit: user && activeTab === 'my-folders', fromTab: activeTab } })} title="Study">
-  <BookOpen size={16} />
-  </button>
-  )}
+                        <div className="folder-actions" onClick={e => e.stopPropagation()}>
+                          {activeTab === 'global-folders' && user && (
+                            <button
+                              className={`folder-settings-icon folder-bookmark-btn ${folder.is_favorite ? 'is-favorited' : ''}`}
+                              onClick={(e) => { e.stopPropagation(); toggleFavorite(folder.id) }}
+                              title={folder.is_favorite ? 'Remove bookmark' : 'Bookmark'}
+                            >
+                              {folder.is_favorite ? <Bookmark size={16} fill="currentColor" /> : <Bookmark size={16} />}
+                            </button>
+                          )}
+                          {(folder.card_count || folder.cardCount) > 0 && (
+                            <button className="folder-settings-icon" onClick={() => navigate(`/study/${folder.id}`, { state: { canEdit: user && activeTab === 'my-folders', fromTab: activeTab } })} title="Study">
+                              <BookOpen size={16} />
+                            </button>
+                          )}
                      {isOwner && (
                        <button className="folder-settings-icon" onClick={(e) => { e.stopPropagation(); openFolderSettings(folder) }}>
                          <Settings size={16} />

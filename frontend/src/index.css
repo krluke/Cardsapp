@@ -540,6 +540,15 @@
   color: var(--accent-color);
 }
 
+.folder-bookmark-btn.is-favorited {
+  color: var(--accent-color);
+}
+
+.folder-bookmark-btn:hover {
+  background: var(--accent-light);
+  color: var(--accent-color);
+}
+
 .tile-action-btn.delete-icon:hover {
   background: rgba(224, 82, 82, 0.1);
   color: var(--danger-color);
