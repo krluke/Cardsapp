@@ -998,10 +998,10 @@ try {
             )}
           </div>
 
-          <div className="account-menu">
-            <button className="icon-btn shadow-btn" onClick={() => { setAuthMenuOpen(!authMenuOpen); setThemeMenuOpen(false); setLangMenuOpen(false) }}>
-              <User size={20} />
-            </button>
+        <div className="account-menu">
+<button className="icon-btn shadow-btn" onClick={() => { setAuthMenuOpen(!authMenuOpen); setThemeMenuOpen(false); setLangMenuOpen(false) }}>
+            {clerk?.user?.hasImage ? <img src={clerk.user.imageUrl} alt="Profile" className="profile-avatar" /> : <User size={20} />}
+          </button>
             {authMenuOpen && (
               <div className="dropdown">
                 {!user ? (
