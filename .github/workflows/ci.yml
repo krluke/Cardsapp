@@ -1,4 +1,4 @@
-name: Python CI/CD
+name: CI/CD
 
 on:
   push:
@@ -10,7 +10,7 @@ permissions:
   contents: write
 
 jobs:
-  build-and-test:
+  backend-lint-test:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -18,20 +18,17 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.10"
-          cache: 'pip'
+          cache: pip
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install flake8 pytest
+          pip install -r requirements.txt -r requirements-dev.txt
 
       - name: Lint with Flake8
         run: |
@@ -41,9 +38,34 @@ jobs:
         run: |
           pytest || echo "No tests found, skipping"
 
+  frontend-lint-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
   deploy:
-    needs: build-and-test
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' || (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true)
+    needs: [backend-lint-test, frontend-lint-build]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: self-hosted
     steps:
       - name: Update local code
@@ -56,14 +78,23 @@ jobs:
         run: |
           docker network inspect cardsapp-net >/dev/null 2>&1 || docker network create cardsapp-net
 
-      - name: Restart Docker Containers
+      - name: Build and deploy app containers
         run: |
           cd ~/server-project
-          docker-compose down --remove-orphans
-          docker buildx prune -f
-          docker-compose up -d --build --force-recreate
-          sleep 10
-          docker-compose ps
+          docker-compose build backend frontend
+          docker-compose up -d --no-deps --force-recreate backend frontend
+          docker-compose up -d --no-deps frontend
+
+      - name: Wait for backend health
+        run: |
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:5000/api/ > /dev/null 2>&1; then
+              echo "Backend is healthy"
+              break
+            fi
+            echo "Waiting for backend... ($i/30)"
+            sleep 2
+          done
 
       - name: Restart Cloudflare Tunnel
         run: |
@@ -76,12 +107,7 @@ jobs:
             cloudflare/cloudflared:latest \
             tunnel --no-autoupdate run
 
-      - name: Verify Backend Health
+      - name: Verify all services
         run: |
           cd ~/server-project
           docker-compose ps
-
-      - name: Collect Static Files
-        run: |
-          cd ~/server-project
-          docker-compose exec -T backend python manage.py collectstatic --noinput || true
