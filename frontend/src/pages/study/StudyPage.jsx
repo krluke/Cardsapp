@@ -135,35 +135,47 @@ export default function StudyPage() {
 
   const speak = (e, content) => {
     e.stopPropagation();
-    const text = content.replace(/[<>]/g, '').trim();
+    const tempEl = document.createElement('div');
+    tempEl.innerHTML = content;
+    const text = (tempEl.textContent || tempEl.innerText || '').trim();
     if (!text) return;
-    
+
+    window.speechSynthesis?.cancel();
+
     const utterance = new SpeechSynthesisUtterance(text);
-    
-    // Detect language patterns (Japanese, Chinese, Korean, etc.)
-    const hasJapanese = /[\u3040-\u309f\u30a0-\u30ff\u4e00-\u9faf]/.test(text);
-    const hasChinese = /[\u4e00-\u9fff]/.test(text);
+
+    const hasHiraganaKatakana = /[\u3040-\u309f\u30a0-\u30ff]/.test(text);
+    const hasCJK = /[\u4e00-\u9fff]/.test(text);
     const hasKorean = /[\uac00-\ud7af\u1100-\u11ff]/.test(text);
-    
+
     let lang = 'en-US';
-    if (hasJapanese) lang = 'ja-JP';
-    else if (hasChinese) lang = 'zh-CN';
+    if (hasHiraganaKatakana) lang = 'ja-JP';
+    else if (hasCJK) lang = 'zh-CN';
     else if (hasKorean) lang = 'ko-KR';
     else if (/[àâäéèêëïîôùûüÿœæç]/.test(text)) lang = 'fr-FR';
     else if (/[äöüß]/.test(text)) lang = 'de-DE';
     else if (/[áéíóúñ¿¡]/.test(text)) lang = 'es-ES';
     else if (/[а-яё]/.test(text)) lang = 'ru-RU';
-    
+
     utterance.lang = lang;
     utterance.rate = 0.9;
     utterance.pitch = 1;
-    
-    // Try to get a better voice for the language
+
+    const setVoiceAndSpeak = (voiceList) => {
+      const bestVoice = voiceList.find(v => v.lang.startsWith(lang.split('-')[0])) || voiceList[0];
+      if (bestVoice) utterance.voice = bestVoice;
+      window.speechSynthesis.speak(utterance);
+    };
+
     const voices = window.speechSynthesis?.getVoices() || [];
-    const bestVoice = voices.find(v => v.lang.startsWith(lang.split('-')[0])) || voices[0];
-    if (bestVoice) utterance.voice = bestVoice;
-    
-    window.speechSynthesis.speak(utterance);
+    if (voices.length > 0) {
+      setVoiceAndSpeak(voices);
+    } else {
+      window.speechSynthesis?.addEventListener('voiceschanged', () => {
+        const updatedVoices = window.speechSynthesis?.getVoices() || [];
+        setVoiceAndSpeak(updatedVoices);
+      }, { once: true });
+    }
   };
 
   if (loading) return <div className="study-container">Loading...</div>;
