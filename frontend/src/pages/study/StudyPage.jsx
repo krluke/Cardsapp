@@ -20,13 +20,12 @@ export default function StudyPage() {
   const [isFlipped, setIsFlipped] = useState(false);
   const [loading, setLoading] = useState(true);
   const [finished, setFinished] = useState(false);
-  const [studyMode, setStudyMode] = useState('due'); // 'due' or 'all'
   const [shuffled, setShuffled] = useState(false);
   const [stats, setStats] = useState({ again: 0, hard: 0, good: 0, easy: 0, total: 0 });
 
   const session = JSON.parse(localStorage.getItem('session') || '{}');
   const user = session.user;
-
+  const [studyMode, setStudyMode] = useState(user ? 'due' : 'all');
   const loadCards = useCallback(async (mode, shuffle = false) => {
     try {
       const endpoint = mode === 'all'
@@ -79,7 +78,6 @@ export default function StudyPage() {
   }, []);
 
   useEffect(() => {
-    if (!user) { navigate('/home'); return; }
     loadCards(studyMode, shuffled);
   }, [folderId, studyMode, shuffled]);
 
@@ -113,7 +111,7 @@ export default function StudyPage() {
     const card = cards[currentIndex];
     setStats(s => ({ ...s, [quality === 0 ? 'again' : quality === 2 ? 'hard' : quality === 3 ? 'good' : 'easy']: s[quality === 0 ? 'again' : quality === 2 ? 'hard' : quality === 3 ? 'good' : 'easy'] + 1, total: s.total + 1 }));
     
-    if (studyMode === 'due') {
+    if (studyMode === 'due' && user) {
       try {
       await apiFetch('/study/update', {
         method: 'POST',
@@ -217,7 +215,7 @@ if (cards.length === 0) return (
       <header className="study-header">
         <button className="toolbar-btn" onClick={() => navigate(`/home?tab=${fromTab}`)}><ArrowLeft size={18} /> Back</button>
         <div className="study-mode-toggle">
-          <button className={`mode-btn ${studyMode === 'due' ? 'active' : ''}`} onClick={() => setStudyMode('due')}>Due</button>
+          {user && <button className={`mode-btn ${studyMode === 'due' ? 'active' : ''}`} onClick={() => setStudyMode('due')}>Due</button>}
           <button className={`mode-btn ${studyMode === 'all' ? 'active' : ''}`} onClick={() => setStudyMode('all')}>All</button>
           <button className={`mode-btn ${shuffled ? 'active' : ''}`} onClick={() => setShuffled(!shuffled)} title="Shuffle"><Shuffle size={16} /></button>
         </div>
