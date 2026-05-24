@@ -228,41 +228,43 @@ if (cards.length === 0) return (
         <div className="progress-bar" style={{ width: `${progress}%` }} />
       </div>
 
-      <div className={`study-card ${isFlipped ? 'flipped' : ''}`} onClick={() => setIsFlipped(!isFlipped)}>
-        <div className="study-card-inner">
-          <div className="study-card-front" style={{ backgroundColor: currentCard.front_bg || 'var(--bg-surface)' }}>
-            <div className="study-content" dangerouslySetInnerHTML={{ __html: currentCard.front_content }} />
-            <button className="speak-btn" onClick={(e) => speak(e, currentCard.front_content)}><Volume2 size={20} /></button>
-            <div className="flip-hint">Click or press Space to flip</div>
-          </div>
-          <div className="study-card-back" style={{ backgroundColor: currentCard.back_bg || 'var(--bg-surface)' }}>
-            <div className="study-content" dangerouslySetInnerHTML={{ __html: currentCard.back_content }} />
-            <button className="speak-btn" onClick={(e) => speak(e, currentCard.back_content)}><Volume2 size={20} /></button>
+      <div className="study-area">
+        <div className={`study-card ${isFlipped ? 'flipped' : ''}`} onClick={() => setIsFlipped(!isFlipped)}>
+          <div className="study-card-inner">
+            <div className="study-card-front" style={{ backgroundColor: currentCard.front_bg || 'var(--bg-surface)' }}>
+              <div className="study-content" dangerouslySetInnerHTML={{ __html: currentCard.front_content }} />
+              <button className="speak-btn" onClick={(e) => speak(e, currentCard.front_content)}><Volume2 size={20} /></button>
+              <div className="flip-hint">Click or press Space to flip</div>
+            </div>
+            <div className="study-card-back" style={{ backgroundColor: currentCard.back_bg || 'var(--bg-surface)' }}>
+              <div className="study-content" dangerouslySetInnerHTML={{ __html: currentCard.back_content }} />
+              <button className="speak-btn" onClick={(e) => speak(e, currentCard.back_content)}><Volume2 size={20} /></button>
+            </div>
           </div>
         </div>
-      </div>
 
-      {isFlipped && (
-        <div className="study-controls">
-          <div className="rate-hint">Press 1-4 or click:</div>
-          <button className="rate-btn again" onClick={() => handleRate(0)}>
-            <span className="rate-key">1</span><XCircle size={20} /> Again
-            <span className="next-review">{getNextReviewText(0, 0)}</span>
-          </button>
-          <button className="rate-btn hard" onClick={() => handleRate(2)}>
-            <span className="rate-key">2</span><HelpCircle size={20} /> Hard
-            <span className="next-review">{getNextReviewText(2, 0)}</span>
-          </button>
-          <button className="rate-btn good" onClick={() => handleRate(3)}>
-            <span className="rate-key">3</span><RotateCcw size={20} /> Good
-            <span className="next-review">{getNextReviewText(3, currentCard.srs_interval || 0)}</span>
-          </button>
-          <button className="rate-btn easy" onClick={() => handleRate(5)}>
-            <span className="rate-key">4</span><CheckCircle size={20} /> Easy
-            <span className="next-review">{getNextReviewText(5, currentCard.srs_interval || 0)}</span>
-          </button>
-        </div>
-      )}
+        {isFlipped && (
+          <div className="study-controls">
+            <div className="rate-hint">Press 1-4 or click:</div>
+            <button className="rate-btn again" onClick={() => handleRate(0)}>
+              <span className="rate-key">1</span><XCircle size={20} /> Again
+              <span className="next-review">{getNextReviewText(0, 0)}</span>
+            </button>
+            <button className="rate-btn hard" onClick={() => handleRate(2)}>
+              <span className="rate-key">2</span><HelpCircle size={20} /> Hard
+              <span className="next-review">{getNextReviewText(2, 0)}</span>
+            </button>
+            <button className="rate-btn good" onClick={() => handleRate(3)}>
+              <span className="rate-key">3</span><RotateCcw size={20} /> Good
+              <span className="next-review">{getNextReviewText(3, currentCard.srs_interval || 0)}</span>
+            </button>
+            <button className="rate-btn easy" onClick={() => handleRate(5)}>
+              <span className="rate-key">4</span><CheckCircle size={20} /> Easy
+              <span className="next-review">{getNextReviewText(5, currentCard.srs_interval || 0)}</span>
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
