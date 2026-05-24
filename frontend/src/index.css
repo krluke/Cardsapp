@@ -413,6 +413,13 @@
   color: var(--accent-color);
 }
 
+.profile-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
 .secondary-btn {
   background: var(--bg-surface);
   border: 1px solid var(--border-color);
