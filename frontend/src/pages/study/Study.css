@@ -158,12 +158,21 @@
   opacity: 0.6;
 }
 
+.study-area {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 24px;
+  max-width: 900px;
+  width: 100%;
+}
+
 .study-controls {
-  margin-top: 30px;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  animation: fadeInUp 0.3s ease-out;
+  min-width: 180px;
+  animation: fadeInRight 0.3s ease-out;
 }
 
 .rate-hint {
@@ -219,6 +228,11 @@
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInRight {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
 .toolbar-btn {
@@ -308,19 +322,24 @@
 }
 
 @media (max-width: 600px) {
+  .study-area {
+    flex-direction: column;
+  }
+
   .study-card {
     max-width: 100%;
   }
-  
+
   .study-controls {
     width: 100%;
     max-width: 600px;
+    animation: fadeInUp 0.3s ease-out;
   }
-  
+
   .rate-btn {
     justify-content: center;
   }
-  
+
   .session-stats {
     grid-template-columns: repeat(2, 1fr);
   }
