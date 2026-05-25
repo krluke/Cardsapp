@@ -5,12 +5,7 @@ import { apiFetch } from '@/lib/api'
 export function AddToFolderModal({ card, onClose, onSuccess }) {
   const [folders, setFolders] = useState([])
   const [loading, setLoading] = useState(true)
-  const [lang, setLang] = useState('ja')
-
-  useEffect(() => {
-    setLang(localStorage.getItem('app-lang') || 'ja')
-    loadPrivateFolders()
-  }, [])
+  const [lang] = useState(() => localStorage.getItem('app-lang') || 'ja')
 
   const loadPrivateFolders = async () => {
     try {
@@ -25,6 +20,10 @@ export function AddToFolderModal({ card, onClose, onSuccess }) {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    requestAnimationFrame(() => loadPrivateFolders())
+  }, [])
 
   const t = (key) => {
     const translations = {
