@@ -45,7 +45,7 @@ export function Modal({ state, onClose, onConfirm, onSubmit }) {
 
   useEffect(() => {
     if (state?.defaultValue) {
-      setInputValue(state.defaultValue)
+      requestAnimationFrame(() => setInputValue(state.defaultValue))
     }
   }, [state?.defaultValue])
 

@@ -13,7 +13,6 @@ export default function StudyPage() {
   const { folderId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const canEdit = location.state?.canEdit ?? false;
   const fromTab = location.state?.fromTab || 'my-folders';
   const [cards, setCards] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -71,7 +70,7 @@ export default function StudyPage() {
       setCards([]);
     }
     finally { setLoading(false); }
-  }, [folderId, user]);
+  }, [folderId]);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('app-theme') || 'light';
@@ -80,8 +79,32 @@ export default function StudyPage() {
 
   useEffect(() => {
     if (!user) { navigate('/home'); return; }
-    loadCards(studyMode, shuffled);
-  }, [folderId, studyMode, shuffled]);
+    requestAnimationFrame(() => loadCards(studyMode, shuffled));
+  }, [folderId, studyMode, shuffled, loadCards, navigate, user]);
+
+  const handleRate = useCallback(async (quality) => {
+    const card = cards[currentIndex];
+    setStats(s => ({ ...s, [quality === 0 ? 'again' : quality === 2 ? 'hard' : quality === 3 ? 'good' : 'easy']: s[quality === 0 ? 'again' : quality === 2 ? 'hard' : quality === 3 ? 'good' : 'easy'] + 1, total: s.total + 1 }));
+
+    if (studyMode === 'due') {
+      try {
+        await apiFetch('/study/update', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ cardId: card.id, quality }),
+        });
+      } catch (e) { console.error(e); }
+    }
+
+    if (currentIndex < cards.length - 1) {
+      setCurrentIndex(currentIndex + 1);
+      setIsFlipped(false);
+    } else {
+      setFinished(true);
+    }
+  }, [cards, currentIndex, studyMode]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -107,31 +130,7 @@ export default function StudyPage() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isFlipped, finished, loading, currentIndex, cards.length]);
-
-  const handleRate = async (quality) => {
-    const card = cards[currentIndex];
-    setStats(s => ({ ...s, [quality === 0 ? 'again' : quality === 2 ? 'hard' : quality === 3 ? 'good' : 'easy']: s[quality === 0 ? 'again' : quality === 2 ? 'hard' : quality === 3 ? 'good' : 'easy'] + 1, total: s.total + 1 }));
-    
-    if (studyMode === 'due') {
-      try {
-      await apiFetch('/study/update', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-          body: JSON.stringify({ cardId: card.id, quality }),
-      });
-      } catch (e) { console.error(e); }
-    }
-
-    if (currentIndex < cards.length - 1) {
-      setCurrentIndex(currentIndex + 1);
-      setIsFlipped(false);
-    } else {
-      setFinished(true);
-    }
-  };
+  }, [isFlipped, finished, loading, currentIndex, cards.length, handleRate]);
 
   const speak = (e, content) => {
     e.stopPropagation();

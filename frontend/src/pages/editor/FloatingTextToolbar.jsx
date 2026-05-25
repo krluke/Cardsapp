@@ -13,7 +13,6 @@ export function FloatingTextToolbar({
   fontFamily,
   textColor,
   backgroundColor,
-  t
 }) {
   if (!isVisible || !element) return null;
 

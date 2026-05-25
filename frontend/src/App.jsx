@@ -528,19 +528,20 @@ function HomePage({ clerkAvailable, isSignedIn: isSignedInProp, getToken: getTok
     const tab = searchParams.get('tab')
     return tab === 'global-folders' || tab === 'global-cards' ? tab : 'my-folders'
   })
-
-  useEffect(() => {
-    const tab = searchParams.get('tab')
-    if (tab === 'global-folders' || tab === 'global-cards') {
-      setActiveTab(tab)
-      setPage(1)
-    }
-  }, [searchParams])
-
   const [folders, setFolders] = useState([])
   const [globalCards, setGlobalCards] = useState([])
   const [searchInput, setSearchInput] = useState('')
   const [page, setPage] = useState(1)
+
+  useEffect(() => {
+    const tab = searchParams.get('tab')
+    if (tab === 'global-folders' || tab === 'global-cards') {
+      requestAnimationFrame(() => {
+        setActiveTab(tab)
+        setPage(1)
+      })
+    }
+  }, [searchParams])
   const [totalPages, setTotalPages] = useState(1)
   const [themeMenuOpen, setThemeMenuOpen] = useState(false)
   const [langMenuOpen, setLangMenuOpen] = useState(false)
