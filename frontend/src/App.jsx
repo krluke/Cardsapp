@@ -555,6 +555,7 @@ function HomePage({ clerkAvailable, isSignedIn: isSignedInProp, getToken: getTok
   const [selectedCard, setSelectedCard] = useState(null)
   const [flippedCards, setFlippedCards] = useState({})
   const [userLoading, setUserLoading] = useState(false)
+  const [logoFlipped, setLogoFlipped] = useState(false)
   const { modalState, showAlert, showConfirm, showPrompt, closeModal, handleConfirm, handlePromptSubmit } = useModal()
 
   const isSignedIn = clerkAvailable ? isSignedInProp : false
@@ -884,7 +885,31 @@ try {
   return (
     <div className="min-h-screen home-page-shell">
       <header className="navbar">
-        <h1 className="logo">CardsApp</h1>
+        <div
+          className={`logo${logoFlipped ? ' flipped' : ''}`}
+          role="button"
+          tabIndex={0}
+          aria-label="CardsApp"
+          onClick={() => setLogoFlipped(f => !f)}
+          onMouseLeave={() => setLogoFlipped(false)}
+          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setLogoFlipped(f => !f) } }}
+        >
+          <div className="logo-scene">
+            <div className="logo-flipper">
+              <div className="logo-sizer" aria-hidden="true">
+                <span>Cards</span>
+                <span>カード</span>
+              </div>
+              <div className="logo-face logo-face-front">
+                <span className="logo-word">Cards</span>
+              </div>
+              <div className="logo-face logo-face-back">
+                <span className="logo-word">カード</span>
+              </div>
+            </div>
+          </div>
+          <span className="logo-app">App</span>
+        </div>
         
         <div className="nav-actions">
           {user && (
