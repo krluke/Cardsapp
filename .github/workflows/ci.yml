@@ -59,7 +59,8 @@ jobs:
       - name: Restart Docker Containers
         run: |
           cd ~/server-project
-          docker-compose up -d --build --remove-orphans
+          docker-compose down --remove-orphans
+          docker-compose up -d --build
           for i in $(seq 1 15); do
             if docker-compose exec -T backend curl -sf http://localhost:5000/api/health >/dev/null 2>&1; then
               echo "Backend is healthy"
