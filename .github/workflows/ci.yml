@@ -19,7 +19,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 1
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -43,7 +43,7 @@ jobs:
 
   deploy:
     needs: build-and-test
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' || (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: self-hosted
     steps:
       - name: Update local code
@@ -59,10 +59,15 @@ jobs:
       - name: Restart Docker Containers
         run: |
           cd ~/server-project
-          docker-compose down --remove-orphans
-          docker buildx prune -f
-          docker-compose up -d --build --force-recreate
-          sleep 10
+          docker-compose up -d --build --remove-orphans
+          for i in $(seq 1 15); do
+            if docker-compose exec -T backend curl -sf http://localhost:5000/api/health >/dev/null 2>&1; then
+              echo "Backend is healthy"
+              break
+            fi
+            echo "Waiting for backend... ($i/15)"
+            sleep 3
+          done
           docker-compose ps
 
       - name: Restart Cloudflare Tunnel
