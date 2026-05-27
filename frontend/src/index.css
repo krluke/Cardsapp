@@ -354,11 +354,88 @@
 }
 
 .logo {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
   margin: 0;
-  font-size: 1.25rem;
-  color: var(--accent-color);
-  font-weight: bold;
-  letter-spacing: 0.5px;
+}
+
+.logo-scene {
+  perspective: 700px;
+}
+
+.logo-flipper {
+  position: relative;
+  display: inline-block;
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.logo:hover .logo-flipper,
+.logo.flipped .logo-flipper {
+  transform: rotateY(180deg);
+}
+
+.logo-sizer {
+  display: grid;
+  padding: 0.08em 0.3em 0.12em;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.logo-sizer span {
+  grid-area: 1 / 1;
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(1.1rem, 3vw, 1.5rem);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+.logo-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.logo-face-front {
+  background: var(--text-main);
+  box-shadow: 2px 4px 12px var(--shadow-sm);
+}
+
+.logo-face-back {
+  transform: rotateY(180deg);
+  background: var(--bg-surface);
+  border: 2px solid var(--text-main);
+  box-shadow: 2px 4px 12px var(--shadow-sm);
+}
+
+.logo-word,
+.logo-app {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(1.1rem, 3vw, 1.5rem);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+.logo-face-front .logo-word {
+  color: var(--bg-surface);
+}
+
+.logo-face-back .logo-word {
+  color: var(--text-main);
+}
+
+.logo-app {
+  color: var(--text-main);
+  padding-left: 0.08em;
 }
 
 .nav-actions {
@@ -369,9 +446,9 @@
 }
 
 @media (min-width: 640px) {
-  .navbar { padding: 1rem 2rem; }
-  .logo { font-size: 1.5rem; }
-  .nav-actions { gap: 1rem; }
+.navbar { padding: 1rem 2rem; }
+.logo-sizer span, .logo-word, .logo-app { font-size: clamp(1.3rem, 3.5vw, 1.8rem); }
+.nav-actions { gap: 1rem; }
 }
 
 /* Buttons */
