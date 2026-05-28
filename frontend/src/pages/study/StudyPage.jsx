@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, CheckCircle, XCircle, HelpCircle, RotateCcw, Volume2, Shuffle } from 'lucide-react';
-import { apiFetch, API_BASE } from '@/lib/api';
+import { apiFetch, ApiError } from '@/lib/api';
 import './Study.css';
 
 function getNextReviewText(quality, currentInterval) {
@@ -32,10 +32,9 @@ export default function StudyPage() {
         : `/study/cards?folderId=${folderId}`;
       const res = await apiFetch(endpoint);
       let data = await res.json();
-      
-      // Handle error responses
-      if (!res.ok || data.message) {
-        console.error('API Error:', data.message || 'Unknown error');
+
+      if (data.message) {
+        console.error('API Error:', data.message);
         setCards([]);
         setLoading(false);
         return;

@@ -1,4 +1,4 @@
-import { useReducer, useEffect, useCallback } from 'react';
+import { useReducer, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Trash2, ChevronLeft, ChevronRight, Copy } from 'lucide-react';
 import './Editor.css';
@@ -7,7 +7,7 @@ import { EditorToolbar } from './editor/EditorToolbar';
 import { EditorSidebar } from './editor/EditorSidebar';
 import { CardCanvas } from './editor/CardCanvas';
 import { FloatingTextToolbar } from './editor/FloatingTextToolbar';
-import { apiFetch } from '@/lib/api';
+import { apiFetch, ApiError } from '@/lib/api';
 
 const TEXT_DEFAULTS = {
   type: 'text',
@@ -343,6 +343,8 @@ export default function EditorPage() {
   const { folderId } = useParams();
   const navigate = useNavigate();
   const [state, dispatch] = useReducer(editorReducer, initialState);
+  const loadingRef = useRef(false);
+  const retryAfterRef = useRef(0);
 
   const session = JSON.parse(localStorage.getItem('session') || '{}');
   const user = session.user;
@@ -517,15 +519,13 @@ export default function EditorPage() {
   };
 
   const loadData = useCallback(async () => {
+    if (loadingRef.current) return
+    if (Date.now() < retryAfterRef.current) return
+    loadingRef.current = true
     try {
       const res = await apiFetch(`/cards/load-auth/${folderId}`);
-      if (res.status === 401) {
-        localStorage.removeItem('session');
-        navigate('/home');
-        return;
-      }
       const data = await res.json();
-      if (res.ok && Array.isArray(data) && data.length > 0) {
+      if (Array.isArray(data) && data.length > 0) {
         const parsedCards = data.map(card => ({
           front: parseElements(card.front),
           back: parseElements(card.back),
@@ -537,8 +537,16 @@ export default function EditorPage() {
       } else {
         dispatch({ type: 'SET_LOADING', payload: false });
       }
-    } catch (e) { console.error(e); dispatch({ type: 'SET_LOADING', payload: false }); }
-  }, [folderId, navigate]);
+    } catch (e) {
+      console.error(e);
+      if (e instanceof ApiError && e.status === 429) {
+        retryAfterRef.current = Date.now() + 30000
+      }
+      dispatch({ type: 'SET_LOADING', payload: false });
+    } finally {
+      loadingRef.current = false
+    }
+  }, [folderId]);
 
   const saveCards = useCallback(async () => {
     dispatch({ type: 'SET_SAVING', payload: true });
