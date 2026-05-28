@@ -1,4 +1,4 @@
-import { useReducer, useEffect, useCallback, useRef } from 'react';
+import { useReducer, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Trash2, ChevronLeft, ChevronRight, Copy } from 'lucide-react';
 import './Editor.css';
@@ -345,9 +345,14 @@ export default function EditorPage() {
   const [state, dispatch] = useReducer(editorReducer, initialState);
   const loadingRef = useRef(false);
   const retryAfterRef = useRef(0);
+  const saveRetryAfterRef = useRef(0);
+  const savingRef = useRef(false);
 
-  const session = JSON.parse(localStorage.getItem('session') || '{}');
-  const user = session.user;
+  const user = useMemo(() => {
+    try {
+      return JSON.parse(localStorage.getItem('session') || '{}').user || null;
+    } catch { return null; }
+  }, []);
 
   const parseElements = (html) => {
     if (!html) return [];
@@ -549,6 +554,9 @@ export default function EditorPage() {
   }, [folderId]);
 
   const saveCards = useCallback(async () => {
+    if (savingRef.current) return
+    if (Date.now() < saveRetryAfterRef.current) return
+    savingRef.current = true
     dispatch({ type: 'SET_SAVING', payload: true });
     try {
       const serializedCards = state.cards.map(card => ({
@@ -565,16 +573,23 @@ export default function EditorPage() {
         },
         body: JSON.stringify({ folderId: parseInt(folderId), cards: serializedCards }),
       });
-    } catch (e) { console.error('Save error:', e); }
-    finally { dispatch({ type: 'SET_SAVING', payload: false }); }
+    } catch (e) {
+      console.error('Save error:', e);
+      if (e instanceof ApiError && e.status === 429) {
+        saveRetryAfterRef.current = Date.now() + 30000
+      }
+    }
+    finally { dispatch({ type: 'SET_SAVING', payload: false }); savingRef.current = false }
   }, [state.cards, folderId]);
+
+  const userRef = useRef(user);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('app-theme') || 'light';
     document.documentElement.setAttribute('data-theme', savedTheme);
-    if (!user) { navigate('/home'); return; }
+    if (!userRef.current) { navigate('/home'); return; }
     requestAnimationFrame(() => loadData());
-  }, [folderId, navigate, user, loadData]);
+  }, [folderId, navigate, loadData]);
 
   useEffect(() => {
     const timer = setTimeout(() => {

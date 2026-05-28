@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, CheckCircle, XCircle, HelpCircle, RotateCcw, Volume2, Shuffle } from 'lucide-react';
 import { apiFetch, ApiError } from '@/lib/api';
@@ -22,10 +22,20 @@ export default function StudyPage() {
   const [shuffled, setShuffled] = useState(false);
   const [stats, setStats] = useState({ again: 0, hard: 0, good: 0, easy: 0, total: 0 });
 
-  const session = JSON.parse(localStorage.getItem('session') || '{}');
-  const user = session.user;
+  const user = useMemo(() => {
+    try {
+      return JSON.parse(localStorage.getItem('session') || '{}').user || null;
+    } catch { return null; }
+  }, []);
+  const userRef = useRef(user);
+  const loadingRef = useRef(false);
+  const retryAfterRef = useRef(0);
+
   const [studyMode, setStudyMode] = useState(user ? 'due' : 'all');
   const loadCards = useCallback(async (mode, shuffle = false) => {
+    if (loadingRef.current) return
+    if (Date.now() < retryAfterRef.current) return
+    loadingRef.current = true
     try {
       const endpoint = mode === 'all'
         ? `/cards/load-auth/${folderId}`
@@ -39,22 +49,22 @@ export default function StudyPage() {
         setLoading(false);
         return;
       }
-      
-  if (mode === 'all' && Array.isArray(data)) {
-    data = data.map((c, i) => ({
-      ...c,
-      id: c.id || i + 1000,
-      front_content: c.front_content || c.front || '',
-      back_content: c.back_content || c.back || '',
-      front_bg: c.front_bg || c.frontBg || null,
-      back_bg: c.back_bg || c.backBg || null,
-    }));
-  }
-      
+
+      if (mode === 'all' && Array.isArray(data)) {
+        data = data.map((c, i) => ({
+          ...c,
+          id: c.id || i + 1000,
+          front_content: c.front_content || c.front || '',
+          back_content: c.back_content || c.back || '',
+          front_bg: c.front_bg || c.frontBg || null,
+          back_bg: c.back_bg || c.backBg || null,
+        }));
+      }
+
       if (shuffle && Array.isArray(data)) {
         data = [...data].sort(() => Math.random() - 0.5);
       }
-      
+
       setCards(Array.isArray(data) ? data : []);
       setCurrentIndex(0);
       setIsFlipped(false);
@@ -63,11 +73,14 @@ export default function StudyPage() {
       if (mode === 'due' && Array.isArray(data) && data.length === 0) {
         setStudyMode('all');
       }
-    } catch (e) { 
-      console.error(e); 
+    } catch (e) {
+      console.error(e);
+      if (e instanceof ApiError && e.status === 429) {
+        retryAfterRef.current = Date.now() + 30000
+      }
       setCards([]);
     }
-    finally { setLoading(false); }
+    finally { setLoading(false); loadingRef.current = false }
   }, [folderId]);
 
   useEffect(() => {
@@ -76,9 +89,9 @@ export default function StudyPage() {
   }, []);
 
   useEffect(() => {
-    if (!user) { navigate('/home'); return; }
+    if (!userRef.current) { navigate('/home'); return; }
     requestAnimationFrame(() => loadCards(studyMode, shuffled));
-  }, [folderId, studyMode, shuffled, loadCards, navigate, user]);
+  }, [folderId, studyMode, shuffled, loadCards, navigate]);
 
   const handleRate = useCallback(async (quality) => {
     const card = cards[currentIndex];
