@@ -1,5 +1,12 @@
 const API_BASE = '/api'
 
+export class ApiError extends Error {
+  constructor(status, message) {
+    super(message)
+    this.status = status
+  }
+}
+
 function getSession() {
   try {
     return JSON.parse(localStorage.getItem('session') || '{}')
@@ -38,7 +45,13 @@ export async function apiFetch(endpoint, options = {}) {
   }
 
   if (!res.ok) {
-    return res
+    const ct = res.headers.get('content-type') || ''
+    if (ct.includes('application/json') || ct.includes('application/problem+json')) {
+      const data = await res.json().catch(() => null)
+      throw new ApiError(res.status, data?.message || res.statusText)
+    }
+    const text = await res.text().catch(() => '')
+    throw new ApiError(res.status, `${res.statusText}: ${text.slice(0, 200)}`)
   }
 
   const ct = res.headers.get('content-type') || ''
@@ -47,7 +60,7 @@ export async function apiFetch(endpoint, options = {}) {
   }
 
   const text = await res.text()
-  throw new Error(`API returned ${res.status} ${res.statusText}: ${text.slice(0, 200)}`)
+  throw new ApiError(res.status, `Unexpected content type: ${text.slice(0, 200)}`)
 }
 
 export { API_BASE }

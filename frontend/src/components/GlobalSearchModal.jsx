@@ -15,8 +15,10 @@ export function GlobalSearchModal({ isOpen, onClose, onSelectCard }) {
       const res = await apiFetch(`/search?q=${encodeURIComponent(query)}`);
       const data = await res.json();
       setResults(data.results || []);
-    } catch (e) { console.error(e); }
-    finally { setLoading(false); }
+    } catch (e) {
+      console.error(e);
+      setResults([]);
+    } finally { setLoading(false); }
   };
 
   if (!isOpen) return null;
