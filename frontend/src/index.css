@@ -490,9 +490,13 @@
   color: var(--accent-color);
 }
 
+.icon-btn:has(.profile-avatar) {
+padding: 0.25rem;
+}
+
 .profile-avatar {
-width: 100%;
-height: 100%;
+width: 24px;
+height: 24px;
 border-radius: 50%;
 object-fit: cover;
 }
