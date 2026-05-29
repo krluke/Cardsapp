@@ -11,7 +11,7 @@ import { GlobalSearchModal } from './components/GlobalSearchModal'
 import { AddToFolderModal } from './components/AddToFolderModal'
 import { CardPreview } from './components/CardPreview'
 import { useModal, Modal } from './components/Modal'
-import { apiFetch, API_BASE } from './lib/api'
+import { apiFetch, API_BASE, ApiError } from './lib/api'
 import './App.css'
 
 const CLERK_THEMES = {
@@ -564,12 +564,18 @@ function HomePage({ clerkAvailable, isSignedIn: isSignedInProp, getToken: getTok
   const exchangingRef = useRef(false)
   const exchangeFailCount = useRef(0)
   const sessionExpiredRef = useRef(false)
+  const foldersLoadingRef = useRef(false)
+  const foldersRetryAfterRef = useRef(0)
 
   const loadFolders = useCallback(async () => {
     if (sessionExpiredRef.current) return
     if (userLoading) return
+    if (foldersLoadingRef.current) return
+    if (Date.now() < foldersRetryAfterRef.current) return
+    foldersLoadingRef.current = true
     if (activeTab === 'my-folders' && !user) {
       setFolders([])
+      foldersLoadingRef.current = false
       return
     }
     const endpoint = '/folders'
@@ -580,7 +586,6 @@ function HomePage({ clerkAvailable, isSignedIn: isSignedInProp, getToken: getTok
     })
     try {
       const res = await apiFetch(`${endpoint}?${params}`)
-      if (res.status === 401) return
       const data = await res.json()
       if (data.folders !== undefined) {
         setFolders(data.folders || [])
@@ -588,7 +593,14 @@ function HomePage({ clerkAvailable, isSignedIn: isSignedInProp, getToken: getTok
       } else if (data.message) {
         console.error('loadFolders error:', data.message)
       }
-    } catch (e) { console.error(e) }
+    } catch (e) {
+      console.error(e)
+      if (e instanceof ApiError && e.status === 429) {
+        foldersRetryAfterRef.current = Date.now() + 30000
+      }
+    } finally {
+      foldersLoadingRef.current = false
+    }
   }, [activeTab, page, searchInput, user, userLoading])
 
   const toggleFavorite = async (folderId) => {
@@ -616,15 +628,20 @@ function HomePage({ clerkAvailable, isSignedIn: isSignedInProp, getToken: getTok
     }
   }
 
+  const globalCardsLoadingRef = useRef(false)
+  const globalCardsRetryAfterRef = useRef(0)
+
   const loadGlobalCards = useCallback(async () => {
     if (sessionExpiredRef.current) return
+    if (globalCardsLoadingRef.current) return
+    if (Date.now() < globalCardsRetryAfterRef.current) return
+    globalCardsLoadingRef.current = true
     const params = new URLSearchParams({
       page,
       search: searchInput,
     })
     try {
       const res = await apiFetch(`/cards/public?${params}`)
-      if (res.status === 401) return
       const data = await res.json()
       if (data.cards) {
         const filteredCards = (data.cards || []).filter(card => {
@@ -635,7 +652,14 @@ function HomePage({ clerkAvailable, isSignedIn: isSignedInProp, getToken: getTok
         setGlobalCards(filteredCards)
         setTotalPages(data.totalPages || 1)
       }
-    } catch (e) { console.error(e) }
+    } catch (e) {
+      console.error(e)
+      if (e instanceof ApiError && e.status === 429) {
+        globalCardsRetryAfterRef.current = Date.now() + 30000
+      }
+    } finally {
+      globalCardsLoadingRef.current = false
+    }
   }, [page, searchInput])
 
   const exchangeClerkToken = useCallback(async () => {
@@ -728,7 +752,7 @@ function HomePage({ clerkAvailable, isSignedIn: isSignedInProp, getToken: getTok
   useEffect(() => {
     const interval = setInterval(() => {
       if (!document.hidden) loadFolders()
-    }, 15000)
+    }, 30000)
     return () => clearInterval(interval)
   }, [loadFolders])
 
@@ -761,24 +785,21 @@ function HomePage({ clerkAvailable, isSignedIn: isSignedInProp, getToken: getTok
     if (!title || !user) return
 
     try {
-      const res = await apiFetch('/folders/create', {
+      await apiFetch('/folders/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ title }),
       })
-      const data = await res.json()
-      if (res.ok) {
-        loadFolders()
+      loadFolders()
+    } catch (e) {
+      if (e instanceof ApiError && (e.message?.includes('同じ名前') || e.message?.includes('already exists'))) {
+        showAlert(t('error_folder_exists'))
       } else {
-        if (data.message?.includes('同じ名前') || data.message?.includes('already exists')) {
-          showAlert(t('error_folder_exists'))
-        } else {
-          showAlert(data.message || t('error_create_folder'))
-        }
+        showAlert(t('error_create_folder'))
       }
-    } catch { showAlert(t('error_create_folder')) }
+    }
   }
 
   const selectTheme = (newTheme) => {
@@ -803,7 +824,7 @@ function HomePage({ clerkAvailable, isSignedIn: isSignedInProp, getToken: getTok
   const saveFolderSettings = async () => {
     if (!editingFolder || !user) return
     try {
-      const res = await apiFetch('/folders/update', {
+      await apiFetch('/folders/update', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -814,10 +835,8 @@ function HomePage({ clerkAvailable, isSignedIn: isSignedInProp, getToken: getTok
           visibility: editingFolder.visibility,
         }),
       })
-      if (res.ok) {
-        setShowSettingsModal(false)
-        loadFolders()
-      }
+      setShowSettingsModal(false)
+      loadFolders()
     } catch { showAlert(t('error_save')) }
   }
 
@@ -845,18 +864,16 @@ function HomePage({ clerkAvailable, isSignedIn: isSignedInProp, getToken: getTok
       const reader = new FileReader();
       reader.onload = async (event) => {
         try {
-      const folderData = JSON.parse(event.target.result);
-      const res = await apiFetch('/folders/import', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ folderData }),
-      });
-          if (res.ok) {
-            showAlert(t('success_import'))
-            loadFolders();
-          }
+          const folderData = JSON.parse(event.target.result);
+          await apiFetch('/folders/import', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ folderData }),
+          });
+          showAlert(t('success_import'))
+          loadFolders();
         } catch { showAlert(t('error_import')) }
       };
       reader.readAsText(file);
@@ -864,21 +881,19 @@ function HomePage({ clerkAvailable, isSignedIn: isSignedInProp, getToken: getTok
     input.click();
   }
 
-const deleteFolder = async () => {
-const confirmed = await showConfirm(t('confirm_delete_folder'), t('confirm_delete_folder'))
-if (!confirmed || !editingFolder || !user) return
-try {
-      const res = await apiFetch('/folders/delete', {
+  const deleteFolder = async () => {
+    const confirmed = await showConfirm(t('confirm_delete_folder'), t('confirm_delete_folder'))
+    if (!confirmed || !editingFolder || !user) return
+    try {
+      await apiFetch('/folders/delete', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ folderId: editingFolder.id }),
       })
-      if (res.ok) {
-        setShowSettingsModal(false)
-        loadFolders()
-      }
+      setShowSettingsModal(false)
+      loadFolders()
     } catch { showAlert(t('error_delete')) }
   }
 

@@ -59,7 +59,7 @@ export function AddToFolderModal({ card, onClose, onSuccess }) {
 
       const updatedCards = [...(Array.isArray(existingCards) ? existingCards : []), newCard]
 
-      const saveRes = await apiFetch('/cards/save', {
+      await apiFetch('/cards/save', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -70,11 +70,7 @@ export function AddToFolderModal({ card, onClose, onSuccess }) {
         }),
       })
 
-      if (saveRes.ok) {
-        onSuccess(t('success_add_card'))
-      } else {
-        onSuccess(t('error_add_card'))
-      }
+      onSuccess(t('success_add_card'))
     } catch (e) {
       console.error(e)
       onSuccess(t('error_add_card'))

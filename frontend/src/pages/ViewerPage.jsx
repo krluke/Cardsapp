@@ -1,8 +1,12 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react'
+<<<<<<< HEAD
 import { apiFetch } from '@/lib/api'
 import { sanitizeHtmlForDisplay } from '@/lib/sanitize'
+=======
+import { apiFetch, ApiError } from '@/lib/api'
+>>>>>>> 4555d75 (Fix: Infinite error messages at console)
 import './Viewer.css'
 
 export default function ViewerPage() {
@@ -15,8 +19,13 @@ export default function ViewerPage() {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [flipped, setFlipped] = useState(false)
   const [loading, setLoading] = useState(true)
+  const loadingRef = useRef(false)
+  const retryAfterRef = useRef(0)
 
   const loadData = useCallback(async () => {
+    if (loadingRef.current) return
+    if (Date.now() < retryAfterRef.current) return
+    loadingRef.current = true
     try {
       const session = JSON.parse(localStorage.getItem('session') || '{}')
       const jwtToken = session.token || ''
@@ -35,7 +44,11 @@ export default function ViewerPage() {
       }
     } catch (e) {
       console.error(e)
+      if (e instanceof ApiError && e.status === 429) {
+        retryAfterRef.current = Date.now() + 30000
+      }
     } finally {
+      loadingRef.current = false
       setLoading(false)
     }
   }, [folderId])
@@ -43,7 +56,6 @@ export default function ViewerPage() {
   useEffect(() => {
     const savedTheme = localStorage.getItem('app-theme') || 'light'
     document.documentElement.setAttribute('data-theme', savedTheme)
-
     requestAnimationFrame(() => loadData())
   }, [folderId, loadData])
 
