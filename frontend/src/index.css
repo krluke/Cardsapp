@@ -491,12 +491,21 @@
 }
 
 .icon-btn:has(.profile-avatar) {
-padding: 0.25rem;
+padding: 0;
+border: none;
+background: transparent;
+box-shadow: none;
+}
+
+.icon-btn:has(.profile-avatar):hover {
+background: transparent;
+border: none;
+box-shadow: none;
 }
 
 .profile-avatar {
-width: 24px;
-height: 24px;
+width: 38px;
+height: 38px;
 border-radius: 50%;
 object-fit: cover;
 }
