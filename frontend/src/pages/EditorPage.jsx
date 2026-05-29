@@ -1,23 +1,4 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-import { useReducer, useEffect, useRef, useCallback } from 'react';
-=======
-import { useReducer, useEffect, useCallback } from 'react';
->>>>>>> b3c8234 (Fix: all 8 issues in frontend)
-=======
-import { useReducer, useEffect, useCallback, useRef } from 'react';
->>>>>>> 4555d75 (Fix: Infinite error messages at console)
-=======
 import { useReducer, useEffect, useCallback, useRef, useMemo } from 'react';
->>>>>>> 27a9cf8 (Fix: infinite error messages at console 2)
-=======
-import { useReducer, useEffect, useCallback, useRef, useMemo } from 'react';
-=======
-import { useReducer, useEffect, useRef, useCallback } from 'react';
->>>>>>> ee3ca24 (Fix 23 security vulnerabilities from comprehensive audit)
->>>>>>> d2daf6a (Fix 23 security vulnerabilities from comprehensive audit)
 import { useParams, useNavigate } from 'react-router-dom';
 import { Trash2, ChevronLeft, ChevronRight, Copy } from 'lucide-react';
 import './Editor.css';
@@ -131,7 +112,7 @@ function editorReducer(state, action) {
       const prevCards = state.history[state.historyIndex];
       return {
         ...state,
-        history: [...state.history, state.cards], // push current to redo
+        history: [...state.history, state.cards],
         cards: prevCards,
         historyIndex: state.historyIndex - 1,
       };
@@ -141,7 +122,7 @@ function editorReducer(state, action) {
       const nextCards = state.history[state.historyIndex + 1];
       return {
         ...state,
-        history: state.history.slice(0, state.historyIndex + 1), // remove redo stack
+        history: state.history.slice(0, state.historyIndex + 1),
         cards: nextCards,
         historyIndex: state.historyIndex + 1,
       };
@@ -170,18 +151,18 @@ function editorReducer(state, action) {
     case 'SET_TEXT_COLOR':
       return { ...state, textColor: action.payload };
     case 'SET_TEXT_BG_COLOR':
-return { ...state, textBoxBgColor: action.payload };
-case 'UPDATE_ELEMENT': {
+      return { ...state, textBoxBgColor: action.payload };
+    case 'UPDATE_ELEMENT': {
       const stateWithHistory = pushHistory(state);
       const { elementId, updates } = action.payload;
       const newCards = [...stateWithHistory.cards];
       const card = { ...newCards[stateWithHistory.currentIndex] };
       const elements = stateWithHistory.isFlipped ? [...card.back] : [...card.front];
       const updatedElements = elements.map(el => el.id === elementId ? { ...el, ...updates } : el);
-      
+
       if (stateWithHistory.isFlipped) card.back = updatedElements;
       else card.front = updatedElements;
-      
+
       newCards[stateWithHistory.currentIndex] = card;
       return { ...stateWithHistory, cards: newCards };
     }
@@ -193,14 +174,14 @@ case 'UPDATE_ELEMENT': {
       const elements = stateWithHistory.isFlipped ? [...card.back] : [...card.front];
       const index = elements.findIndex(el => el.id === elementId);
       if (index === -1) return state;
-      
+
       const [element] = elements.splice(index, 1);
       if (direction === 'front') elements.push(element);
       else elements.unshift(element);
-      
+
       if (stateWithHistory.isFlipped) card.back = elements;
       else card.front = elements;
-      
+
       newCards[stateWithHistory.currentIndex] = card;
       return { ...stateWithHistory, cards: newCards };
     }
@@ -221,8 +202,8 @@ case 'UPDATE_ELEMENT': {
         fontStyle: 'normal',
         textDecoration: 'none',
         textAlign: 'left',
-          color: textColor || '',
-          backgroundColor: bgColor || '',
+        color: textColor || '',
+        backgroundColor: bgColor || '',
         rotation: 0
       };
       const newCards = [...stateWithHistory.cards];
@@ -243,11 +224,11 @@ case 'UPDATE_ELEMENT': {
       const elements = stateWithHistory.isFlipped ? [...card.back] : [...card.front];
       const element = elements.find(el => el.id === elementId);
       if (!element) return state;
-      
+
       const newElement = { ...element, id: `text-${Date.now()}`, left: element.left + 5, top: element.top + 5 };
       if (stateWithHistory.isFlipped) card.back = [...elements, newElement];
       else card.front = [...elements, newElement];
-      
+
       newCards[stateWithHistory.currentIndex] = card;
       return { ...stateWithHistory, cards: newCards, selectedElement: newElement.id };
     }
@@ -258,10 +239,10 @@ case 'UPDATE_ELEMENT': {
       const newCards = [...stateWithHistory.cards];
       const card = { ...newCards[stateWithHistory.currentIndex] };
       const elements = stateWithHistory.isFlipped ? [...card.back] : [...card.front];
-      
+
       if (stateWithHistory.isFlipped) card.back = [...elements, newElement];
       else card.front = [...elements, newElement];
-      
+
       newCards[stateWithHistory.currentIndex] = card;
       return { ...stateWithHistory, cards: newCards, selectedElement: newElement.id, imageUrl: '' };
     }
@@ -272,15 +253,15 @@ case 'UPDATE_ELEMENT': {
       const card = { ...newCards[stateWithHistory.currentIndex] };
       const elements = stateWithHistory.isFlipped ? [...card.back] : [...card.front];
       const filteredElements = elements.filter(el => el.id !== elementId);
-      
+
       if (stateWithHistory.isFlipped) card.back = filteredElements;
       else card.front = filteredElements;
-      
+
       newCards[stateWithHistory.currentIndex] = card;
-      return { 
-        ...stateWithHistory, 
-        cards: newCards, 
-        selectedElement: stateWithHistory.selectedElement === elementId ? null : stateWithHistory.selectedElement 
+      return {
+        ...stateWithHistory,
+        cards: newCards,
+        selectedElement: stateWithHistory.selectedElement === elementId ? null : stateWithHistory.selectedElement
       };
     }
     case 'UPDATE_BG_COLOR': {
@@ -296,22 +277,22 @@ case 'UPDATE_ELEMENT': {
     case 'ADD_CARD': {
       const stateWithHistory = pushHistory(state);
       const newCard = { front: [], back: [], frontBg: '', backBg: '' };
-      return { 
-        ...stateWithHistory, 
-        cards: [...stateWithHistory.cards, newCard], 
-        currentIndex: stateWithHistory.cards.length, 
-        isFlipped: false, 
-        selectedElement: null 
+      return {
+        ...stateWithHistory,
+        cards: [...stateWithHistory.cards, newCard],
+        currentIndex: stateWithHistory.cards.length,
+        isFlipped: false,
+        selectedElement: null
       };
     }
     case 'DELETE_CARD': {
       const stateWithHistory = pushHistory(state);
       const newCards = stateWithHistory.cards.filter((_, i) => i !== stateWithHistory.currentIndex);
-      return { 
-        ...stateWithHistory, 
-        cards: newCards, 
-        currentIndex: Math.max(0, stateWithHistory.currentIndex - 1), 
-        selectedElement: null 
+      return {
+        ...stateWithHistory,
+        cards: newCards,
+        currentIndex: Math.max(0, stateWithHistory.currentIndex - 1),
+        selectedElement: null
       };
     }
     case 'APPLY_TEMPLATE': {
@@ -362,142 +343,18 @@ export default function EditorPage() {
   const { folderId } = useParams();
   const navigate = useNavigate();
   const [state, dispatch] = useReducer(editorReducer, initialState);
-<<<<<<< HEAD
-<<<<<<< HEAD
-  const saveCardsRef = useRef(null);
-=======
-=======
->>>>>>> d2daf6a (Fix 23 security vulnerabilities from comprehensive audit)
+
   const loadingRef = useRef(false);
   const retryAfterRef = useRef(0);
-<<<<<<< HEAD
->>>>>>> 4555d75 (Fix: Infinite error messages at console)
-=======
   const saveRetryAfterRef = useRef(0);
   const savingRef = useRef(false);
->>>>>>> 27a9cf8 (Fix: infinite error messages at console 2)
 
   const user = useMemo(() => {
-=======
-  const saveCardsRef = useRef(null);
-
-  const session = JSON.parse(localStorage.getItem('session') || '{}');
-  const user = session.user;
-
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('app-theme') || 'light';
-    document.documentElement.setAttribute('data-theme', savedTheme);
-    if (!user) { navigate('/home'); return; }
-    loadData();
-  }, [folderId]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (saveCardsRef.current) saveCardsRef.current();
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, [state.cards]);
-
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'Delete' && state.selectedElement) {
-        dispatch({ type: 'DELETE_ELEMENT', payload: { elementId: state.selectedElement } });
-      }
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-        e.preventDefault();
-        saveCards();
-      }
-      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
-        e.preventDefault();
-        dispatch({ type: 'UNDO' });
-      }
-      if ((e.ctrlKey || e.metaKey) && e.key === 'y') {
-        e.preventDefault();
-        dispatch({ type: 'REDO' });
-      }
-      if ((e.ctrlKey || e.metaKey) && e.key === 'd' && state.selectedElement) {
-        e.preventDefault();
-        dispatch({ type: 'DUPLICATE_ELEMENT', payload: { elementId: state.selectedElement } });
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [state.selectedElement, saveCards]);
-
-  const loadData = async () => {
->>>>>>> ee3ca24 (Fix 23 security vulnerabilities from comprehensive audit)
     try {
       return JSON.parse(localStorage.getItem('session') || '{}').user || null;
     } catch { return null; }
   }, []);
 
-<<<<<<< HEAD
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('app-theme') || 'light';
-    document.documentElement.setAttribute('data-theme', savedTheme);
-    if (!user) { navigate('/home'); return; }
-    loadData();
-  }, [folderId]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (saveCardsRef.current) saveCardsRef.current();
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, [state.cards]);
-
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'Delete' && state.selectedElement) {
-        dispatch({ type: 'DELETE_ELEMENT', payload: { elementId: state.selectedElement } });
-      }
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-        e.preventDefault();
-        saveCards();
-      }
-      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
-        e.preventDefault();
-        dispatch({ type: 'UNDO' });
-      }
-      if ((e.ctrlKey || e.metaKey) && e.key === 'y') {
-        e.preventDefault();
-        dispatch({ type: 'REDO' });
-      }
-      if ((e.ctrlKey || e.metaKey) && e.key === 'd' && state.selectedElement) {
-        e.preventDefault();
-        dispatch({ type: 'DUPLICATE_ELEMENT', payload: { elementId: state.selectedElement } });
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [state.selectedElement, saveCards]);
-
-  const loadData = async () => {
-    try {
-      const res = await apiFetch(`/cards/load-auth/${folderId}`);
-      if (res.status === 401) {
-        localStorage.removeItem('session');
-        navigate('/home');
-        return;
-      }
-      const data = await res.json();
-      if (res.ok && Array.isArray(data) && data.length > 0) {
-        const parsedCards = data.map(card => ({
-          front: parseElements(card.front),
-          back: parseElements(card.back),
-          frontBg: card.frontBg || '',
-          backBg: card.backBg || '',
-          tags: card.tags || ''
-        }));
-        dispatch({ type: 'SET_CARDS', payload: parsedCards });
-      } else {
-        dispatch({ type: 'SET_LOADING', payload: false });
-      }
-    } catch (e) { console.error(e); dispatch({ type: 'SET_LOADING', payload: false }); }
-  };
-
-=======
->>>>>>> b3c8234 (Fix: all 8 issues in frontend)
   const parseElements = (html) => {
     if (!html) return [];
     const elements = [];
@@ -577,8 +434,8 @@ export default function EditorPage() {
             const fontStyleMatch = style.match(/font-style:\s*(\w+)/);
             const textDecorationMatch = style.match(/text-decoration:\s*(\w+)/);
             const textAlignMatch = style.match(/text-align:\s*(\w+)/);
-const colorMatch = style.match(/(?:^|;\s*)color:\s*(#[0-9a-fA-F]+|rgb\([^)]+\))/);
-const bgColorMatch = style.match(/background-color:\s*(#[0-9a-fA-F]+|rgb\([^)]+\))/);
+            const colorMatch = style.match(/(?:^|;\s*)color:\s*(#[0-9a-fA-F]+|rgb\([^)]+\))/);
+            const bgColorMatch = style.match(/background-color:\s*(#[0-9a-fA-F]+|rgb\([^)]+\))/);
 
             elements.push({
               id: `text-${Date.now()}-${elements.length}`,
@@ -640,34 +497,6 @@ const bgColorMatch = style.match(/background-color:\s*(#[0-9a-fA-F]+|rgb\([^)]+\
     return elements;
   };
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-const serializeElements = (elements) => {
-  return elements.map(el => {
-    if (el.type === 'text') {
-      const sanitizedContent = el.content
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
-      const h = typeof el.height === 'number' ? el.height + '%' : (el.height || 'auto');
-      const ff = el.fontFamily || 'sans-serif';
-      const fw = el.fontWeight || 'normal';
-      const fs = el.fontStyle || 'normal';
-      const td = el.textDecoration || 'none';
-      const ta = el.textAlign || 'left';
-      const c = el.color && el.color !== '#000000' ? el.color : '';
-      const bg = el.backgroundColor && el.backgroundColor !== 'transparent' ? el.backgroundColor : '';
-      const r = el.rotation || 0;
-      const colorStyle = c ? `color:${c};` : '';
-      const bgStyle = bg ? `background-color:${bg};` : '';
-      return `<div class="draggable-text" style="position:absolute;left:${el.left}%;top:${el.top}%;width:${el.width}%;height:${h};font-size:${el.fontSize}px;font-family:"${ff}";font-weight:${fw};font-style:${fs};text-decoration:${td};text-align:${ta};${colorStyle}${bgStyle}transform:rotate(${r}deg)">${sanitizedContent}</div>`;
-    }
-    if (el.type === 'image') {
-      const safeSrc = el.src.replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      return `<div class="draggable-image" style="position:absolute;left:${el.left}%;top:${el.top}%;width:${el.width}%;height:${el.height}%;"><img src="${safeSrc}" style="width:100%;height:100%;object-fit:contain;" /></div>`;
-=======
-=======
->>>>>>> d2daf6a (Fix 23 security vulnerabilities from comprehensive audit)
   const serializeElements = (elements) => {
     return elements.map(el => {
       if (el.type === 'text') {
@@ -681,7 +510,7 @@ const serializeElements = (elements) => {
         const fs = el.fontStyle || 'normal';
         const td = el.textDecoration || 'none';
         const ta = el.textAlign || 'left';
-        const c = el.color || '';
+        const c = el.color && el.color !== '#000000' ? el.color : '';
         const bg = el.backgroundColor && el.backgroundColor !== 'transparent' ? el.backgroundColor : '';
         const r = el.rotation || 0;
         const colorStyle = c ? `color:${c};` : '';
@@ -689,36 +518,8 @@ const serializeElements = (elements) => {
         return `<div class="draggable-text" style="position:absolute;left:${el.left}%;top:${el.top}%;width:${el.width}%;height:${h};font-size:${el.fontSize}px;font-family:"${ff}";font-weight:${fw};font-style:${fs};text-decoration:${td};text-align:${ta};${colorStyle}${bgStyle}transform:rotate(${r}deg)">${sanitizedContent}</div>`;
       }
       if (el.type === 'image') {
-        return `<div class="draggable-image" style="position:absolute;left:${el.left}%;top:${el.top}%;width:${el.width}%;height:${el.height}%;"><img src="${el.src}" style="width:100%;height:100%;object-fit:contain;" /></div>`;
-<<<<<<< HEAD
->>>>>>> b3c8234 (Fix: all 8 issues in frontend)
-=======
-=======
-const serializeElements = (elements) => {
-  return elements.map(el => {
-    if (el.type === 'text') {
-      const sanitizedContent = el.content
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
-      const h = typeof el.height === 'number' ? el.height + '%' : (el.height || 'auto');
-      const ff = el.fontFamily || 'sans-serif';
-      const fw = el.fontWeight || 'normal';
-      const fs = el.fontStyle || 'normal';
-      const td = el.textDecoration || 'none';
-      const ta = el.textAlign || 'left';
-      const c = el.color && el.color !== '#000000' ? el.color : '';
-      const bg = el.backgroundColor && el.backgroundColor !== 'transparent' ? el.backgroundColor : '';
-      const r = el.rotation || 0;
-      const colorStyle = c ? `color:${c};` : '';
-      const bgStyle = bg ? `background-color:${bg};` : '';
-      return `<div class="draggable-text" style="position:absolute;left:${el.left}%;top:${el.top}%;width:${el.width}%;height:${h};font-size:${el.fontSize}px;font-family:"${ff}";font-weight:${fw};font-style:${fs};text-decoration:${td};text-align:${ta};${colorStyle}${bgStyle}transform:rotate(${r}deg)">${sanitizedContent}</div>`;
-    }
-    if (el.type === 'image') {
-      const safeSrc = el.src.replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      return `<div class="draggable-image" style="position:absolute;left:${el.left}%;top:${el.top}%;width:${el.width}%;height:${el.height}%;"><img src="${safeSrc}" style="width:100%;height:100%;object-fit:contain;" /></div>`;
->>>>>>> ee3ca24 (Fix 23 security vulnerabilities from comprehensive audit)
->>>>>>> d2daf6a (Fix 23 security vulnerabilities from comprehensive audit)
+        const safeSrc = el.src.replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return `<div class="draggable-image" style="position:absolute;left:${el.left}%;top:${el.top}%;width:${el.width}%;height:${el.height}%;"><img src="${safeSrc}" style="width:100%;height:100%;object-fit:contain;" /></div>`;
       }
       return '';
     }).join('');
@@ -830,19 +631,19 @@ const serializeElements = (elements) => {
   const currentBg = state.isFlipped ? currentCard?.backBg : currentCard?.frontBg;
   const currentTags = currentCard?.tags || '';
 
-const addText = (x = 30, y = 40) => {
-  dispatch({
-    type: 'ADD_TEXT',
-    payload: {
-      x,
-      y,
-      fontSize: state.fontSize,
-      textColor: state.textColor,
-bgColor: state.textBoxBgColor,
-highlightColor: 'transparent'
-    }
-  });
-};
+  const addText = (x = 30, y = 40) => {
+    dispatch({
+      type: 'ADD_TEXT',
+      payload: {
+        x,
+        y,
+        fontSize: state.fontSize,
+        textColor: state.textColor,
+        bgColor: state.textBoxBgColor,
+        highlightColor: 'transparent'
+      }
+    });
+  };
 
   const addImage = () => {
     if (!state.imageUrl.trim()) return;
@@ -854,10 +655,10 @@ highlightColor: 'transparent'
     const formData = new FormData();
     formData.append('image', file);
     try {
-const res = await apiFetch('/cards/upload', {
-method: 'POST',
-body: formData,
-});
+      const res = await apiFetch('/cards/upload', {
+        method: 'POST',
+        body: formData,
+      });
       const data = await res.json();
       if (data.url) {
         dispatch({ type: 'ADD_IMAGE', payload: { imageUrl: data.url } });
@@ -903,11 +704,9 @@ body: formData,
   };
 
   const updateTags = (tags) => {
-    // Tags are handled per card. We'll assume the current card should be updated.
     const newCards = [...state.cards];
     newCards[state.currentIndex] = { ...newCards[state.currentIndex], tags: tags };
-    // We need a new reducer action for this.
-  dispatch({ type: 'UPDATE_TAGS', payload: { tags } });
+    dispatch({ type: 'UPDATE_TAGS', payload: { tags } });
   };
 
   const applyFormat = (format) => {
@@ -938,40 +737,6 @@ body: formData,
     dispatch({ type: 'UPDATE_BG_COLOR', payload: { color } });
   };
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-=======
->>>>>>> d2daf6a (Fix 23 security vulnerabilities from comprehensive audit)
-  const saveCards = useCallback(async () => {
-    dispatch({ type: 'SET_SAVING', payload: true });
-    try {
-      const serializedCards = state.cards.map(card => ({
-        front: serializeElements(card.front),
-        back: serializeElements(card.back),
-        frontBg: card.frontBg,
-        backBg: card.backBg,
-        tags: card.tags || ''
-      }));
-      await apiFetch('/cards/save', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ folderId: parseInt(folderId), cards: serializedCards }),
-      });
-    } catch (e) { console.error('Save error:', e); }
-    finally { dispatch({ type: 'SET_SAVING', payload: false }); }
-  }, [state.cards, folderId]);
-
-  useEffect(() => {
-    saveCardsRef.current = saveCards;
-  });
-
-<<<<<<< HEAD
-=======
->>>>>>> b3c8234 (Fix: all 8 issues in frontend)
-=======
->>>>>>> ee3ca24 (Fix 23 security vulnerabilities from comprehensive audit)
->>>>>>> d2daf6a (Fix 23 security vulnerabilities from comprehensive audit)
   const goToHome = () => { navigate('/home'); };
 
   if (state.loading) return <div className="page-container">Loading...</div>;
@@ -1019,19 +784,19 @@ body: formData,
         }}
         fontSize={state.fontSize}
         fontFamily={state.fontFamily}
-  textColor={selectedEl?.color ?? ''}
-  backgroundColor={selectedEl?.backgroundColor ?? ''}
+        textColor={selectedEl?.color ?? ''}
+        backgroundColor={selectedEl?.backgroundColor ?? ''}
         t={t}
       />
       <div className="editor-main">
-        <EditorSidebar 
-          cards={state.cards} 
-          currentIndex={state.currentIndex} 
+        <EditorSidebar
+          cards={state.cards}
+          currentIndex={state.currentIndex}
           onSelectCard={(idx) => {
             dispatch({ type: 'SET_CURRENT_INDEX', payload: idx });
             dispatch({ type: 'SET_FLIPPED', payload: false });
-          }} 
-          onAddCard={() => dispatch({ type: 'ADD_CARD' })} 
+          }}
+          onAddCard={() => dispatch({ type: 'ADD_CARD' })}
         />
         <div className="card-area">
           <div className="card-flip-container">
@@ -1069,11 +834,11 @@ body: formData,
           <div className="editor-meta-row">
             <div className="tags-input-container">
               <label>Tags:</label>
-              <input 
-                type="text" 
-                className="toolbar-select" 
-                placeholder="Comma separated tags..." 
-                value={currentTags} 
+              <input
+                type="text"
+                className="toolbar-select"
+                placeholder="Comma separated tags..."
+                value={currentTags}
                 onChange={(e) => updateTags(e.target.value)}
               />
             </div>

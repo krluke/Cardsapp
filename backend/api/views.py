@@ -756,22 +756,11 @@ def get_study_cards(request):
                     """,
                     (folder_id,),
                 )
-            cards = dictfetchall(c)
-<<<<<<< HEAD
-<<<<<<< HEAD
-            for card in cards:
-                card["front_content"] = sanitize_html_for_display(card.get("front_content", ""))
-                card["back_content"] = sanitize_html_for_display(card.get("back_content", ""))
-=======
->>>>>>> d946e7a (Allow unauthenticated access to study mode for public folders)
-=======
-=======
-            for card in cards:
-                card["front_content"] = sanitize_html_for_display(card.get("front_content", ""))
-                card["back_content"] = sanitize_html_for_display(card.get("back_content", ""))
->>>>>>> ee3ca24 (Fix 23 security vulnerabilities from comprehensive audit)
->>>>>>> d2daf6a (Fix 23 security vulnerabilities from comprehensive audit)
-            return JsonResponse(cards, safe=False)
+    cards = dictfetchall(c)
+    for card in cards:
+        card["front_content"] = sanitize_html_for_display(card.get("front_content", ""))
+        card["back_content"] = sanitize_html_for_display(card.get("back_content", ""))
+    return JsonResponse(cards, safe=False)
     except Exception as e:
         logger.error(f"get_study_cards error: {e}")
         return JsonResponse({"error": "Failed to fetch study cards"}, status=500)

@@ -1,20 +1,8 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, CheckCircle, XCircle, HelpCircle, RotateCcw, Volume2, Shuffle } from 'lucide-react';
-<<<<<<< HEAD
-<<<<<<< HEAD
-import { apiFetch, API_BASE } from '@/lib/api';
-import { sanitizeHtmlForDisplay } from '@/lib/sanitize';
-=======
 import { apiFetch, ApiError } from '@/lib/api';
->>>>>>> 4555d75 (Fix: Infinite error messages at console)
-=======
-import { apiFetch, ApiError } from '@/lib/api';
-=======
-import { apiFetch, API_BASE } from '@/lib/api';
 import { sanitizeHtmlForDisplay } from '@/lib/sanitize';
->>>>>>> ee3ca24 (Fix 23 security vulnerabilities from comprehensive audit)
->>>>>>> d2daf6a (Fix 23 security vulnerabilities from comprehensive audit)
 import './Study.css';
 
 function getNextReviewText(quality, currentInterval) {
@@ -102,21 +90,7 @@ export default function StudyPage() {
   }, []);
 
   useEffect(() => {
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-    if (!user) { navigate('/home'); return; }
-<<<<<<< HEAD
-=======
->>>>>>> d946e7a (Allow unauthenticated access to study mode for public folders)
-    loadCards(studyMode, shuffled);
-  }, [folderId, studyMode, shuffled, loadCards]);
-=======
-=======
-=======
->>>>>>> d2daf6a (Fix 23 security vulnerabilities from comprehensive audit)
     if (!userRef.current) { navigate('/home'); return; }
->>>>>>> 27a9cf8 (Fix: infinite error messages at console 2)
     requestAnimationFrame(() => loadCards(studyMode, shuffled));
   }, [folderId, studyMode, shuffled, loadCards, navigate]);
 
@@ -143,15 +117,6 @@ export default function StudyPage() {
       setFinished(true);
     }
   }, [cards, currentIndex, studyMode]);
-<<<<<<< HEAD
->>>>>>> b3c8234 (Fix: all 8 issues in frontend)
-=======
-=======
-    if (!user) { navigate('/home'); return; }
-    loadCards(studyMode, shuffled);
-  }, [folderId, studyMode, shuffled, loadCards]);
->>>>>>> ee3ca24 (Fix 23 security vulnerabilities from comprehensive audit)
->>>>>>> d2daf6a (Fix 23 security vulnerabilities from comprehensive audit)
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -177,35 +142,7 @@ export default function StudyPage() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-<<<<<<< HEAD
   }, [isFlipped, finished, loading, currentIndex, cards.length, handleRate]);
-=======
-  }, [isFlipped, finished, loading, currentIndex, cards.length]);
-
-  const handleRate = async (quality) => {
-    const card = cards[currentIndex];
-    setStats(s => ({ ...s, [quality === 0 ? 'again' : quality === 2 ? 'hard' : quality === 3 ? 'good' : 'easy']: s[quality === 0 ? 'again' : quality === 2 ? 'hard' : quality === 3 ? 'good' : 'easy'] + 1, total: s.total + 1 }));
-    
-    if (studyMode === 'due' && user) {
-      try {
-      await apiFetch('/study/update', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-          body: JSON.stringify({ cardId: card.id, quality }),
-      });
-      } catch (e) { console.error(e); }
-    }
-
-    if (currentIndex < cards.length - 1) {
-      setCurrentIndex(currentIndex + 1);
-      setIsFlipped(false);
-    } else {
-      setFinished(true);
-    }
-  };
->>>>>>> d946e7a (Allow unauthenticated access to study mode for public folders)
 
   const speak = (e, content) => {
     e.stopPropagation();
@@ -253,13 +190,13 @@ export default function StudyPage() {
   };
 
   if (loading) return <div className="study-container">Loading...</div>;
-if (cards.length === 0) return (
-  <div className="study-container">
-    <h2>No cards to study! 🎉</h2>
-    <div className="finished-buttons">
-      <button className="primary-btn" onClick={() => navigate(`/home?tab=${fromTab}`)}>Back</button>
+  if (cards.length === 0) return (
+    <div className="study-container">
+      <h2>No cards to study! 🎉</h2>
+      <div className="finished-buttons">
+        <button className="primary-btn" onClick={() => navigate(`/home?tab=${fromTab}`)}>Back</button>
       </div>
-      </div>
+    </div>
   );
 
   if (finished) {
@@ -268,16 +205,16 @@ if (cards.length === 0) return (
       <div className="study-container">
         <h2>Study Session Complete! 🌟</h2>
         <div className="session-stats">
-        <div className="stat-item"><span className="stat-value">{stats.total}</span><span className="stat-label">Cards Reviewed</span></div>
-        <div className="stat-item"><span className="stat-value">{accuracy}%</span><span className="stat-label">Accuracy</span></div>
-        <div className="stat-item stat-easy"><span className="stat-value">{stats.easy}</span><span className="stat-label">Easy</span></div>
-        <div className="stat-item stat-good"><span className="stat-value">{stats.good}</span><span className="stat-label">Good</span></div>
-        <div className="stat-item stat-hard"><span className="stat-value">{stats.hard}</span><span className="stat-label">Hard</span></div>
-        <div className="stat-item stat-again"><span className="stat-value">{stats.again}</span><span className="stat-label">Again</span></div>
+          <div className="stat-item"><span className="stat-value">{stats.total}</span><span className="stat-label">Cards Reviewed</span></div>
+          <div className="stat-item"><span className="stat-value">{accuracy}%</span><span className="stat-label">Accuracy</span></div>
+          <div className="stat-item stat-easy"><span className="stat-value">{stats.easy}</span><span className="stat-label">Easy</span></div>
+          <div className="stat-item stat-good"><span className="stat-value">{stats.good}</span><span className="stat-label">Good</span></div>
+          <div className="stat-item stat-hard"><span className="stat-value">{stats.hard}</span><span className="stat-label">Hard</span></div>
+          <div className="stat-item stat-again"><span className="stat-value">{stats.again}</span><span className="stat-label">Again</span></div>
         </div>
         <div className="finished-buttons">
-        <button className="primary-btn" onClick={() => { setStats({ again: 0, hard: 0, good: 0, easy: 0, total: 0 }); loadCards(studyMode, shuffled); }}>Study Again</button>
-        <button className="secondary-btn" onClick={() => navigate(`/home?tab=${fromTab}`)}>Back</button>
+          <button className="primary-btn" onClick={() => { setStats({ again: 0, hard: 0, good: 0, easy: 0, total: 0 }); loadCards(studyMode, shuffled); }}>Study Again</button>
+          <button className="secondary-btn" onClick={() => navigate(`/home?tab=${fromTab}`)}>Back</button>
         </div>
       </div>
     );
@@ -302,49 +239,18 @@ if (cards.length === 0) return (
         <div className="progress-bar" style={{ width: `${progress}%` }} />
       </div>
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-      <div className={`study-card ${isFlipped ? 'flipped' : ''}`} onClick={() => setIsFlipped(!isFlipped)}>
-        <div className="study-card-inner">
-          <div className="study-card-front" style={{ backgroundColor: currentCard.front_bg || 'var(--bg-surface)' }}>
-          <div className="study-content" dangerouslySetInnerHTML={{ __html: sanitizeHtmlForDisplay(currentCard.front_content) }} />
-          <button className="speak-btn" onClick={(e) => speak(e, currentCard.front_content)}><Volume2 size={20} /></button>
-          <div className="flip-hint">Click or press Space to flip</div>
-        </div>
-        <div className="study-card-back" style={{ backgroundColor: currentCard.back_bg || 'var(--bg-surface)' }}>
-          <div className="study-content" dangerouslySetInnerHTML={{ __html: sanitizeHtmlForDisplay(currentCard.back_content) }} />
-            <button className="speak-btn" onClick={(e) => speak(e, currentCard.back_content)}><Volume2 size={20} /></button>
-=======
-=======
->>>>>>> d2daf6a (Fix 23 security vulnerabilities from comprehensive audit)
       <div className="study-area">
         <div className={`study-card ${isFlipped ? 'flipped' : ''}`} onClick={() => setIsFlipped(!isFlipped)}>
           <div className="study-card-inner">
             <div className="study-card-front" style={{ backgroundColor: currentCard.front_bg || 'var(--bg-surface)' }}>
-              <div className="study-content" dangerouslySetInnerHTML={{ __html: currentCard.front_content }} />
+              <div className="study-content" dangerouslySetInnerHTML={{ __html: sanitizeHtmlForDisplay(currentCard.front_content) }} />
               <button className="speak-btn" onClick={(e) => speak(e, currentCard.front_content)}><Volume2 size={20} /></button>
               <div className="flip-hint">Click or press Space to flip</div>
             </div>
             <div className="study-card-back" style={{ backgroundColor: currentCard.back_bg || 'var(--bg-surface)' }}>
-              <div className="study-content" dangerouslySetInnerHTML={{ __html: currentCard.back_content }} />
+              <div className="study-content" dangerouslySetInnerHTML={{ __html: sanitizeHtmlForDisplay(currentCard.back_content) }} />
               <button className="speak-btn" onClick={(e) => speak(e, currentCard.back_content)}><Volume2 size={20} /></button>
             </div>
-<<<<<<< HEAD
->>>>>>> b0be6a4 (Fix: Study mode UI)
-=======
-=======
-      <div className={`study-card ${isFlipped ? 'flipped' : ''}`} onClick={() => setIsFlipped(!isFlipped)}>
-        <div className="study-card-inner">
-          <div className="study-card-front" style={{ backgroundColor: currentCard.front_bg || 'var(--bg-surface)' }}>
-          <div className="study-content" dangerouslySetInnerHTML={{ __html: sanitizeHtmlForDisplay(currentCard.front_content) }} />
-          <button className="speak-btn" onClick={(e) => speak(e, currentCard.front_content)}><Volume2 size={20} /></button>
-          <div className="flip-hint">Click or press Space to flip</div>
-        </div>
-        <div className="study-card-back" style={{ backgroundColor: currentCard.back_bg || 'var(--bg-surface)' }}>
-          <div className="study-content" dangerouslySetInnerHTML={{ __html: sanitizeHtmlForDisplay(currentCard.back_content) }} />
-            <button className="speak-btn" onClick={(e) => speak(e, currentCard.back_content)}><Volume2 size={20} /></button>
->>>>>>> ee3ca24 (Fix 23 security vulnerabilities from comprehensive audit)
->>>>>>> d2daf6a (Fix 23 security vulnerabilities from comprehensive audit)
           </div>
         </div>
 

@@ -1,20 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react'
-<<<<<<< HEAD
-<<<<<<< HEAD
-import { apiFetch } from '@/lib/api'
-import { sanitizeHtmlForDisplay } from '@/lib/sanitize'
-=======
 import { apiFetch, ApiError } from '@/lib/api'
->>>>>>> 4555d75 (Fix: Infinite error messages at console)
-=======
-import { apiFetch, ApiError } from '@/lib/api'
-=======
-import { apiFetch } from '@/lib/api'
 import { sanitizeHtmlForDisplay } from '@/lib/sanitize'
->>>>>>> ee3ca24 (Fix 23 security vulnerabilities from comprehensive audit)
->>>>>>> d2daf6a (Fix 23 security vulnerabilities from comprehensive audit)
 import './Viewer.css'
 
 export default function ViewerPage() {
@@ -109,12 +97,12 @@ export default function ViewerPage() {
       <main className="viewer-main">
         <div className="flashcard-container" onClick={() => setFlipped(!flipped)}>
           <div className={`flashcard ${flipped ? 'flipped' : ''}`}>
-        <div className="flashcard-front" style={{ backgroundColor: currentCard.frontBg || 'var(--bg-surface)' }}>
-        <div className="flashcard-content" dangerouslySetInnerHTML={{ __html: sanitizeHtmlForDisplay(currentCard.front) || '<p>Empty</p>' }} />
-        <div className="flip-hint">Click to flip</div>
-      </div>
-      <div className="flashcard-back" style={{ backgroundColor: currentCard.backBg || 'var(--bg-surface)' }}>
-        <div className="flashcard-content" dangerouslySetInnerHTML={{ __html: sanitizeHtmlForDisplay(currentCard.back) || '<p>Empty</p>' }} />
+            <div className="flashcard-front" style={{ backgroundColor: currentCard.frontBg || 'var(--bg-surface)' }}>
+              <div className="flashcard-content" dangerouslySetInnerHTML={{ __html: sanitizeHtmlForDisplay(currentCard.front) || '<p>Empty</p>' }} />
+              <div className="flip-hint">Click to flip</div>
+            </div>
+            <div className="flashcard-back" style={{ backgroundColor: currentCard.backBg || 'var(--bg-surface)' }}>
+              <div className="flashcard-content" dangerouslySetInnerHTML={{ __html: sanitizeHtmlForDisplay(currentCard.back) || '<p>Empty</p>' }} />
               <div className="flip-hint">Click to flip</div>
             </div>
           </div>
