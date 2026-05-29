@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Trash2, Move, RotateCw, Volume2 } from 'lucide-react';
+import { Trash2, Move, RotateCw, Volume2, Maximize2 } from 'lucide-react';
 
 export function DraggableText({ element, isSelected, onSelect, onUpdate, onDelete, t, canvasRef }) {
 const elementRef = useRef(null);
@@ -31,17 +31,24 @@ return { width: rect.width, height: rect.height };
     return Math.atan2(clientY - center.y, clientX - center.x) * (180 / Math.PI);
   }, []);
 
+  const exitEditing = () => {
+    if (isEditing && contentRef.current) {
+      contentRef.current.blur();
+    }
+  };
+
   const speak = (e) => {
     e.stopPropagation();
+    exitEditing();
     const utterance = new SpeechSynthesisUtterance(element.content || t('placeholder_text_input'));
     window.speechSynthesis.speak(utterance);
   };
 
   const handleEdgeMouseDown = (e) => {
     if (e.target.contentEditable === 'true') return;
-    if (isEditing) return;
     e.stopPropagation();
     e.preventDefault();
+    exitEditing();
     onSelect(element.id);
     setIsDragging(true);
     const dims = getCanvasDimensions();
@@ -55,28 +62,30 @@ return { width: rect.width, height: rect.height };
     };
   };
 
-const handleResizeStart = (e) => {
-  e.stopPropagation();
-  e.preventDefault();
-  onSelect(element.id);
-  setIsResizing(true);
-  const dims = getCanvasDimensions();
-  const currentWidth = element.width || 40;
-  const currentHeight = typeof element.height === 'number' ? element.height : 20;
-  dragStartRef.current = {
-    x: e.clientX,
-    y: e.clientY,
-    width: currentWidth,
-    height: currentHeight,
-    canvasWidth: dims.width,
-    canvasHeight: dims.height,
-    aspect: currentWidth / currentHeight
+  const handleResizeStart = (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    exitEditing();
+    onSelect(element.id);
+    setIsResizing(true);
+    const dims = getCanvasDimensions();
+    const currentWidth = element.width || 40;
+    const currentHeight = typeof element.height === 'number' ? element.height : 20;
+    dragStartRef.current = {
+      x: e.clientX,
+      y: e.clientY,
+      width: currentWidth,
+      height: currentHeight,
+      canvasWidth: dims.width,
+      canvasHeight: dims.height,
+      aspect: currentWidth / currentHeight
+    };
   };
-};
 
   const handleRotateStart = (e) => {
     e.stopPropagation();
     e.preventDefault();
+    exitEditing();
     onSelect(element.id);
     setIsRotating(true);
     const startAngle = getAngle(e.clientX, e.clientY);
@@ -102,7 +111,36 @@ const handleContentFocus = (e) => {
     onUpdate(element.id, { content: e.target.innerText });
   };
 
-useEffect(() => {
+  const handleContentKeyDown = (e) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      contentRef.current?.blur();
+    }
+  };
+
+  const handleContentDoubleClick = (e) => {
+    e.stopPropagation();
+    onSelect(element.id);
+    if (contentRef.current && !isEditing) {
+      contentRef.current.focus();
+    }
+  };
+
+  const autoFocusedRef = useRef(false);
+
+  useEffect(() => {
+    if (!isSelected) return;
+    if (autoFocusedRef.current) return;
+    if (element.content !== '') return;
+    if (!contentRef.current) return;
+    autoFocusedRef.current = true;
+    const timer = setTimeout(() => {
+      contentRef.current?.focus();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [isSelected, element.id, element.content]);
+
+  useEffect(() => {
   if (!isDragging && !isResizing && !isRotating) return;
 
   const handleMouseMove = (e) => {
@@ -145,10 +183,13 @@ useEffect(() => {
   };
   }, [isDragging, isResizing, isRotating, element.id, onUpdate, getAngle]);
 
-const handleContentClick = (e) => {
-  e.stopPropagation();
-  onSelect(element.id);
-};
+  const handleContentClick = (e) => {
+    e.stopPropagation();
+    if (!isEditing) {
+      e.preventDefault();
+    }
+    onSelect(element.id);
+  };
 
   const containerStyle = {
     position: 'absolute',
@@ -180,7 +221,7 @@ const handleContentClick = (e) => {
     borderRadius: '4px',
     whiteSpace: 'pre-wrap',
     wordBreak: 'break-word',
-    cursor: 'text',
+    cursor: isEditing ? 'text' : 'pointer',
     userSelect: 'text'
   };
 
@@ -267,29 +308,34 @@ const handleContentClick = (e) => {
               zIndex: 102,
               boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
             }}
-            onClick={(e) => { e.stopPropagation(); onDelete(element.id); }}
+            onClick={(e) => { e.stopPropagation(); exitEditing(); onDelete(element.id); }}
             title="Delete"
           >
             <Trash2 size={14} color="white" />
           </div>
 
-{/* Combined resize handle - Bottom right corner */}
-  <div
-    style={{
-      position: 'absolute',
-      bottom: '-8px',
-      right: '-8px',
-      width: '20px',
-      height: '20px',
-      background: '#D97757',
-      borderRadius: '50%',
-      cursor: 'se-resize',
-      zIndex: 101,
-      boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-    }}
-    onMouseDown={handleResizeStart}
-    title="Resize"
-  />
+      {/* Combined resize handle - Bottom right corner */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: '-12px',
+          right: '-12px',
+          width: '24px',
+          height: '24px',
+          background: '#D97757',
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'se-resize',
+          zIndex: 101,
+          boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+        }}
+        onMouseDown={handleResizeStart}
+        title="Resize"
+      >
+        <Maximize2 size={14} color="white" />
+      </div>
 
           {/* TTS button */}
           <button
@@ -326,9 +372,11 @@ const handleContentClick = (e) => {
           ...contentStyle,
           backgroundColor: element.backgroundColor || 'transparent'
         }}
-        onFocus={handleContentFocus}
-        onBlur={handleContentBlur}
-        onMouseDown={handleContentClick}
+onFocus={handleContentFocus}
+onBlur={handleContentBlur}
+onMouseDown={handleContentClick}
+onDoubleClick={handleContentDoubleClick}
+onKeyDown={handleContentKeyDown}
       >
         {element.content || t('placeholder_text_input')}
       </div>
