@@ -3,8 +3,11 @@ import math
 import json
 import logging
 import traceback
+from pathlib import Path
+from datetime import timedelta
+from uuid import uuid4
 
-from django.db import connection
+from django.db import connection, transaction
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.clickjacking import xframe_options_exempt
@@ -75,6 +78,43 @@ def sanitize_html(html):
             "position",
             "z-index",
             "transform",
+        ]
+    )
+    return bleach.clean(
+        html,
+        tags=allowed_tags,
+        attributes=allowed_attrs,
+        css_sanitizer=css_sanitizer,
+        strip=True,
+    )
+
+
+def sanitize_html_for_display(html):
+    allowed_tags = [
+        "span", "div", "br", "p", "b", "i", "strong", "em", "u", "font", "img",
+    ]
+    allowed_attrs = {
+        "*": ["class", "style", "data-name", "data-aspect"],
+        "font": ["color", "size", "face"],
+        "img": ["src", "alt", "draggable"],
+    }
+    css_sanitizer = CSSSanitizer(
+        allowed_css_properties=[
+            "color",
+            "font-size",
+            "font-weight",
+            "font-style",
+            "font-family",
+            "text-decoration",
+            "text-align",
+            "left",
+            "top",
+            "width",
+            "height",
+            "max-width",
+            "max-height",
+            "background-color",
+            "position",
         ]
     )
     return bleach.clean(
@@ -417,30 +457,34 @@ def update_folder(request):
     if not folder_id:
         return JsonResponse({"message": "フォルダIDが必要です"}, status=400)
 
-    with connection.cursor() as c:
-        c.execute("SELECT user_email FROM folders WHERE id = %s", (folder_id,))
-        folder = dictfetchone(c)
-        if not folder or folder["user_email"] != user_email:
-            return JsonResponse(
-                {"message": "このフォルダへのアクセス権限がありません"}, status=403
-            )
-
-        if title:
-            c.execute(
-                "SELECT id FROM folders WHERE user_email = %s AND title = %s AND id != %s",
-                (user_email, title, folder_id),
-            )
-            if dictfetchone(c):
+    with transaction.atomic():
+        with connection.cursor() as c:
+            c.execute("SELECT user_email FROM folders WHERE id = %s", (folder_id,))
+            folder = dictfetchone(c)
+            if not folder or folder["user_email"] != user_email:
                 return JsonResponse(
-                    {"message": "同じ名前のフォルダが既に存在します"}, status=400
+                    {"message": "このフォルダへのアクセス権限がありません"}, status=403
                 )
 
-        c.execute(
-            "UPDATE folders SET title = %s, visibility = %s WHERE id = %s",
-            (title, data.get("visibility"), folder_id),
-        )
+            if title:
+                c.execute(
+                    "SELECT id FROM folders WHERE user_email = %s AND title = %s AND id != %s",
+                    (user_email, title, folder_id),
+                )
+                if dictfetchone(c):
+                    return JsonResponse(
+                        {"message": "同じ名前のフォルダが既に存在します"}, status=400
+                    )
 
-    connection.commit()
+            visibility = data.get("visibility")
+            if visibility and visibility not in ("private", "public"):
+                return JsonResponse({"message": "Invalid visibility value"}, status=400)
+
+            c.execute(
+                "UPDATE folders SET title = %s, visibility = %s WHERE id = %s",
+                (title, visibility, folder_id),
+            )
+
     return JsonResponse({"message": "Success"})
 
 
@@ -483,6 +527,11 @@ def toggle_action(request):
 
     if not folder_id or action not in ("like", "favorite"):
         return JsonResponse({"message": "Invalid request"}, status=400)
+
+    with connection.cursor() as c:
+        c.execute("SELECT 1 FROM folders WHERE id = %s", (folder_id,))
+        if not dictfetchone(c):
+            return JsonResponse({"message": "Folder not found"}, status=404)
 
     if action == "like":
         with connection.cursor() as c:
@@ -609,44 +658,45 @@ def import_folder(request):
     if not folder_data:
         return JsonResponse({"error": "Missing folderData"}, status=400)
 
+    visibility = folder_data.get("visibility", "private")
+    if visibility not in ("private", "public"):
+        visibility = "private"
+
     try:
-        with connection.cursor() as c:
-            # Create new folder
-            c.execute(
-                "INSERT INTO folders (user_email, title, visibility) VALUES (%s, %s, %s)",
-                (
-                    user_email,
-                    folder_data["folder_title"],
-                    folder_data.get("visibility", "private"),
-                ),
-            )
-            folder_id = c.lastrowid
+        with transaction.atomic():
+            with connection.cursor() as c:
+                c.execute(
+                    "INSERT INTO folders (user_email, title, visibility) VALUES (%s, %s, %s)",
+                    (
+                        user_email,
+                        bleach.clean(folder_data["folder_title"], tags=[], strip=True),
+                        visibility,
+                    ),
+                )
+                folder_id = c.lastrowid
 
-            # Import cards
-            for idx, card in enumerate(folder_data["cards"]):
-                front_content = sanitize_html(card.get("front_content", ""))
-                back_content = sanitize_html(card.get("back_content", ""))
-                front_bg = card.get("front_bg", "")
-                back_bg = card.get("back_bg", "")
-                tags = card.get("tags", "")
-                
-            c.execute(
-                "INSERT INTO cards (folder_id, order_index, front_content, back_content, front_bg, back_bg, tags, srs_interval, srs_ease, srs_next_review) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-                (
-                    folder_id,
-                    idx,
-                    front_content,
-                    back_content,
-                    front_bg,
-                    back_bg,
-                    tags,
-                    0,
-                    2.5,
-                    None,
-                ),
-            )
+                for idx, card in enumerate(folder_data["cards"]):
+                    front_content = sanitize_html(card.get("front_content", ""))
+                    back_content = sanitize_html(card.get("back_content", ""))
+                    front_bg = card.get("front_bg", "")
+                    back_bg = card.get("back_bg", "")
+                    tags = card.get("tags", "")
 
-        connection.commit()
+                    c.execute(
+                        "INSERT INTO cards (folder_id, order_index, front_content, back_content, front_bg, back_bg, tags, srs_interval, srs_ease, srs_next_review) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                        (
+                            folder_id,
+                            idx,
+                            front_content,
+                            back_content,
+                            front_bg,
+                            back_bg,
+                            tags,
+                            0,
+                            2.5,
+                            None,
+                        ),
+                    )
 
         return JsonResponse({"message": "Import successful", "folderId": folder_id})
     except Exception as e:
@@ -704,10 +754,13 @@ def get_study_cards(request):
                     AND (c.back_content IS NOT NULL AND c.back_content != '')
                     ORDER BY c.order_index
                     """,
-                    (folder_id,),
-                )
-            cards = dictfetchall(c)
-            return JsonResponse(cards, safe=False)
+            (folder_id,),
+            )
+        cards = dictfetchall(c)
+        for card in cards:
+            card["front_content"] = sanitize_html_for_display(card.get("front_content", ""))
+            card["back_content"] = sanitize_html_for_display(card.get("back_content", ""))
+        return JsonResponse(cards, safe=False)
     except Exception as e:
         logger.error(f"get_study_cards error: {e}")
         return JsonResponse({"error": "Failed to fetch study cards"}, status=500)
@@ -728,42 +781,44 @@ def update_srs(request):
         return JsonResponse({"error": "Missing parameters"}, status=400)
 
     try:
-        with connection.cursor() as c:
-            c.execute(
-                "SELECT srs_interval, srs_ease FROM cards WHERE id = %s", (card_id,)
-            )
-            row = dictfetchone(c)
-            if not row:
-                return JsonResponse({"error": "Card not found"}, status=404)
+        with transaction.atomic():
+            with connection.cursor() as c:
+                c.execute(
+                    """SELECT c.srs_interval, c.srs_ease FROM cards c
+                    JOIN folders f ON c.folder_id = f.id
+                    WHERE c.id = %s AND f.user_email = %s""",
+                    (card_id, user_email),
+                )
+                row = dictfetchone(c)
+                if not row:
+                    return JsonResponse({"error": "Card not found or access denied"}, status=404)
 
-            interval = row["srs_interval"] or 0
-            ease = row["srs_ease"] or 2.5
+                interval = row["srs_interval"] or 0
+                ease = row["srs_ease"] or 2.5
 
-            # SM-2 Algorithm
-            if quality >= 3:
-                if interval == 0:
-                    new_interval = 1
-                elif interval == 1:
-                    new_interval = 6
+                if quality >= 3:
+                    if interval == 0:
+                        new_interval = 1
+                    elif interval == 1:
+                        new_interval = 6
+                    else:
+                        new_interval = math.ceil(interval * ease)
+                    new_ease = ease + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02))
                 else:
-                    new_interval = math.ceil(interval * ease)
-                new_ease = ease + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02))
-            else:
-                new_interval = 1
-                new_ease = ease
+                    new_interval = 1
+                    new_ease = ease
 
-            new_ease = max(1.3, new_ease)
+                new_ease = max(1.3, new_ease)
 
-            from datetime import datetime, timedelta
+                from django.utils import timezone
 
-            next_review = datetime.now() + timedelta(days=new_interval)
+                next_review = timezone.now() + timedelta(days=new_interval)
 
-            c.execute(
-                "UPDATE cards SET srs_interval = %s, srs_ease = %s, srs_next_review = %s WHERE id = %s",
-                (new_interval, new_ease, next_review, card_id),
-            )
+                c.execute(
+                    "UPDATE cards SET srs_interval = %s, srs_ease = %s, srs_next_review = %s WHERE id = %s",
+                    (new_interval, new_ease, next_review, card_id),
+                )
 
-        connection.commit()
         return JsonResponse({"message": "SRS updated"})
     except Exception as e:
         logger.error(f"update_srs error: {e}")
@@ -775,6 +830,11 @@ def update_srs(request):
 # ==========================================
 
 
+ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/gif", "image/webp"}
+MAX_IMAGE_SIZE = 5 * 1024 * 1024
+ALLOWED_IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp"}
+
+
 @csrf_exempt
 @jwt_required
 @require_http_methods(["POST"])
@@ -784,8 +844,21 @@ def upload_image(request):
 
     try:
         image_file = request.FILES["image"]
+
+        if image_file.size > MAX_IMAGE_SIZE:
+            return JsonResponse({"error": "File too large (max 5MB)"}, status=400)
+
+        content_type = getattr(image_file, "content_type", "") or ""
+        if content_type not in ALLOWED_IMAGE_TYPES:
+            return JsonResponse({"error": "File type not allowed"}, status=400)
+
+        ext = Path(image_file.name).suffix.lower()
+        if ext not in ALLOWED_IMAGE_EXTENSIONS:
+            return JsonResponse({"error": "File extension not allowed"}, status=400)
+
+        safe_filename = f"uploads/{uuid4().hex}{ext}"
         fs = FileSystemStorage()
-        filename = fs.save(f"uploads/{image_file.name}", image_file)
+        filename = fs.save(safe_filename, image_file)
         url = fs.url(filename)
         return JsonResponse({"url": url})
     except Exception as e:
@@ -805,50 +878,41 @@ def save_cards(request):
         cards_data = data.get("cards")
         user_email = request.user_email
 
-        logger.error(
-            f"SAVE DEBUG - folder_id: {folder_id}, user_email: {user_email}, cards_count: {len(cards_data) if cards_data else 0}"
-        )
-
         if not folder_id:
-            logger.error("Save error: folderId is missing from request")
             return JsonResponse({"message": "フォルダIDが必要です"}, status=400)
 
-        with connection.cursor() as c:
-            c.execute("SELECT user_email FROM folders WHERE id = %s", (folder_id,))
-            folder = dictfetchone(c)
-            if not folder or folder["user_email"] != user_email:
-                return JsonResponse(
-                    {"message": "このフォルダへのアクセス権限がありません"}, status=403
-                )
+        with transaction.atomic():
+            with connection.cursor() as c:
+                c.execute("SELECT user_email FROM folders WHERE id = %s", (folder_id,))
+                folder = dictfetchone(c)
+                if not folder or folder["user_email"] != user_email:
+                    return JsonResponse(
+                        {"message": "このフォルダへのアクセス権限がありません"}, status=403
+                    )
 
-            c.execute("DELETE FROM cards WHERE folder_id = %s", (folder_id,))
+                c.execute("DELETE FROM cards WHERE folder_id = %s", (folder_id,))
 
-            for idx, card in enumerate(cards_data):
-                front_html = sanitize_html(card.get("front", ""))
-                back_html = sanitize_html(card.get("back", ""))
-                front_bg = card.get("frontBg", "")
-                back_bg = card.get("backBg", "")
+                for idx, card in enumerate(cards_data):
+                    front_html = sanitize_html(card.get("front", ""))
+                    back_html = sanitize_html(card.get("back", ""))
+                    front_bg = card.get("frontBg", "")
+                    back_bg = card.get("backBg", "")
 
-                c.execute(
-                    "INSERT INTO cards (folder_id, order_index, front_content, back_content, front_bg, back_bg, tags, srs_interval, srs_ease, srs_next_review) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-                    (
-                        folder_id,
-                        idx,
-                        front_html,
-                        back_html,
-                        front_bg,
-                        back_bg,
-                        card.get("tags", ""),
-                        0,
-                        2.5,
-                        None,
-                    ),
-                )
-
-        connection.commit()
-        logger.error(
-            f"SAVE DEBUG - committed {len(cards_data)} cards for folder {folder_id}"
-        )
+                    c.execute(
+                        "INSERT INTO cards (folder_id, order_index, front_content, back_content, front_bg, back_bg, tags, srs_interval, srs_ease, srs_next_review) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                        (
+                            folder_id,
+                            idx,
+                            front_html,
+                            back_html,
+                            front_bg,
+                            back_bg,
+                            card.get("tags", ""),
+                            0,
+                            2.5,
+                            None,
+                        ),
+                    )
 
         return JsonResponse({"message": "セーブ完了！"})
     except Exception as e:
@@ -975,9 +1039,9 @@ def get_public_cards(request):
             c.execute(fetch_sql, tuple(final_params))
             cards = dictfetchall(c)
 
-        for idx, card in enumerate(cards):
-            if "id" not in card:
-                card["id"] = idx + 1
+            for card in cards:
+                card["front"] = sanitize_html_for_display(card.get("front", ""))
+                card["back"] = sanitize_html_for_display(card.get("back", ""))
 
         return JsonResponse(
             {

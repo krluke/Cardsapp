@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, CheckCircle, XCircle, HelpCircle, RotateCcw, Volume2, Shuffle } from 'lucide-react';
 import { apiFetch, ApiError } from '@/lib/api';
+import { sanitizeHtmlForDisplay } from '@/lib/sanitize';
 import './Study.css';
 
 function getNextReviewText(quality, currentInterval) {
@@ -189,13 +190,13 @@ export default function StudyPage() {
   };
 
   if (loading) return <div className="study-container">Loading...</div>;
-if (cards.length === 0) return (
-  <div className="study-container">
-    <h2>No cards to study! 🎉</h2>
-    <div className="finished-buttons">
-      <button className="primary-btn" onClick={() => navigate(`/home?tab=${fromTab}`)}>Back</button>
+  if (cards.length === 0) return (
+    <div className="study-container">
+      <h2>No cards to study! 🎉</h2>
+      <div className="finished-buttons">
+        <button className="primary-btn" onClick={() => navigate(`/home?tab=${fromTab}`)}>Back</button>
       </div>
-      </div>
+    </div>
   );
 
   if (finished) {
@@ -204,16 +205,16 @@ if (cards.length === 0) return (
       <div className="study-container">
         <h2>Study Session Complete! 🌟</h2>
         <div className="session-stats">
-        <div className="stat-item"><span className="stat-value">{stats.total}</span><span className="stat-label">Cards Reviewed</span></div>
-        <div className="stat-item"><span className="stat-value">{accuracy}%</span><span className="stat-label">Accuracy</span></div>
-        <div className="stat-item stat-easy"><span className="stat-value">{stats.easy}</span><span className="stat-label">Easy</span></div>
-        <div className="stat-item stat-good"><span className="stat-value">{stats.good}</span><span className="stat-label">Good</span></div>
-        <div className="stat-item stat-hard"><span className="stat-value">{stats.hard}</span><span className="stat-label">Hard</span></div>
-        <div className="stat-item stat-again"><span className="stat-value">{stats.again}</span><span className="stat-label">Again</span></div>
+          <div className="stat-item"><span className="stat-value">{stats.total}</span><span className="stat-label">Cards Reviewed</span></div>
+          <div className="stat-item"><span className="stat-value">{accuracy}%</span><span className="stat-label">Accuracy</span></div>
+          <div className="stat-item stat-easy"><span className="stat-value">{stats.easy}</span><span className="stat-label">Easy</span></div>
+          <div className="stat-item stat-good"><span className="stat-value">{stats.good}</span><span className="stat-label">Good</span></div>
+          <div className="stat-item stat-hard"><span className="stat-value">{stats.hard}</span><span className="stat-label">Hard</span></div>
+          <div className="stat-item stat-again"><span className="stat-value">{stats.again}</span><span className="stat-label">Again</span></div>
         </div>
         <div className="finished-buttons">
-        <button className="primary-btn" onClick={() => { setStats({ again: 0, hard: 0, good: 0, easy: 0, total: 0 }); loadCards(studyMode, shuffled); }}>Study Again</button>
-        <button className="secondary-btn" onClick={() => navigate(`/home?tab=${fromTab}`)}>Back</button>
+          <button className="primary-btn" onClick={() => { setStats({ again: 0, hard: 0, good: 0, easy: 0, total: 0 }); loadCards(studyMode, shuffled); }}>Study Again</button>
+          <button className="secondary-btn" onClick={() => navigate(`/home?tab=${fromTab}`)}>Back</button>
         </div>
       </div>
     );
@@ -242,12 +243,12 @@ if (cards.length === 0) return (
         <div className={`study-card ${isFlipped ? 'flipped' : ''}`} onClick={() => setIsFlipped(!isFlipped)}>
           <div className="study-card-inner">
             <div className="study-card-front" style={{ backgroundColor: currentCard.front_bg || 'var(--bg-surface)' }}>
-              <div className="study-content" dangerouslySetInnerHTML={{ __html: currentCard.front_content }} />
+              <div className="study-content" dangerouslySetInnerHTML={{ __html: sanitizeHtmlForDisplay(currentCard.front_content) }} />
               <button className="speak-btn" onClick={(e) => speak(e, currentCard.front_content)}><Volume2 size={20} /></button>
               <div className="flip-hint">Click or press Space to flip</div>
             </div>
             <div className="study-card-back" style={{ backgroundColor: currentCard.back_bg || 'var(--bg-surface)' }}>
-              <div className="study-content" dangerouslySetInnerHTML={{ __html: currentCard.back_content }} />
+              <div className="study-content" dangerouslySetInnerHTML={{ __html: sanitizeHtmlForDisplay(currentCard.back_content) }} />
               <button className="speak-btn" onClick={(e) => speak(e, currentCard.back_content)}><Volume2 size={20} /></button>
             </div>
           </div>
