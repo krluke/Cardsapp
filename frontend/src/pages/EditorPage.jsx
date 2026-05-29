@@ -584,14 +584,12 @@ export default function EditorPage() {
     finally { dispatch({ type: 'SET_SAVING', payload: false }); savingRef.current = false }
   }, [state.cards, folderId]);
 
-  const userRef = useRef(user);
-
   useEffect(() => {
     const savedTheme = localStorage.getItem('app-theme') || 'light';
     document.documentElement.setAttribute('data-theme', savedTheme);
-    if (!userRef.current) { navigate('/home'); return; }
-    requestAnimationFrame(() => loadData());
-  }, [folderId, navigate, loadData]);
+    if (!user) { navigate('/home'); return; }
+    loadData();
+  }, [folderId, user, loadData, navigate]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
