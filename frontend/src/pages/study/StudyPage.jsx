@@ -2,11 +2,19 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, CheckCircle, XCircle, HelpCircle, RotateCcw, Volume2, Shuffle } from 'lucide-react';
 <<<<<<< HEAD
+<<<<<<< HEAD
 import { apiFetch, API_BASE } from '@/lib/api';
 import { sanitizeHtmlForDisplay } from '@/lib/sanitize';
 =======
 import { apiFetch, ApiError } from '@/lib/api';
 >>>>>>> 4555d75 (Fix: Infinite error messages at console)
+=======
+import { apiFetch, ApiError } from '@/lib/api';
+=======
+import { apiFetch, API_BASE } from '@/lib/api';
+import { sanitizeHtmlForDisplay } from '@/lib/sanitize';
+>>>>>>> ee3ca24 (Fix 23 security vulnerabilities from comprehensive audit)
+>>>>>>> d2daf6a (Fix 23 security vulnerabilities from comprehensive audit)
 import './Study.css';
 
 function getNextReviewText(quality, currentInterval) {
@@ -96,6 +104,7 @@ export default function StudyPage() {
   useEffect(() => {
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     if (!user) { navigate('/home'); return; }
 <<<<<<< HEAD
 =======
@@ -104,6 +113,8 @@ export default function StudyPage() {
   }, [folderId, studyMode, shuffled, loadCards]);
 =======
 =======
+=======
+>>>>>>> d2daf6a (Fix 23 security vulnerabilities from comprehensive audit)
     if (!userRef.current) { navigate('/home'); return; }
 >>>>>>> 27a9cf8 (Fix: infinite error messages at console 2)
     requestAnimationFrame(() => loadCards(studyMode, shuffled));
@@ -132,7 +143,15 @@ export default function StudyPage() {
       setFinished(true);
     }
   }, [cards, currentIndex, studyMode]);
+<<<<<<< HEAD
 >>>>>>> b3c8234 (Fix: all 8 issues in frontend)
+=======
+=======
+    if (!user) { navigate('/home'); return; }
+    loadCards(studyMode, shuffled);
+  }, [folderId, studyMode, shuffled, loadCards]);
+>>>>>>> ee3ca24 (Fix 23 security vulnerabilities from comprehensive audit)
+>>>>>>> d2daf6a (Fix 23 security vulnerabilities from comprehensive audit)
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -284,6 +303,7 @@ if (cards.length === 0) return (
       </div>
 
 <<<<<<< HEAD
+<<<<<<< HEAD
       <div className={`study-card ${isFlipped ? 'flipped' : ''}`} onClick={() => setIsFlipped(!isFlipped)}>
         <div className="study-card-inner">
           <div className="study-card-front" style={{ backgroundColor: currentCard.front_bg || 'var(--bg-surface)' }}>
@@ -295,6 +315,8 @@ if (cards.length === 0) return (
           <div className="study-content" dangerouslySetInnerHTML={{ __html: sanitizeHtmlForDisplay(currentCard.back_content) }} />
             <button className="speak-btn" onClick={(e) => speak(e, currentCard.back_content)}><Volume2 size={20} /></button>
 =======
+=======
+>>>>>>> d2daf6a (Fix 23 security vulnerabilities from comprehensive audit)
       <div className="study-area">
         <div className={`study-card ${isFlipped ? 'flipped' : ''}`} onClick={() => setIsFlipped(!isFlipped)}>
           <div className="study-card-inner">
@@ -307,7 +329,22 @@ if (cards.length === 0) return (
               <div className="study-content" dangerouslySetInnerHTML={{ __html: currentCard.back_content }} />
               <button className="speak-btn" onClick={(e) => speak(e, currentCard.back_content)}><Volume2 size={20} /></button>
             </div>
+<<<<<<< HEAD
 >>>>>>> b0be6a4 (Fix: Study mode UI)
+=======
+=======
+      <div className={`study-card ${isFlipped ? 'flipped' : ''}`} onClick={() => setIsFlipped(!isFlipped)}>
+        <div className="study-card-inner">
+          <div className="study-card-front" style={{ backgroundColor: currentCard.front_bg || 'var(--bg-surface)' }}>
+          <div className="study-content" dangerouslySetInnerHTML={{ __html: sanitizeHtmlForDisplay(currentCard.front_content) }} />
+          <button className="speak-btn" onClick={(e) => speak(e, currentCard.front_content)}><Volume2 size={20} /></button>
+          <div className="flip-hint">Click or press Space to flip</div>
+        </div>
+        <div className="study-card-back" style={{ backgroundColor: currentCard.back_bg || 'var(--bg-surface)' }}>
+          <div className="study-content" dangerouslySetInnerHTML={{ __html: sanitizeHtmlForDisplay(currentCard.back_content) }} />
+            <button className="speak-btn" onClick={(e) => speak(e, currentCard.back_content)}><Volume2 size={20} /></button>
+>>>>>>> ee3ca24 (Fix 23 security vulnerabilities from comprehensive audit)
+>>>>>>> d2daf6a (Fix 23 security vulnerabilities from comprehensive audit)
           </div>
         </div>
 

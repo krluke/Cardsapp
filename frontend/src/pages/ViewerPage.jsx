@@ -2,11 +2,19 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react'
 <<<<<<< HEAD
+<<<<<<< HEAD
 import { apiFetch } from '@/lib/api'
 import { sanitizeHtmlForDisplay } from '@/lib/sanitize'
 =======
 import { apiFetch, ApiError } from '@/lib/api'
 >>>>>>> 4555d75 (Fix: Infinite error messages at console)
+=======
+import { apiFetch, ApiError } from '@/lib/api'
+=======
+import { apiFetch } from '@/lib/api'
+import { sanitizeHtmlForDisplay } from '@/lib/sanitize'
+>>>>>>> ee3ca24 (Fix 23 security vulnerabilities from comprehensive audit)
+>>>>>>> d2daf6a (Fix 23 security vulnerabilities from comprehensive audit)
 import './Viewer.css'
 
 export default function ViewerPage() {

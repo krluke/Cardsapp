@@ -1,6 +1,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 import { useReducer, useEffect, useRef, useCallback } from 'react';
 =======
 import { useReducer, useEffect, useCallback } from 'react';
@@ -11,6 +12,12 @@ import { useReducer, useEffect, useCallback, useRef } from 'react';
 =======
 import { useReducer, useEffect, useCallback, useRef, useMemo } from 'react';
 >>>>>>> 27a9cf8 (Fix: infinite error messages at console 2)
+=======
+import { useReducer, useEffect, useCallback, useRef, useMemo } from 'react';
+=======
+import { useReducer, useEffect, useRef, useCallback } from 'react';
+>>>>>>> ee3ca24 (Fix 23 security vulnerabilities from comprehensive audit)
+>>>>>>> d2daf6a (Fix 23 security vulnerabilities from comprehensive audit)
 import { useParams, useNavigate } from 'react-router-dom';
 import { Trash2, ChevronLeft, ChevronRight, Copy } from 'lucide-react';
 import './Editor.css';
@@ -356,8 +363,11 @@ export default function EditorPage() {
   const navigate = useNavigate();
   const [state, dispatch] = useReducer(editorReducer, initialState);
 <<<<<<< HEAD
+<<<<<<< HEAD
   const saveCardsRef = useRef(null);
 =======
+=======
+>>>>>>> d2daf6a (Fix 23 security vulnerabilities from comprehensive audit)
   const loadingRef = useRef(false);
   const retryAfterRef = useRef(0);
 <<<<<<< HEAD
@@ -368,6 +378,54 @@ export default function EditorPage() {
 >>>>>>> 27a9cf8 (Fix: infinite error messages at console 2)
 
   const user = useMemo(() => {
+=======
+  const saveCardsRef = useRef(null);
+
+  const session = JSON.parse(localStorage.getItem('session') || '{}');
+  const user = session.user;
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('app-theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    if (!user) { navigate('/home'); return; }
+    loadData();
+  }, [folderId]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (saveCardsRef.current) saveCardsRef.current();
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [state.cards]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Delete' && state.selectedElement) {
+        dispatch({ type: 'DELETE_ELEMENT', payload: { elementId: state.selectedElement } });
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        saveCards();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+        e.preventDefault();
+        dispatch({ type: 'UNDO' });
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'y') {
+        e.preventDefault();
+        dispatch({ type: 'REDO' });
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'd' && state.selectedElement) {
+        e.preventDefault();
+        dispatch({ type: 'DUPLICATE_ELEMENT', payload: { elementId: state.selectedElement } });
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [state.selectedElement, saveCards]);
+
+  const loadData = async () => {
+>>>>>>> ee3ca24 (Fix 23 security vulnerabilities from comprehensive audit)
     try {
       return JSON.parse(localStorage.getItem('session') || '{}').user || null;
     } catch { return null; }
@@ -583,6 +641,7 @@ const bgColorMatch = style.match(/background-color:\s*(#[0-9a-fA-F]+|rgb\([^)]+\
   };
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 const serializeElements = (elements) => {
   return elements.map(el => {
     if (el.type === 'text') {
@@ -607,6 +666,8 @@ const serializeElements = (elements) => {
       const safeSrc = el.src.replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
       return `<div class="draggable-image" style="position:absolute;left:${el.left}%;top:${el.top}%;width:${el.width}%;height:${el.height}%;"><img src="${safeSrc}" style="width:100%;height:100%;object-fit:contain;" /></div>`;
 =======
+=======
+>>>>>>> d2daf6a (Fix 23 security vulnerabilities from comprehensive audit)
   const serializeElements = (elements) => {
     return elements.map(el => {
       if (el.type === 'text') {
@@ -629,7 +690,35 @@ const serializeElements = (elements) => {
       }
       if (el.type === 'image') {
         return `<div class="draggable-image" style="position:absolute;left:${el.left}%;top:${el.top}%;width:${el.width}%;height:${el.height}%;"><img src="${el.src}" style="width:100%;height:100%;object-fit:contain;" /></div>`;
+<<<<<<< HEAD
 >>>>>>> b3c8234 (Fix: all 8 issues in frontend)
+=======
+=======
+const serializeElements = (elements) => {
+  return elements.map(el => {
+    if (el.type === 'text') {
+      const sanitizedContent = el.content
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+      const h = typeof el.height === 'number' ? el.height + '%' : (el.height || 'auto');
+      const ff = el.fontFamily || 'sans-serif';
+      const fw = el.fontWeight || 'normal';
+      const fs = el.fontStyle || 'normal';
+      const td = el.textDecoration || 'none';
+      const ta = el.textAlign || 'left';
+      const c = el.color && el.color !== '#000000' ? el.color : '';
+      const bg = el.backgroundColor && el.backgroundColor !== 'transparent' ? el.backgroundColor : '';
+      const r = el.rotation || 0;
+      const colorStyle = c ? `color:${c};` : '';
+      const bgStyle = bg ? `background-color:${bg};` : '';
+      return `<div class="draggable-text" style="position:absolute;left:${el.left}%;top:${el.top}%;width:${el.width}%;height:${h};font-size:${el.fontSize}px;font-family:"${ff}";font-weight:${fw};font-style:${fs};text-decoration:${td};text-align:${ta};${colorStyle}${bgStyle}transform:rotate(${r}deg)">${sanitizedContent}</div>`;
+    }
+    if (el.type === 'image') {
+      const safeSrc = el.src.replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      return `<div class="draggable-image" style="position:absolute;left:${el.left}%;top:${el.top}%;width:${el.width}%;height:${el.height}%;"><img src="${safeSrc}" style="width:100%;height:100%;object-fit:contain;" /></div>`;
+>>>>>>> ee3ca24 (Fix 23 security vulnerabilities from comprehensive audit)
+>>>>>>> d2daf6a (Fix 23 security vulnerabilities from comprehensive audit)
       }
       return '';
     }).join('');
@@ -850,6 +939,10 @@ body: formData,
   };
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> d2daf6a (Fix 23 security vulnerabilities from comprehensive audit)
   const saveCards = useCallback(async () => {
     dispatch({ type: 'SET_SAVING', payload: true });
     try {
@@ -873,8 +966,12 @@ body: formData,
     saveCardsRef.current = saveCards;
   });
 
+<<<<<<< HEAD
 =======
 >>>>>>> b3c8234 (Fix: all 8 issues in frontend)
+=======
+>>>>>>> ee3ca24 (Fix 23 security vulnerabilities from comprehensive audit)
+>>>>>>> d2daf6a (Fix 23 security vulnerabilities from comprehensive audit)
   const goToHome = () => { navigate('/home'); };
 
   if (state.loading) return <div className="page-container">Loading...</div>;
