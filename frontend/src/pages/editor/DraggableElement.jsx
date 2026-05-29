@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Trash2, Move, RotateCw, Volume2 } from 'lucide-react';
 
 export function DraggableText({ element, isSelected, onSelect, onUpdate, onDelete, t, canvasRef }) {
@@ -26,10 +26,10 @@ return { width: rect.width, height: rect.height };
     };
   };
 
-  const getAngle = (clientX, clientY) => {
+  const getAngle = useCallback((clientX, clientY) => {
     const center = getCenter();
     return Math.atan2(clientY - center.y, clientX - center.x) * (180 / Math.PI);
-  };
+  }, []);
 
   const speak = (e) => {
     e.stopPropagation();
@@ -143,7 +143,7 @@ useEffect(() => {
     window.removeEventListener('mousemove', handleMouseMove);
     window.removeEventListener('mouseup', handleMouseUp);
   };
-}, [isDragging, isResizing, isRotating, element.id, onUpdate]);
+  }, [isDragging, isResizing, isRotating, element.id, onUpdate, getAngle]);
 
 const handleContentClick = (e) => {
   e.stopPropagation();

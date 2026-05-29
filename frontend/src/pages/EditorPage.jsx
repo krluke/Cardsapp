@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import { useReducer, useEffect, useRef, useCallback } from 'react';
+=======
+import { useReducer, useEffect, useCallback } from 'react';
+>>>>>>> b3c8234 (Fix: all 8 issues in frontend)
 import { useParams, useNavigate } from 'react-router-dom';
 import { Trash2, ChevronLeft, ChevronRight, Copy } from 'lucide-react';
 import './Editor.css';
@@ -348,6 +352,7 @@ export default function EditorPage() {
   const session = JSON.parse(localStorage.getItem('session') || '{}');
   const user = session.user;
 
+<<<<<<< HEAD
   useEffect(() => {
     const savedTheme = localStorage.getItem('app-theme') || 'light';
     document.documentElement.setAttribute('data-theme', savedTheme);
@@ -412,17 +417,17 @@ export default function EditorPage() {
     } catch (e) { console.error(e); dispatch({ type: 'SET_LOADING', payload: false }); }
   };
 
+=======
+>>>>>>> b3c8234 (Fix: all 8 issues in frontend)
   const parseElements = (html) => {
     if (!html) return [];
     const elements = [];
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
 
-    // Check if it's old Polotno format (uses pixels instead of %)
     const hasPxFormat = html.includes('left:') && html.includes('px') && !html.includes('position:absolute');
 
     if (hasPxFormat) {
-      // Old Polotno format - parse text elements
       doc.querySelectorAll('.draggable-text, [data-name]').forEach((el, idx) => {
         const style = el.getAttribute('style') || '';
         const textEl = el.querySelector('.text-content');
@@ -449,7 +454,6 @@ export default function EditorPage() {
         });
       });
 
-      // Parse images
       doc.querySelectorAll('.draggable-image').forEach((el, idx) => {
         const img = el.querySelector('img');
         if (!img) return;
@@ -471,23 +475,19 @@ export default function EditorPage() {
         });
       });
     } else {
-      // New format with percentages - direct text extraction approach to avoid wrapper issues
       try {
-        // Parse text elements from style-based approach
         const textElements = doc.querySelectorAll('[style*="position"]');
         textElements.forEach((el) => {
           const style = el.getAttribute('style') || '';
           const isTextElement = !el.querySelector('img') && el.innerHTML && !el.querySelector('img');
-          
+
           if (isTextElement && el.textContent && el.textContent.trim()) {
-            // Check if this has image children first
             const img = el.querySelector('img');
             if (img) return;
 
-            // Extract from direct element content
             const textContent = el.textContent;
             const rotationMatch = style.match(/transform:\s*rotate\((\d+)deg\)/);
-            
+
             const leftMatch = style.match(/left:\s*(\d+(?:\.\d+)?)%/);
             const topMatch = style.match(/top:\s*(\d+(?:\.\d+)?)%/);
             const widthMatch = style.match(/width:\s*(\d+(?:\.\d+)?)%/);
@@ -522,11 +522,10 @@ export default function EditorPage() {
           }
         });
 
-        // Parse images by finding img tags with position attributes
         doc.querySelectorAll('img').forEach((img) => {
           const parent = img.closest('[style*="position"]') || img.parentElement;
           if (!parent) return;
-          
+
           const style = parent.getAttribute('style') || '';
           const leftMatch = style.match(/left:\s*(\d+(?:\.\d+)?)%/);
           const topMatch = style.match(/top:\s*(\d+(?:\.\d+)?)%/);
@@ -545,7 +544,6 @@ export default function EditorPage() {
         });
       } catch (e) {
         console.error('Error parsing elements:', e);
-        // Fallback: simple text content extraction
         const textEl = doc.body.querySelector('*');
         if (textEl && textEl.textContent && textEl.textContent.trim()) {
           elements.push({
@@ -563,6 +561,7 @@ export default function EditorPage() {
     return elements;
   };
 
+<<<<<<< HEAD
 const serializeElements = (elements) => {
   return elements.map(el => {
     if (el.type === 'text') {
@@ -586,10 +585,119 @@ const serializeElements = (elements) => {
     if (el.type === 'image') {
       const safeSrc = el.src.replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
       return `<div class="draggable-image" style="position:absolute;left:${el.left}%;top:${el.top}%;width:${el.width}%;height:${el.height}%;"><img src="${safeSrc}" style="width:100%;height:100%;object-fit:contain;" /></div>`;
+=======
+  const serializeElements = (elements) => {
+    return elements.map(el => {
+      if (el.type === 'text') {
+        const sanitizedContent = el.content
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;');
+        const h = typeof el.height === 'number' ? el.height + '%' : (el.height || 'auto');
+        const ff = el.fontFamily || 'sans-serif';
+        const fw = el.fontWeight || 'normal';
+        const fs = el.fontStyle || 'normal';
+        const td = el.textDecoration || 'none';
+        const ta = el.textAlign || 'left';
+        const c = el.color && el.color !== '#000000' ? el.color : '';
+        const bg = el.backgroundColor && el.backgroundColor !== 'transparent' ? el.backgroundColor : '';
+        const r = el.rotation || 0;
+        const colorStyle = c ? `color:${c};` : '';
+        const bgStyle = bg ? `background-color:${bg};` : '';
+        return `<div class="draggable-text" style="position:absolute;left:${el.left}%;top:${el.top}%;width:${el.width}%;height:${h};font-size:${el.fontSize}px;font-family:"${ff}";font-weight:${fw};font-style:${fs};text-decoration:${td};text-align:${ta};${colorStyle}${bgStyle}transform:rotate(${r}deg)">${sanitizedContent}</div>`;
+      }
+      if (el.type === 'image') {
+        return `<div class="draggable-image" style="position:absolute;left:${el.left}%;top:${el.top}%;width:${el.width}%;height:${el.height}%;"><img src="${el.src}" style="width:100%;height:100%;object-fit:contain;" /></div>`;
+>>>>>>> b3c8234 (Fix: all 8 issues in frontend)
       }
       return '';
     }).join('');
   };
+
+  const loadData = useCallback(async () => {
+    try {
+      const res = await apiFetch(`/cards/load-auth/${folderId}`);
+      if (res.status === 401) {
+        localStorage.removeItem('session');
+        navigate('/home');
+        return;
+      }
+      const data = await res.json();
+      if (res.ok && Array.isArray(data) && data.length > 0) {
+        const parsedCards = data.map(card => ({
+          front: parseElements(card.front),
+          back: parseElements(card.back),
+          frontBg: card.frontBg || '',
+          backBg: card.backBg || '',
+          tags: card.tags || ''
+        }));
+        dispatch({ type: 'SET_CARDS', payload: parsedCards });
+      } else {
+        dispatch({ type: 'SET_LOADING', payload: false });
+      }
+    } catch (e) { console.error(e); dispatch({ type: 'SET_LOADING', payload: false }); }
+  }, [folderId, navigate]);
+
+  const saveCards = useCallback(async () => {
+    dispatch({ type: 'SET_SAVING', payload: true });
+    try {
+      const serializedCards = state.cards.map(card => ({
+        front: serializeElements(card.front),
+        back: serializeElements(card.back),
+        frontBg: card.frontBg,
+        backBg: card.backBg,
+        tags: card.tags || ''
+      }));
+      await apiFetch('/cards/save', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ folderId: parseInt(folderId), cards: serializedCards }),
+      });
+    } catch (e) { console.error('Save error:', e); }
+    finally { dispatch({ type: 'SET_SAVING', payload: false }); }
+  }, [state.cards, folderId]);
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('app-theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    if (!user) { navigate('/home'); return; }
+    requestAnimationFrame(() => loadData());
+  }, [folderId, navigate, user, loadData]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      saveCards();
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [state.cards, saveCards]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Delete' && state.selectedElement) {
+        dispatch({ type: 'DELETE_ELEMENT', payload: { elementId: state.selectedElement } });
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        saveCards();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+        e.preventDefault();
+        dispatch({ type: 'UNDO' });
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'y') {
+        e.preventDefault();
+        dispatch({ type: 'REDO' });
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'd' && state.selectedElement) {
+        e.preventDefault();
+        dispatch({ type: 'DUPLICATE_ELEMENT', payload: { elementId: state.selectedElement } });
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [state.selectedElement, saveCards]);
 
   const currentCard = state.cards[state.currentIndex];
   const currentElements = state.isFlipped ? currentCard?.back || [] : currentCard?.front || [];
@@ -673,11 +781,7 @@ body: formData,
     const newCards = [...state.cards];
     newCards[state.currentIndex] = { ...newCards[state.currentIndex], tags: tags };
     // We need a new reducer action for this.
-    dispatch({ type: 'UPDATE_TAGS', payload: { tags } });
-  };
-
-  const deleteElement = (elementId) => {
-    dispatch({ type: 'DELETE_ELEMENT', payload: { elementId } });
+  dispatch({ type: 'UPDATE_TAGS', payload: { tags } });
   };
 
   const applyFormat = (format) => {
@@ -708,6 +812,7 @@ body: formData,
     dispatch({ type: 'UPDATE_BG_COLOR', payload: { color } });
   };
 
+<<<<<<< HEAD
   const saveCards = useCallback(async () => {
     dispatch({ type: 'SET_SAVING', payload: true });
     try {
@@ -731,6 +836,8 @@ body: formData,
     saveCardsRef.current = saveCards;
   });
 
+=======
+>>>>>>> b3c8234 (Fix: all 8 issues in frontend)
   const goToHome = () => { navigate('/home'); };
 
   if (state.loading) return <div className="page-container">Loading...</div>;

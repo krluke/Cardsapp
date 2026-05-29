@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react'
 import { apiFetch } from '@/lib/api'
@@ -16,20 +16,13 @@ export default function ViewerPage() {
   const [flipped, setFlipped] = useState(false)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('app-theme') || 'light'
-    document.documentElement.setAttribute('data-theme', savedTheme)
-    
-    loadData()
-  }, [folderId])
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       const session = JSON.parse(localStorage.getItem('session') || '{}')
       const jwtToken = session.token || ''
 
-        const cardsRes = await apiFetch(`/cards/load-auth/${folderId}`)
-        const cardsData = await cardsRes.json()
+      const cardsRes = await apiFetch(`/cards/load-auth/${folderId}`)
+      const cardsData = await cardsRes.json()
       setCards(Array.isArray(cardsData) ? cardsData : [])
 
       if (jwtToken) {
@@ -45,7 +38,14 @@ export default function ViewerPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [folderId])
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('app-theme') || 'light'
+    document.documentElement.setAttribute('data-theme', savedTheme)
+
+    requestAnimationFrame(() => loadData())
+  }, [folderId, loadData])
 
   const goNext = () => {
     setFlipped(false)
