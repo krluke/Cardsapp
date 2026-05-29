@@ -28,14 +28,14 @@ export default function StudyPage() {
       return JSON.parse(localStorage.getItem('session') || '{}').user || null;
     } catch { return null; }
   }, []);
-  const userRef = useRef(user);
   const loadingRef = useRef(false);
   const retryAfterRef = useRef(0);
 
   const [studyMode, setStudyMode] = useState(user ? 'due' : 'all');
-  const loadCards = useCallback(async (mode, shuffle = false) => {
-    if (loadingRef.current) return
-    if (Date.now() < retryAfterRef.current) return
+
+  const fetchCards = useCallback(async (mode, shuffle = false) => {
+    if (loadingRef.current) return null
+    if (Date.now() < retryAfterRef.current) return null
     loadingRef.current = true
     try {
       const endpoint = mode === 'all'
@@ -46,9 +46,7 @@ export default function StudyPage() {
 
       if (data.message) {
         console.error('API Error:', data.message);
-        setCards([]);
-        setLoading(false);
-        return;
+        return [];
       }
 
       if (mode === 'all' && Array.isArray(data)) {
@@ -66,23 +64,29 @@ export default function StudyPage() {
         data = [...data].sort(() => Math.random() - 0.5);
       }
 
-      setCards(Array.isArray(data) ? data : []);
-      setCurrentIndex(0);
-      setIsFlipped(false);
-      setFinished(false);
-
-      if (mode === 'due' && Array.isArray(data) && data.length === 0) {
-        setStudyMode('all');
-      }
+      return Array.isArray(data) ? data : [];
     } catch (e) {
       console.error(e);
       if (e instanceof ApiError && e.status === 429) {
         retryAfterRef.current = Date.now() + 30000
       }
-      setCards([]);
+      return [];
+    } finally {
+      loadingRef.current = false
     }
-    finally { setLoading(false); loadingRef.current = false }
   }, [folderId]);
+
+  const loadCards = useCallback(async (mode, shuffle = false) => {
+    const data = await fetchCards(mode, shuffle);
+    setCards(data);
+    setCurrentIndex(0);
+    setIsFlipped(false);
+    setFinished(false);
+    setLoading(false);
+    if (mode === 'due' && Array.isArray(data) && data.length === 0) {
+      setStudyMode('all');
+    }
+  }, [fetchCards]);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('app-theme') || 'light';
@@ -90,9 +94,20 @@ export default function StudyPage() {
   }, []);
 
   useEffect(() => {
-    if (!userRef.current) { navigate('/home'); return; }
-    requestAnimationFrame(() => loadCards(studyMode, shuffled));
-  }, [folderId, studyMode, shuffled, loadCards, navigate]);
+    let cancelled = false;
+    fetchCards(studyMode, shuffled).then(data => {
+      if (cancelled) return;
+      setCards(data);
+      setCurrentIndex(0);
+      setIsFlipped(false);
+      setFinished(false);
+      setLoading(false);
+      if (studyMode === 'due' && Array.isArray(data) && data.length === 0) {
+        setStudyMode('all');
+      }
+    });
+    return () => { cancelled = true; };
+  }, [folderId, studyMode, shuffled, fetchCards]);
 
   const handleRate = useCallback(async (quality) => {
     const card = cards[currentIndex];

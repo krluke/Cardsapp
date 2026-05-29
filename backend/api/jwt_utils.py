@@ -70,27 +70,7 @@ def jwt_required(view_func):
 
 
 def jwt_optional(view_func):
-    def wrapper(request, *args, **kwargs):
-        auth_header = request.headers.get("Authorization")
-        if auth_header and auth_header.startswith("Bearer "):
-            token = auth_header.split(" ")[1]
-            payload = verify_jwt_token(token)
-            if payload:
-                request.user_id = payload["user_id"]
-                request.user_email = payload["email"]
-            else:
-                request.user_id = None
-                request.user_email = None
-        else:
-            request.user_id = None
-            request.user_email = None
-
-        return view_func(request, *args, **kwargs)
-
-    return wrapper
-
-
-def jwt_optional(view_func):
+    @functools.wraps(view_func)
     def wrapper(request, *args, **kwargs):
         auth_header = request.headers.get("Authorization")
         if auth_header and auth_header.startswith("Bearer "):
