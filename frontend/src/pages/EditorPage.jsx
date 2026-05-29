@@ -433,8 +433,8 @@ export default function EditorPage() {
             const fontStyleMatch = style.match(/font-style:\s*(\w+)/);
             const textDecorationMatch = style.match(/text-decoration:\s*(\w+)/);
             const textAlignMatch = style.match(/text-align:\s*(\w+)/);
-            const colorMatch = style.match(/color:\s*(#[0-9a-fA-F]+|rgb\([^)]+\))/);
-            const bgColorMatch = style.match(/background-color:\s*([^;]+)/);
+const colorMatch = style.match(/(?:^|;\s*)color:\s*(#[0-9a-fA-F]+|rgb\([^)]+\))/);
+const bgColorMatch = style.match(/background-color:\s*(#[0-9a-fA-F]+|rgb\([^)]+\))/);
 
             elements.push({
               id: `text-${Date.now()}-${elements.length}`,
@@ -509,7 +509,7 @@ export default function EditorPage() {
         const fs = el.fontStyle || 'normal';
         const td = el.textDecoration || 'none';
         const ta = el.textAlign || 'left';
-        const c = el.color && el.color !== '#000000' ? el.color : '';
+        const c = el.color || '';
         const bg = el.backgroundColor && el.backgroundColor !== 'transparent' ? el.backgroundColor : '';
         const r = el.rotation || 0;
         const colorStyle = c ? `color:${c};` : '';
@@ -784,8 +784,8 @@ body: formData,
         }}
         fontSize={state.fontSize}
         fontFamily={state.fontFamily}
-        textColor={state.textColor}
-        backgroundColor={selectedEl?.backgroundColor || ''}
+  textColor={selectedEl?.color ?? ''}
+  backgroundColor={selectedEl?.backgroundColor ?? ''}
         t={t}
       />
       <div className="editor-main">

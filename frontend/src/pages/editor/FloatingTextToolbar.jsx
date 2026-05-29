@@ -127,29 +127,63 @@ export function FloatingTextToolbar({
         <option value="72">72px</option>
       </select>
 
-{/* Color Controls */}
-  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Text</span>
-      <input
-        type="color"
-          value={textColor || '#000000'}
-          onChange={(e) => onTextColorChange(e.target.value)}
-        title="Text Color"
-        style={{ width: '28px', height: '28px', padding: '0', border: '1px solid var(--border-color)', borderRadius: '4px', cursor: 'pointer' }}
-      />
-    </div>
-    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Fill</span>
-      <input
-        type="color"
-          value={backgroundColor || '#ffffff'}
-        onChange={(e) => onBackgroundColorChange(e.target.value)}
-        title="Background Color"
-        style={{ width: '28px', height: '28px', padding: '0', border: '1px solid var(--border-color)', borderRadius: '4px', cursor: 'pointer' }}
-      />
-    </div>
-  </div>
+      {/* Color Controls */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Text</span>
+          <button
+            className={`toolbar-btn ${!textColor ? 'active' : ''}`}
+            onClick={() => onTextColorChange(textColor ? '' : '#000000')}
+            title={textColor ? 'Switch to Adaptive (theme)' : 'Switch to Custom color'}
+            style={{ fontSize: '10px', padding: '2px 5px', minWidth: 'auto', lineHeight: '1' }}
+          >
+            Auto
+          </button>
+          <input
+            type="color"
+            value={textColor || '#000000'}
+            onChange={(e) => onTextColorChange(e.target.value)}
+            title="Text Color"
+            disabled={!textColor}
+            style={{
+              width: '28px',
+              height: '28px',
+              padding: '0',
+              border: '1px solid var(--border-color)',
+              borderRadius: '4px',
+              cursor: textColor ? 'pointer' : 'not-allowed',
+              opacity: textColor ? 1 : 0.4
+            }}
+          />
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Fill</span>
+          <button
+            className={`toolbar-btn ${!backgroundColor ? 'active' : ''}`}
+            onClick={() => onBackgroundColorChange(backgroundColor ? '' : '#ffffff')}
+            title={backgroundColor ? 'Switch to Adaptive (transparent)' : 'Switch to Custom color'}
+            style={{ fontSize: '10px', padding: '2px 5px', minWidth: 'auto', lineHeight: '1' }}
+          >
+            Auto
+          </button>
+          <input
+            type="color"
+            value={backgroundColor || '#ffffff'}
+            onChange={(e) => onBackgroundColorChange(e.target.value)}
+            title="Background Color"
+            disabled={!backgroundColor}
+            style={{
+              width: '28px',
+              height: '28px',
+              padding: '0',
+              border: '1px solid var(--border-color)',
+              borderRadius: '4px',
+              cursor: backgroundColor ? 'pointer' : 'not-allowed',
+              opacity: backgroundColor ? 1 : 0.4
+            }}
+          />
+        </div>
+      </div>
 
   {/* Layer Controls */}
   <div style={{ display: 'flex', gap: '4px', borderLeft: '1px solid var(--border-color)', paddingLeft: '8px' }}>
