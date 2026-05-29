@@ -19,6 +19,7 @@ from bleach.css_sanitizer import CSSSanitizer
 from api.csrf import csrf_protector
 from api.jwt_utils import (
     generate_jwt_token,
+    jwt_optional,
     jwt_required,
     verify_jwt_token,
 )
@@ -709,7 +710,7 @@ def import_folder(request):
 
 
 @xframe_options_exempt
-@jwt_required
+@jwt_optional
 def get_study_cards(request):
     user_email = request.user_email
     folder_id = request.GET.get("folderId")
@@ -719,22 +720,49 @@ def get_study_cards(request):
     try:
         with connection.cursor() as c:
             c.execute(
-                """
-                SELECT c.id, c.front_content, c.back_content, c.front_bg, c.back_bg
-                FROM cards c
-                JOIN folders f ON c.folder_id = f.id
-                WHERE f.id = %s AND (f.user_email = %s OR f.visibility = 'public')
-                AND (c.srs_next_review IS NULL OR c.srs_next_review <= CURRENT_TIMESTAMP)
-                AND (c.front_content IS NOT NULL AND c.front_content != '')
-                AND (c.back_content IS NOT NULL AND c.back_content != '')
-                ORDER BY c.srs_next_review ASC
-                """,
-                (folder_id, user_email),
+                "SELECT user_email, visibility FROM folders WHERE id = %s",
+                (folder_id,),
             )
+            folder = dictfetchone(c)
+            if not folder:
+                return JsonResponse({"error": "Folder not found"}, status=404)
+            if folder["visibility"] != "public" and (not user_email or folder["user_email"] != user_email):
+                return JsonResponse({"error": "Access denied"}, status=403)
+
+            if user_email:
+                c.execute(
+                    """
+                    SELECT c.id, c.front_content, c.back_content, c.front_bg, c.back_bg
+                    FROM cards c
+                    JOIN folders f ON c.folder_id = f.id
+                    WHERE f.id = %s AND (f.user_email = %s OR f.visibility = 'public')
+                    AND (c.srs_next_review IS NULL OR c.srs_next_review <= CURRENT_TIMESTAMP)
+                    AND (c.front_content IS NOT NULL AND c.front_content != '')
+                    AND (c.back_content IS NOT NULL AND c.back_content != '')
+                    ORDER BY c.srs_next_review ASC
+                    """,
+                    (folder_id, user_email),
+                )
+            else:
+                c.execute(
+                    """
+                    SELECT c.id, c.front_content, c.back_content, c.front_bg, c.back_bg
+                    FROM cards c
+                    JOIN folders f ON c.folder_id = f.id
+                    WHERE f.id = %s AND f.visibility = 'public'
+                    AND (c.front_content IS NOT NULL AND c.front_content != '')
+                    AND (c.back_content IS NOT NULL AND c.back_content != '')
+                    ORDER BY c.order_index
+                    """,
+                    (folder_id,),
+                )
             cards = dictfetchall(c)
+<<<<<<< HEAD
             for card in cards:
                 card["front_content"] = sanitize_html_for_display(card.get("front_content", ""))
                 card["back_content"] = sanitize_html_for_display(card.get("back_content", ""))
+=======
+>>>>>>> d946e7a (Allow unauthenticated access to study mode for public folders)
             return JsonResponse(cards, safe=False)
     except Exception as e:
         logger.error(f"get_study_cards error: {e}")
@@ -933,7 +961,7 @@ def delete_card(request):
 
 
 @xframe_options_exempt
-@jwt_required
+@jwt_optional
 def load_cards_fixed(request, folder_id):
     user_email = request.user_email
     try:
@@ -945,7 +973,7 @@ def load_cards_fixed(request, folder_id):
             folder = dictfetchone(c)
             if not folder:
                 return JsonResponse({"message": "Folder not found"}, status=404)
-            if folder["visibility"] != "public" and folder["user_email"] != user_email:
+            if folder["visibility"] != "public" and (not user_email or folder["user_email"] != user_email):
                 return JsonResponse({"message": "Access denied"}, status=403)
 
             c.execute(
