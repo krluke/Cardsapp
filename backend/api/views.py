@@ -754,9 +754,9 @@ def get_study_cards(request):
                     AND (c.back_content IS NOT NULL AND c.back_content != '')
                     ORDER BY c.order_index
                     """,
-                    (folder_id,),
-                )
-    cards = dictfetchall(c)
+            (folder_id,),
+            )
+        cards = dictfetchall(c)
     for card in cards:
         card["front_content"] = sanitize_html_for_display(card.get("front_content", ""))
         card["back_content"] = sanitize_html_for_display(card.get("back_content", ""))
