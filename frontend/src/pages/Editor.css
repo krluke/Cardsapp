@@ -233,17 +233,17 @@
 }
 
 .card-canvas {
-  width: 100%;
-  height: 100%;
-  max-width: 600px;
-  aspect-ratio: auto;
-  background: #ffffff;
-  border-radius: 16px;
-  box-shadow: var(--shadow-lg);
-  border: 2px solid var(--accent-color);
-  position: relative;
-  overflow: hidden;
-  cursor: default;
+width: 100%;
+height: 100%;
+max-width: 600px;
+aspect-ratio: auto;
+background: #ffffff;
+border-radius: 16px;
+box-shadow: var(--shadow-lg);
+border: 2px solid var(--accent-color);
+position: relative;
+overflow: hidden;
+cursor: default;
 }
 
 .card-canvas .canvas-hint {
@@ -376,7 +376,7 @@
   width: 100%;
   height: 100%;
   position: relative;
-  transform-style: preserve-3d;
+  transform-style: preserve-3d !important;
   transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -384,17 +384,23 @@
   transform: rotateY(180deg);
 }
 
-.card-flip-front,
-.card-flip-back {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
+.card-flip-front {
+position: absolute;
+width: 100%;
+height: 100%;
+backface-visibility: hidden !important;
+-webkit-backface-visibility: hidden !important;
+transform-style: preserve-3d !important;
 }
 
 .card-flip-back {
-  transform: rotateY(180deg);
+position: absolute;
+width: 100%;
+height: 100%;
+backface-visibility: hidden !important;
+-webkit-backface-visibility: hidden !important;
+transform: rotateY(180deg);
+transform-style: preserve-3d !important;
 }
 
 .card-flip-wrapper.flipped .card-flip-front {
