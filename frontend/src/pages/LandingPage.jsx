@@ -1,11 +1,12 @@
 import { useNavigate } from 'react-router-dom'
-import { ArrowRight, BookOpen, Palette, Globe } from 'lucide-react'
+import { ArrowRight, BookOpen, Palette, Globe, LogIn } from 'lucide-react'
 
 const translations = {
   ja: {
     tagline: 'カードで学ぶ、\nカードで広がる。',
     description: 'CardsApp は、フラッシュカード作成から間隔反復学習まで、すべてを一つの場所で。美しいエディタで自由にデザインし、SM-2 アルゴリズムで効率よく記憶を定着。',
     cta: 'はじめる',
+    login: 'ログイン',
     cta_guest: 'ログインせずに見る',
     feature_editor: 'ビジュアルエディタ',
     feature_editor_desc: 'ドラッグ＆ドロップで自由にカードをデザイン',
@@ -18,6 +19,7 @@ const translations = {
     tagline: 'Learn with cards.\nGrow with cards.',
     description: 'CardsApp brings flashcard creation and spaced-repetition study together in one place. Design freely with a beautiful editor, and let the SM-2 algorithm fix memory efficiently.',
     cta: 'Get Started',
+    login: 'Login',
     cta_guest: 'Browse without login',
     feature_editor: 'Visual Editor',
     feature_editor_desc: 'Design cards freely with drag & drop',
@@ -44,6 +46,14 @@ export default function LandingPage({ clerkAvailable, clerk }) {
     }
   }
 
+  const handleLogin = () => {
+    if (clerkAvailable && typeof clerk?.openSignIn === 'function') {
+      clerk.openSignIn()
+    } else {
+      navigate('/home')
+    }
+  }
+
   const handleGuest = () => {
     navigate('/home?tab=global-folders')
   }
@@ -55,9 +65,16 @@ export default function LandingPage({ clerkAvailable, clerk }) {
           <span className="landing-logo-mark">Cards</span>
           <span className="landing-logo-app">App</span>
         </div>
-        <button className="landing-nav-cta" onClick={handleCta}>
-          {clerkAvailable ? t('cta') : t('cta_guest')}
-        </button>
+        <div className="landing-nav-actions">
+          {clerkAvailable && (
+            <button className="landing-nav-login" onClick={handleLogin}>
+              <LogIn size={16} /> {t('login')}
+            </button>
+          )}
+          <button className="landing-nav-cta" onClick={handleCta}>
+            {clerkAvailable ? t('cta') : t('cta_guest')}
+          </button>
+        </div>
       </div>
 
       <main className="landing-hero">
@@ -67,6 +84,11 @@ export default function LandingPage({ clerkAvailable, clerk }) {
           <button className="landing-primary-cta" onClick={handleCta}>
             {t('cta')} <ArrowRight size={18} />
           </button>
+          {clerkAvailable && (
+            <button className="landing-login-cta" onClick={handleLogin}>
+              <LogIn size={18} /> {t('login')}
+            </button>
+          )}
           {clerkAvailable && (
             <button className="landing-secondary-cta" onClick={handleGuest}>
               {t('cta_guest')}

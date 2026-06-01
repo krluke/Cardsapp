@@ -1171,6 +1171,32 @@ select.input-field:focus {
   letter-spacing: -0.02em;
 }
 
+.landing-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.landing-nav-login {
+  background: var(--bg-surface);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: var(--transition);
+}
+
+.landing-nav-login:hover {
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+}
+
 .landing-nav-cta {
   background: var(--accent-color);
   color: #fff;
@@ -1260,6 +1286,27 @@ select.input-field:focus {
 .landing-secondary-cta:hover {
   border-color: var(--accent-color);
   color: var(--accent-color);
+}
+
+.landing-login-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--bg-surface);
+  color: var(--accent-color);
+  border: 1px solid var(--accent-color);
+  padding: 0.75rem 1.8rem;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.landing-login-cta:hover {
+  background: var(--accent-light);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
 .landing-features {
