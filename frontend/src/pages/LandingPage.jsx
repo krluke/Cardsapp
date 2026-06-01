@@ -85,11 +85,6 @@ export default function LandingPage({ clerkAvailable, clerk }) {
             {t('cta')} <ArrowRight size={18} />
           </button>
           {clerkAvailable && (
-            <button className="landing-login-cta" onClick={handleLogin}>
-              <LogIn size={18} /> {t('login')}
-            </button>
-          )}
-          {clerkAvailable && (
             <button className="landing-secondary-cta" onClick={handleGuest}>
               {t('cta_guest')}
             </button>
