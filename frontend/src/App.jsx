@@ -7,6 +7,7 @@ import AccountPage from './pages/AccountPage'
 import EditorPage from './pages/EditorPage'
 import ViewerPage from './pages/ViewerPage'
 import StudyPage from './pages/study/StudyPage'
+import LandingPage from './pages/LandingPage'
 import { GlobalSearchModal } from './components/GlobalSearchModal'
 import { AddToFolderModal } from './components/AddToFolderModal'
 import { CardPreview } from './components/CardPreview'
@@ -487,7 +488,7 @@ export default function App({ clerkAvailable }) {
 
   const routes = (
     <Routes>
-      <Route path="/" element={<Navigate to="/home" replace />} />
+      <Route path="/" element={clerkAvailable ? <ClerkLandingPage /> : <LandingPage clerkAvailable={false} />} />
       <Route path="/home" element={clerkAvailable ? <ClerkHomePage /> : <HomePage clerkAvailable={false} />} />
       <Route path="/account" element={<AccountPage />} />
       <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
@@ -515,6 +516,11 @@ function ClerkHomePage() {
   const { isSignedIn, getToken } = useAuth()
   const clerk = useClerk()
   return <HomePage clerkAvailable={true} isSignedIn={isSignedIn} getToken={getToken} clerk={clerk} />
+}
+
+function ClerkLandingPage() {
+  const clerk = useClerk()
+  return <LandingPage clerkAvailable={true} clerk={clerk} />
 }
 
 function HomePage({ clerkAvailable, isSignedIn: isSignedInProp, getToken: getTokenProp, clerk: clerkProp }) {
