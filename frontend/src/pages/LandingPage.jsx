@@ -40,7 +40,7 @@ export default function LandingPage({ clerkAvailable, clerk }) {
 
   const handleCta = () => {
     if (clerkAvailable && typeof clerk?.openSignIn === 'function') {
-      clerk.openSignIn()
+      clerk.openSignIn({ redirectUrl: '/home' })
     } else {
       navigate('/home')
     }
@@ -48,7 +48,7 @@ export default function LandingPage({ clerkAvailable, clerk }) {
 
   const handleLogin = () => {
     if (clerkAvailable && typeof clerk?.openSignIn === 'function') {
-      clerk.openSignIn()
+      clerk.openSignIn({ redirectUrl: '/home' })
     } else {
       navigate('/home')
     }
