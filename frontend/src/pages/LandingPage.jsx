@@ -45,7 +45,7 @@ export default function LandingPage({ clerkAvailable, clerk }) {
   }
 
   const handleGuest = () => {
-    navigate('/home')
+    navigate('/home?tab=global-folders')
   }
 
   return (
