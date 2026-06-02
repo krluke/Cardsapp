@@ -583,7 +583,8 @@ function HomePage({ clerkAvailable, clerkLoaded: clerkLoadedProp, devLogin, isSi
       })
     }
   }, [searchParams])
-  const [totalPages, setTotalPages] = useState(1)
+  const [folderTotalPages, setFolderTotalPages] = useState(1)
+  const [cardTotalPages, setCardTotalPages] = useState(1)
   const [themeMenuOpen, setThemeMenuOpen] = useState(false)
   const [langMenuOpen, setLangMenuOpen] = useState(false)
   const [authMenuOpen, setAuthMenuOpen] = useState(false)
@@ -610,11 +611,12 @@ function HomePage({ clerkAvailable, clerkLoaded: clerkLoadedProp, devLogin, isSi
   const foldersLoadingRef = useRef(false)
   const foldersRetryAfterRef = useRef(0)
 
-  const loadFolders = useCallback(async () => {
+const loadFolders = useCallback(async () => {
     if (sessionExpiredRef.current) return
     if (userLoading) return
     if (foldersLoadingRef.current) return
     if (Date.now() < foldersRetryAfterRef.current) return
+    if (activeTab === 'global-cards') return
     foldersLoadingRef.current = true
     setFoldersLoading(true)
     if (activeTab === 'my-folders' && !user) {
@@ -632,12 +634,12 @@ function HomePage({ clerkAvailable, clerkLoaded: clerkLoadedProp, devLogin, isSi
     try {
       const res = await apiFetch(`${endpoint}?${params}`)
       const data = await res.json()
-        if (data.folders !== undefined) {
-          setFolders(data.folders || [])
-          const apiTotalPages = data.totalPages || 1
-          setTotalPages(apiTotalPages)
-          if (page > apiTotalPages) setPage(apiTotalPages)
-        } else if (data.message) {
+      if (data.folders !== undefined) {
+        setFolders(data.folders || [])
+        const apiTotalPages = data.totalPages || 1
+        setFolderTotalPages(apiTotalPages)
+        if (activeTab !== 'global-cards' && page > apiTotalPages) setPage(apiTotalPages)
+      } else if (data.message) {
         console.error('loadFolders error:', data.message)
       }
     } catch (e) {
@@ -703,7 +705,7 @@ function HomePage({ clerkAvailable, clerkLoaded: clerkLoadedProp, devLogin, isSi
   const globalCardsLoadingRef = useRef(false)
   const globalCardsRetryAfterRef = useRef(0)
 
-  const loadGlobalCards = useCallback(async () => {
+const loadGlobalCards = useCallback(async () => {
     if (sessionExpiredRef.current) return
     if (globalCardsLoadingRef.current) return
     if (Date.now() < globalCardsRetryAfterRef.current) return
@@ -716,17 +718,17 @@ function HomePage({ clerkAvailable, clerkLoaded: clerkLoadedProp, devLogin, isSi
     try {
       const res = await apiFetch(`/cards/public?${params}`)
       const data = await res.json()
-        if (data.cards) {
-          const filteredCards = (data.cards || []).filter(card => {
-            const frontContent = (card.front || '').replace(/[<>]/g, '').trim()
-            const backContent = (card.back || '').replace(/[<>]/g, '').trim()
-            return frontContent || backContent
-          })
-          setGlobalCards(filteredCards)
-          const apiTotalPages = data.totalPages || 1
-          setTotalPages(apiTotalPages)
-          if (page > apiTotalPages) setPage(apiTotalPages)
-        }
+      if (data.cards) {
+        const filteredCards = (data.cards || []).filter(card => {
+          const frontContent = (card.front || '').replace(/[<>]/g, '').trim()
+          const backContent = (card.back || '').replace(/[<>]/g, '').trim()
+          return frontContent || backContent
+        })
+        setGlobalCards(filteredCards)
+        const apiTotalPages = data.totalPages || 1
+        setCardTotalPages(apiTotalPages)
+        if (page > apiTotalPages) setPage(apiTotalPages)
+      }
     } catch (e) {
       console.error(e)
       if (e instanceof ApiError && e.status === 429) {
@@ -822,8 +824,8 @@ function HomePage({ clerkAvailable, clerkLoaded: clerkLoadedProp, devLogin, isSi
   }, [isSignedIn, exchangeClerkToken])
 
   useEffect(() => {
-    if (!userLoading) requestAnimationFrame(() => loadFolders())
-  }, [loadFolders, userLoading])
+    if (activeTab !== 'global-cards' && !userLoading) requestAnimationFrame(() => loadFolders())
+  }, [loadFolders, userLoading, activeTab])
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -1170,8 +1172,8 @@ const handleDevLogin = useCallback(async () => {
           </div>
           <div className="pagination-controls">
           <button disabled={page === 1 || foldersLoading || globalCardsLoading} onClick={() => setPage(p => p - 1)}><ChevronLeft size={16} /></button>
-          <span>{page} / {totalPages}</span>
-          <button disabled={page === totalPages || foldersLoading || globalCardsLoading} onClick={() => setPage(p => p + 1)}><ChevronRight size={16} /></button>
+          <span>{page} / {activeTab === 'global-cards' ? cardTotalPages : folderTotalPages}</span>
+          <button disabled={page === (activeTab === 'global-cards' ? cardTotalPages : folderTotalPages) || foldersLoading || globalCardsLoading} onClick={() => setPage(p => p + 1)}><ChevronRight size={16} /></button>
           </div>
         </div>
 
