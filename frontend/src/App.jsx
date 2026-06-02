@@ -517,7 +517,7 @@ export default function App({ clerkAvailable }) {
 
   const routes = (
     <Routes>
-      <Route path="/" element={clerkAvailable ? <ClerkLandingPage /> : <LandingPage clerkAvailable={false} onDevLogin={!clerkAvailable ? devLogin : undefined} />} />
+      <Route path="/" element={clerkAvailable ? <ClerkLandingPage /> : JSON.parse(localStorage.getItem('session') || '{}').token ? <Navigate to="/home" replace /> : <LandingPage clerkAvailable={false} onDevLogin={devLogin} />} />
       <Route path="/home" element={clerkAvailable ? <ClerkHomePage /> : <HomePage clerkAvailable={false} devLogin={devLogin} />} />
       <Route path="/account" element={<AccountPage />} />
       <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
@@ -548,9 +548,10 @@ function ClerkHomePage() {
 }
 
 function ClerkLandingPage() {
-  const { isLoaded } = useAuth()
-  const clerk = useClerk()
-  return <LandingPage clerkAvailable={true} clerkLoaded={isLoaded} clerk={clerk} />
+    const { isLoaded, isSignedIn } = useAuth()
+    const clerk = useClerk()
+    if (isSignedIn) return <Navigate to="/home" replace />
+    return <LandingPage clerkAvailable={true} clerkLoaded={isLoaded} clerk={clerk} />
 }
 
 function HomePage({ clerkAvailable, clerkLoaded: clerkLoadedProp, devLogin, isSignedIn: isSignedInProp, getToken: getTokenProp, clerk: clerkProp }) {
