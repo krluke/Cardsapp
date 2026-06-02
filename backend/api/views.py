@@ -261,6 +261,44 @@ def clerk_auth(request):
 
 
 # ==========================================
+# DEV AUTH ENDPOINT
+# ==========================================
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def dev_auth(request):
+    if not os.environ.get("DEBUG") == "True":
+        return JsonResponse({"error": "Dev auth is only available in DEBUG mode"}, status=403)
+    try:
+        data = json.loads(request.body)
+        email = data.get("email", "")
+        if not email:
+            return JsonResponse({"error": "Email is required"}, status=400)
+        with connection.cursor() as c:
+            c.execute("SELECT * FROM users WHERE email = %s", (email,))
+            user = dictfetchone(c)
+        if not user:
+            return JsonResponse({"error": "User not found"}, status=404)
+        csrf_token = csrf_protector.generate_token(email)
+        jwt_user_id = user.get("id") or user.get("email")
+        jwt_token = generate_jwt_token(jwt_user_id, email)
+        return JsonResponse(
+            {
+                "message": "ログイン成功！",
+                "username": user["username"],
+                "email": user["email"],
+                "clerkUserId": user.get("clerk_user_id", ""),
+                "csrfToken": csrf_token,
+                "token": jwt_token,
+            }
+        )
+    except Exception as e:
+        logger.error(f"Dev auth error: {e}")
+        return JsonResponse({"error": "Dev auth failed"}, status=500)
+
+
+# ==========================================
 # USER ENDPOINTS
 # ==========================================
 
