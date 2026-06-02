@@ -513,17 +513,18 @@ export default function App({ clerkAvailable }) {
 }
 
 function ClerkHomePage() {
-  const { isSignedIn, getToken } = useAuth()
+  const { isSignedIn, isLoaded, getToken } = useAuth()
   const clerk = useClerk()
-  return <HomePage clerkAvailable={true} isSignedIn={isSignedIn} getToken={getToken} clerk={clerk} />
+  return <HomePage clerkAvailable={true} clerkLoaded={isLoaded} isSignedIn={isSignedIn} getToken={getToken} clerk={clerk} />
 }
 
 function ClerkLandingPage() {
+  const { isLoaded } = useAuth()
   const clerk = useClerk()
-  return <LandingPage clerkAvailable={true} clerk={clerk} />
+  return <LandingPage clerkAvailable={true} clerkLoaded={isLoaded} clerk={clerk} />
 }
 
-function HomePage({ clerkAvailable, isSignedIn: isSignedInProp, getToken: getTokenProp, clerk: clerkProp }) {
+function HomePage({ clerkAvailable, clerkLoaded: clerkLoadedProp, isSignedIn: isSignedInProp, getToken: getTokenProp, clerk: clerkProp }) {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const [user, setUser] = useState(() => {
@@ -565,6 +566,7 @@ function HomePage({ clerkAvailable, isSignedIn: isSignedInProp, getToken: getTok
   const { modalState, showAlert, showConfirm, showPrompt, closeModal, handleConfirm, handlePromptSubmit } = useModal()
 
   const isSignedIn = clerkAvailable ? isSignedInProp : false
+  const clerkLoaded = clerkAvailable ? clerkLoadedProp : true
   const getToken = useMemo(() => clerkAvailable ? getTokenProp : async () => null, [clerkAvailable, getTokenProp])
   const clerk = useMemo(() => clerkAvailable ? clerkProp : {}, [clerkAvailable, clerkProp])
   const exchangingRef = useRef(false)
@@ -1051,7 +1053,7 @@ function HomePage({ clerkAvailable, isSignedIn: isSignedInProp, getToken: getTok
             {authMenuOpen && (
               <div className="dropdown">
                 {!user ? (
-          <button className="dropdown-item" onClick={() => { if (clerkAvailable && !isSignedIn && typeof clerk.openSignIn === 'function') { clerk.openSignIn() } else if (isSignedIn) { exchangeClerkToken() }; setAuthMenuOpen(false) }}>
+          <button className="dropdown-item" onClick={() => { if (clerkAvailable && clerkLoaded && !isSignedIn && typeof clerk.openSignIn === 'function') { clerk.openSignIn() } else if (isSignedIn) { exchangeClerkToken() } else { navigate('/home') }; setAuthMenuOpen(false) }}>
             <LogIn size={18} /> {(!clerkAvailable || !isSignedIn) ? t('menu_login') : t('guest_login_btn')}
                   </button>
                 ) : (
@@ -1090,7 +1092,7 @@ function HomePage({ clerkAvailable, isSignedIn: isSignedInProp, getToken: getTok
         {activeTab === 'my-folders' && !user && (
           <div className="empty-state">
             <p>{t('guest_message')}</p>
-            <button className="primary-btn" onClick={() => { if (clerkAvailable && !isSignedIn && typeof clerk.openSignIn === 'function') { clerk.openSignIn() } else if (isSignedIn) { exchangeClerkToken() } }}>{t('guest_login_btn')}</button>
+            <button className="primary-btn" onClick={() => { if (clerkAvailable && clerkLoaded && !isSignedIn && typeof clerk.openSignIn === 'function') { clerk.openSignIn() } else if (isSignedIn) { exchangeClerkToken() } else { navigate('/home') } }}>{t('guest_login_btn')}</button>
           </div>
         )}
 
