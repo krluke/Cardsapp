@@ -12,6 +12,7 @@ import { GlobalSearchModal } from './components/GlobalSearchModal'
 import { AddToFolderModal } from './components/AddToFolderModal'
 import { CardPreview } from './components/CardPreview'
 import { useModal, Modal } from './components/Modal'
+import LoadingSpinner from './components/LoadingSpinner'
 import { apiFetch, API_BASE, ApiError } from './lib/api'
 import './App.css'
 
@@ -363,6 +364,7 @@ function t(key) {
       success_export: "エクスポートが完了しました",
       error_export: "エクスポートに失敗しました",
       no_public_folders: "公開されているフォルダはありません",
+  loading_folders: "フォルダを読み込み中...",
       login_title: "ログイン",
       placeholder_login_id: "メール または ユーザー名",
       placeholder_password: "パスワード",
@@ -385,6 +387,7 @@ function t(key) {
       tab_global_cards: "公開カード一覧",
       search_placeholder_cards: "カードを検索...",
       no_public_cards: "公開されているカードはありません",
+  loading_cards: "カードを読み込み中...",
       btn_add_to_folder: "フォルダに追加",
       select_folder: "フォルダを選択",
       success_add_card: "カードを追加しました",
@@ -440,6 +443,7 @@ function t(key) {
       success_export: "Export successful",
       error_export: "Export failed",
       no_public_folders: "No public folders yet",
+  loading_folders: "Loading folders...",
       login_title: "Login",
       placeholder_login_id: "Email or Username",
       placeholder_password: "Password",
@@ -462,6 +466,7 @@ function t(key) {
       tab_global_cards: "All Public Cards",
       search_placeholder_cards: "Search cards...",
       no_public_cards: "No public cards yet",
+  loading_cards: "Loading cards...",
       btn_add_to_folder: "Add to folder",
       select_folder: "Select folder",
       success_add_card: "Card added successfully",
@@ -596,18 +601,18 @@ function HomePage({ clerkAvailable, clerkLoaded: clerkLoadedProp, devLogin, isSi
   const exchangingRef = useRef(false)
   const exchangeFailCount = useRef(0)
   const sessionExpiredRef = useRef(false)
-  const foldersLoadingRef = useRef(false)
+  const [foldersLoading, setFoldersLoading] = useState(true)
   const foldersRetryAfterRef = useRef(0)
 
   const loadFolders = useCallback(async () => {
     if (sessionExpiredRef.current) return
     if (userLoading) return
-    if (foldersLoadingRef.current) return
+    if (foldersLoading) return
     if (Date.now() < foldersRetryAfterRef.current) return
-    foldersLoadingRef.current = true
+    setFoldersLoading(true)
     if (activeTab === 'my-folders' && !user) {
       setFolders([])
-      foldersLoadingRef.current = false
+      setFoldersLoading(false)
       return
     }
     const endpoint = '/folders'
@@ -631,9 +636,9 @@ function HomePage({ clerkAvailable, clerkLoaded: clerkLoadedProp, devLogin, isSi
         foldersRetryAfterRef.current = Date.now() + 30000
       }
     } finally {
-      foldersLoadingRef.current = false
+      setFoldersLoading(false)
     }
-  }, [activeTab, page, searchInput, user, userLoading])
+  }, [activeTab, page, searchInput, user, userLoading, foldersLoading])
 
   const toggleFavorite = async (folderId) => {
     if (!user) return
@@ -660,14 +665,14 @@ function HomePage({ clerkAvailable, clerkLoaded: clerkLoadedProp, devLogin, isSi
     }
   }
 
-  const globalCardsLoadingRef = useRef(false)
+  const [globalCardsLoading, setGlobalCardsLoading] = useState(false)
   const globalCardsRetryAfterRef = useRef(0)
 
   const loadGlobalCards = useCallback(async () => {
     if (sessionExpiredRef.current) return
-    if (globalCardsLoadingRef.current) return
+    if (globalCardsLoading) return
     if (Date.now() < globalCardsRetryAfterRef.current) return
-    globalCardsLoadingRef.current = true
+    setGlobalCardsLoading(true)
     const params = new URLSearchParams({
       page,
       search: searchInput,
@@ -690,9 +695,9 @@ function HomePage({ clerkAvailable, clerkLoaded: clerkLoadedProp, devLogin, isSi
         globalCardsRetryAfterRef.current = Date.now() + 30000
       }
     } finally {
-      globalCardsLoadingRef.current = false
+      setGlobalCardsLoading(false)
     }
-  }, [page, searchInput])
+  }, [page, searchInput, globalCardsLoading])
 
   const exchangeClerkToken = useCallback(async () => {
     if (exchangingRef.current) return
@@ -1131,87 +1136,99 @@ const handleDevLogin = useCallback(async () => {
           </div>
         </div>
 
-        {activeTab === 'my-folders' && !user && (
-          <div className="empty-state">
-            <p>{t('guest_message')}</p>
-            <button className="primary-btn" onClick={() => { if (clerkAvailable && clerkLoaded && !isSignedIn && typeof clerk.openSignIn === 'function') { clerk.openSignIn() } else if (isSignedIn) { exchangeClerkToken() } else if (!clerkAvailable) { handleDevLogin() } }}>{t('guest_login_btn')}</button>
-          </div>
-        )}
+{activeTab === 'my-folders' && foldersLoading && folders.length === 0 && (
+  <LoadingSpinner text={t('loading_folders')} />
+)}
 
-{activeTab === 'global-folders' && folders.length === 0 && (
+{activeTab === 'my-folders' && !foldersLoading && !user && (
+  <div className="empty-state">
+    <p>{t('guest_message')}</p>
+    <button className="primary-btn" onClick={() => { if (clerkAvailable && clerkLoaded && !isSignedIn && typeof clerk.openSignIn === 'function') { clerk.openSignIn() } else if (isSignedIn) { exchangeClerkToken() } else if (!clerkAvailable) { handleDevLogin() } }}>{t('guest_login_btn')}</button>
+  </div>
+)}
+
+{activeTab === 'global-folders' && foldersLoading && folders.length === 0 && (
+  <LoadingSpinner text={t('loading_folders')} />
+)}
+
+{activeTab === 'global-folders' && !foldersLoading && folders.length === 0 && (
   <div className="empty-state">
     <p>{t('no_public_folders')}</p>
   </div>
 )}
 
-{activeTab === 'global-cards' && globalCards.length === 0 && (
+{activeTab === 'global-cards' && globalCardsLoading && globalCards.length === 0 && (
+  <LoadingSpinner text={t('loading_cards')} />
+)}
+
+{activeTab === 'global-cards' && !globalCardsLoading && globalCards.length === 0 && (
   <div className="empty-state">
     <p>{t('no_public_cards')}</p>
   </div>
 )}
 
-          {(activeTab === 'my-folders' || activeTab === 'global-folders') && (
-          <div className="folder-grid">
-            {folders.map(folder => {
-               const isOwner = activeTab === 'my-folders' || folder.username === user?.username;
-               return (
-  <div key={folder.id} className="folder-tile" onClick={() => {
-  const canEdit = user && activeTab === 'my-folders';
-  navigate(canEdit ? `/editor/${folder.id}` : `/viewer/${folder.id}`, { state: { fromTab: activeTab } });
-}}>
-                        <div className="folder-actions" onClick={e => e.stopPropagation()}>
-                          {activeTab === 'global-folders' && user && (
-                            <button
-                              className={`folder-settings-icon folder-bookmark-btn ${folder.is_favorite ? 'is-favorited' : ''}`}
-                              onClick={(e) => { e.stopPropagation(); toggleFavorite(folder.id) }}
-                              title={folder.is_favorite ? 'Remove bookmark' : 'Bookmark'}
-                            >
-                              {folder.is_favorite ? <Bookmark size={16} fill="currentColor" /> : <Bookmark size={16} />}
-                            </button>
-                          )}
-                          {(folder.card_count || folder.cardCount) > 0 && (
-                            <button className="folder-settings-icon" onClick={() => navigate(`/study/${folder.id}`, { state: { canEdit: user && activeTab === 'my-folders', fromTab: activeTab } })} title="Study">
-                              <BookOpen size={16} />
-                            </button>
-                          )}
-                     {isOwner && (
-                       <button className="folder-settings-icon" onClick={(e) => { e.stopPropagation(); openFolderSettings(folder) }}>
-                         <Settings size={16} />
-                       </button>
-                     )}
-                   </div>
-                   <h3 style={{margin: 0, fontSize: '1rem'}}>{folder.title}</h3>
-                   <p style={{margin: '0.5rem 0 0', fontSize: '0.8rem', color: 'var(--text-muted)'}}>
-                     {activeTab === 'global-folders' && folder.username ? `${folder.username} • ` : ''}{folder.card_count || folder.cardCount || 0} cards
-                   </p>
-                 </div>
-               );
-            })}
+{(activeTab === 'my-folders' || activeTab === 'global-folders') && folders.length > 0 && (
+  <div className="folder-grid">
+    {folders.map(folder => {
+      const isOwner = activeTab === 'my-folders' || folder.username === user?.username;
+      return (
+        <div key={folder.id} className="folder-tile" onClick={() => {
+          const canEdit = user && activeTab === 'my-folders';
+          navigate(canEdit ? `/editor/${folder.id}` : `/viewer/${folder.id}`, { state: { fromTab: activeTab } });
+        }}>
+          <div className="folder-actions" onClick={e => e.stopPropagation()}>
+            {activeTab === 'global-folders' && user && (
+              <button
+                className={`folder-settings-icon folder-bookmark-btn ${folder.is_favorite ? 'is-favorited' : ''}`}
+                onClick={(e) => { e.stopPropagation(); toggleFavorite(folder.id) }}
+                title={folder.is_favorite ? 'Remove bookmark' : 'Bookmark'}
+              >
+                {folder.is_favorite ? <Bookmark size={16} fill="currentColor" /> : <Bookmark size={16} />}
+              </button>
+            )}
+            {(folder.card_count || folder.cardCount) > 0 && (
+              <button className="folder-settings-icon" onClick={() => navigate(`/study/${folder.id}`, { state: { canEdit: user && activeTab === 'my-folders', fromTab: activeTab } })} title="Study">
+                <BookOpen size={16} />
+              </button>
+            )}
+            {isOwner && (
+              <button className="folder-settings-icon" onClick={(e) => { e.stopPropagation(); openFolderSettings(folder) }}>
+                <Settings size={16} />
+              </button>
+            )}
           </div>
-          )}
-
-          {activeTab === 'global-cards' && (
-            <div className="global-cards-grid">
-              {globalCards.map(card => (
-<div key={card.id} className="global-card-tile" onClick={() => setFlippedCards(prev => ({...prev, [card.id]: !prev[card.id]}))}>
-          <div className={`global-card-inner ${flippedCards[card.id] ? 'flipped' : ''}`}>
-        <div className="global-card-front" style={{ backgroundColor: card.frontBg || 'var(--bg-surface)' }}>
-          <CardPreview html={card.front} />
-          <div className="global-card-folder-info">
-            {card.folder_title} • {card.folder_owner}
-          </div>
+          <h3 style={{margin: 0, fontSize: '1rem'}}>{folder.title}</h3>
+          <p style={{margin: '0.5rem 0 0', fontSize: '0.8rem', color: 'var(--text-muted)'}}>
+            {activeTab === 'global-folders' && folder.username ? `${folder.username} • ` : ''}{folder.card_count || folder.cardCount || 0} cards
+          </p>
         </div>
-        <div className="global-card-back" style={{ backgroundColor: card.backBg || 'var(--bg-surface)' }}>
+      );
+    })}
+  </div>
+)}
+
+{activeTab === 'global-cards' && globalCards.length > 0 && (
+  <div className="global-cards-grid">
+    {globalCards.map(card => (
+      <div key={card.id} className="global-card-tile" onClick={() => setFlippedCards(prev => ({...prev, [card.id]: !prev[card.id]}))}>
+        <div className={`global-card-inner ${flippedCards[card.id] ? 'flipped' : ''}`}>
+          <div className="global-card-front" style={{ backgroundColor: card.frontBg || 'var(--bg-surface)' }}>
+            <CardPreview html={card.front} />
+            <div className="global-card-folder-info">
+              {card.folder_title} • {card.folder_owner}
+            </div>
+          </div>
+          <div className="global-card-back" style={{ backgroundColor: card.backBg || 'var(--bg-surface)' }}>
             <CardPreview html={card.back} />
           </div>
-          </div>
-                  <button className="global-card-add-btn" onClick={(e) => { e.stopPropagation(); setSelectedCard(card); setShowAddToFolderModal(true) }} title={t('btn_add_to_folder')}>
-                    <Plus size={16} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
+        </div>
+        <button className="global-card-add-btn" onClick={(e) => { e.stopPropagation(); setSelectedCard(card); setShowAddToFolderModal(true) }} title={t('btn_add_to_folder')}>
+          <Plus size={16} />
+        </button>
+      </div>
+    ))}
+  </div>
+)}
       </main>
 
         <footer className="home-page-footer">
