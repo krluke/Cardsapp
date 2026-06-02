@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useSearchParams, Link } from 'react-router-dom'
-import { X, FolderPlus, Palette, Globe, User, LogOut, LogIn, Settings, Trash2, Search, ChevronLeft, ChevronRight, BookOpen, Plus, Bookmark } from 'lucide-react'
+import { X, FolderPlus, Palette, Globe, User, LogOut, LogIn, Settings, Trash2, Search, ChevronLeft, ChevronRight, BookOpen, Plus, Bookmark, Heart } from 'lucide-react'
 import { ClerkProvider, useAuth, useClerk } from '@clerk/clerk-react'
 
 import AccountPage from './pages/AccountPage'
@@ -363,7 +363,9 @@ function t(key) {
       error_import: "無効なファイル形式です",
       success_export: "エクスポートが完了しました",
       error_export: "エクスポートに失敗しました",
-      no_public_folders: "公開されているフォルダはありません",
+      like_tooltip: "いいね",
+  unlike_tooltip: "いいね解除",
+  no_public_folders: "公開されているフォルダはありません",
   loading_folders: "フォルダを読み込み中...",
       login_title: "ログイン",
       placeholder_login_id: "メール または ユーザー名",
@@ -442,7 +444,9 @@ function t(key) {
       error_import: "Invalid file format",
       success_export: "Export successful",
       error_export: "Export failed",
-      no_public_folders: "No public folders yet",
+      like_tooltip: "Like",
+  unlike_tooltip: "Unlike",
+  no_public_folders: "No public folders yet",
   loading_folders: "Loading folders...",
       login_title: "Login",
       placeholder_login_id: "Email or Username",
@@ -667,6 +671,29 @@ function HomePage({ clerkAvailable, clerkLoaded: clerkLoadedProp, devLogin, isSi
         )
         return reverted.sort((a, b) => (b.is_favorite ? 1 : 0) - (a.is_favorite ? 1 : 0) || b.id - a.id)
       })
+    }
+  }
+
+  const toggleLike = async (folderId) => {
+    if (!user) return
+    setFolders(prev => prev.map(f => {
+      if (f.id !== folderId) return f
+      const wasLiked = !!f.is_liked
+      return { ...f, is_liked: !wasLiked, like_count: (f.like_count || 0) + (wasLiked ? -1 : 1) }
+    }))
+    try {
+      await apiFetch('/folders/toggle-action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ folderId, action: 'like' }),
+      })
+    } catch (e) {
+      console.error(e)
+      setFolders(prev => prev.map(f => {
+        if (f.id !== folderId) return f
+        const wasLiked = !!f.is_liked
+        return { ...f, is_liked: !wasLiked, like_count: (f.like_count || 0) + (wasLiked ? -1 : 1) }
+      }))
     }
   }
 
@@ -1184,16 +1211,26 @@ const handleDevLogin = useCallback(async () => {
           const canEdit = user && activeTab === 'my-folders';
           navigate(canEdit ? `/editor/${folder.id}` : `/viewer/${folder.id}`, { state: { fromTab: activeTab } });
         }}>
-          <div className="folder-actions" onClick={e => e.stopPropagation()}>
-            {activeTab === 'global-folders' && user && (
-              <button
-                className={`folder-settings-icon folder-bookmark-btn ${folder.is_favorite ? 'is-favorited' : ''}`}
-                onClick={(e) => { e.stopPropagation(); toggleFavorite(folder.id) }}
-                title={folder.is_favorite ? 'Remove bookmark' : 'Bookmark'}
-              >
-                {folder.is_favorite ? <Bookmark size={16} fill="currentColor" /> : <Bookmark size={16} />}
-              </button>
-            )}
+                <div className="folder-actions" onClick={e => e.stopPropagation()}>
+                  {user && (
+                    <button
+                      className={`folder-settings-icon folder-like-btn ${folder.is_liked ? 'is-liked' : ''}`}
+                      onClick={(e) => { e.stopPropagation(); toggleLike(folder.id) }}
+                      title={folder.is_liked ? t('unlike_tooltip') : t('like_tooltip')}
+                    >
+                      {folder.is_liked ? <Heart size={16} fill="currentColor" /> : <Heart size={16} />}
+                      {(folder.like_count || 0) > 0 && <span className="like-count">{folder.like_count}</span>}
+                    </button>
+                  )}
+                  {activeTab === 'global-folders' && user && (
+                    <button
+                      className={`folder-settings-icon folder-bookmark-btn ${folder.is_favorite ? 'is-favorited' : ''}`}
+                      onClick={(e) => { e.stopPropagation(); toggleFavorite(folder.id) }}
+                      title={folder.is_favorite ? 'Remove bookmark' : 'Bookmark'}
+                    >
+                      {folder.is_favorite ? <Bookmark size={16} fill="currentColor" /> : <Bookmark size={16} />}
+                    </button>
+                  )}
             {(folder.card_count || folder.cardCount) > 0 && (
               <button className="folder-settings-icon" onClick={() => navigate(`/study/${folder.id}`, { state: { canEdit: user && activeTab === 'my-folders', fromTab: activeTab } })} title="Study">
                 <BookOpen size={16} />
