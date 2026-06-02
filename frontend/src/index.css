@@ -796,6 +796,32 @@ object-fit: cover;
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes spinnerRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.loading-spinner-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 1rem;
+  gap: 1rem;
+  width: 100%;
+}
+
+.loading-spinner {
+  animation: spinnerRotate 1.2s linear infinite;
+  filter: drop-shadow(0 0 6px var(--accent-color));
+}
+
+.loading-spinner-text {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
 .menu-header {
   padding: 14px 18px;
   border-bottom: 1px solid var(--border-color);
