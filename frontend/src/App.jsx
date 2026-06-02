@@ -602,16 +602,19 @@ function HomePage({ clerkAvailable, clerkLoaded: clerkLoadedProp, devLogin, isSi
   const exchangeFailCount = useRef(0)
   const sessionExpiredRef = useRef(false)
   const [foldersLoading, setFoldersLoading] = useState(true)
+  const foldersLoadingRef = useRef(false)
   const foldersRetryAfterRef = useRef(0)
 
   const loadFolders = useCallback(async () => {
     if (sessionExpiredRef.current) return
     if (userLoading) return
-    if (foldersLoading) return
+    if (foldersLoadingRef.current) return
     if (Date.now() < foldersRetryAfterRef.current) return
+    foldersLoadingRef.current = true
     setFoldersLoading(true)
     if (activeTab === 'my-folders' && !user) {
       setFolders([])
+      foldersLoadingRef.current = false
       setFoldersLoading(false)
       return
     }
@@ -636,9 +639,10 @@ function HomePage({ clerkAvailable, clerkLoaded: clerkLoadedProp, devLogin, isSi
         foldersRetryAfterRef.current = Date.now() + 30000
       }
     } finally {
+      foldersLoadingRef.current = false
       setFoldersLoading(false)
     }
-  }, [activeTab, page, searchInput, user, userLoading, foldersLoading])
+  }, [activeTab, page, searchInput, user, userLoading])
 
   const toggleFavorite = async (folderId) => {
     if (!user) return
@@ -666,12 +670,14 @@ function HomePage({ clerkAvailable, clerkLoaded: clerkLoadedProp, devLogin, isSi
   }
 
   const [globalCardsLoading, setGlobalCardsLoading] = useState(false)
+  const globalCardsLoadingRef = useRef(false)
   const globalCardsRetryAfterRef = useRef(0)
 
   const loadGlobalCards = useCallback(async () => {
     if (sessionExpiredRef.current) return
-    if (globalCardsLoading) return
+    if (globalCardsLoadingRef.current) return
     if (Date.now() < globalCardsRetryAfterRef.current) return
+    globalCardsLoadingRef.current = true
     setGlobalCardsLoading(true)
     const params = new URLSearchParams({
       page,
@@ -695,9 +701,10 @@ function HomePage({ clerkAvailable, clerkLoaded: clerkLoadedProp, devLogin, isSi
         globalCardsRetryAfterRef.current = Date.now() + 30000
       }
     } finally {
+      globalCardsLoadingRef.current = false
       setGlobalCardsLoading(false)
     }
-  }, [page, searchInput, globalCardsLoading])
+  }, [page, searchInput])
 
   const exchangeClerkToken = useCallback(async () => {
     if (exchangingRef.current) return
