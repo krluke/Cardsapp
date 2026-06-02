@@ -390,7 +390,10 @@ def get_folders(request):
     try:
         tab = request.GET.get("tab", "my-folders")
         search_query = request.GET.get("q", "")
-        page = int(request.GET.get("page", 1))
+        try:
+            page = max(1, int(request.GET.get("page", 1)))
+        except (ValueError, TypeError):
+            page = 1
 
         user_email = None
         auth_header = request.headers.get("Authorization", "")
@@ -1037,7 +1040,10 @@ def load_cards_fixed(request, folder_id):
 def get_public_cards(request):
     try:
         search_query = request.GET.get("search", "").strip()
-        page = int(request.GET.get("page", 1))
+        try:
+            page = max(1, int(request.GET.get("page", 1)))
+        except (ValueError, TypeError):
+            page = 1
         limit = 20
         offset = (page - 1) * limit
 
