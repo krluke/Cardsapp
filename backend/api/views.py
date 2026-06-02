@@ -437,17 +437,18 @@ def get_folders(request):
         }
         safe_order_by = order_by_whitelist.get(order_by, "f.id DESC")
 
-        if tab == "my-folders":
-            fetch_sql = f"""
-                SELECT f.id, f.title, f.visibility, f.likes,
-                       (SELECT COUNT(*) FROM folder_likes WHERE folder_id = f.id) as like_count,
-                       (SELECT COUNT(*) FROM cards WHERE folder_id = f.id) as card_count
-                FROM folders f
-                {base_where}
-                ORDER BY {safe_order_by}
-                LIMIT %s OFFSET %s
-            """
-            final_params = params + [limit, offset]
+    if tab == "my-folders":
+        fetch_sql = f"""
+            SELECT f.id, f.title, f.visibility, f.likes,
+                (SELECT COUNT(*) FROM folder_likes WHERE folder_id = f.id) as like_count,
+                (SELECT COUNT(*) FROM cards WHERE folder_id = f.id) as card_count,
+                EXISTS(SELECT 1 FROM folder_likes WHERE folder_id = f.id AND user_email = %s) as is_liked
+            FROM folders f
+            {base_where}
+            ORDER BY {safe_order_by}
+            LIMIT %s OFFSET %s
+        """
+        final_params = [user_email or ''] + params + [limit, offset]
         else:
             fetch_sql = f"""
                 SELECT f.id, f.title, f.visibility,

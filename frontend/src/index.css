@@ -646,6 +646,28 @@ object-fit: cover;
   color: var(--accent-color);
 }
 
+.folder-like-btn.is-liked {
+  color: #e04040;
+}
+
+.folder-like-btn:hover {
+  background: rgba(224, 64, 64, 0.1);
+  color: #e04040;
+}
+
+.folder-like-btn .like-count {
+  font-size: 0.65rem;
+  font-weight: 600;
+  margin-left: 2px;
+  line-height: 1;
+}
+
+.folder-actions .folder-like-btn {
+  width: auto;
+  padding: 0 6px;
+  gap: 1px;
+}
+
 .tile-action-btn.delete-icon:hover {
   background: rgba(224, 82, 82, 0.1);
   color: var(--danger-color);
