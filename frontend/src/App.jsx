@@ -476,6 +476,30 @@ export default function App({ clerkAvailable }) {
   const clerkKey = clerkAvailable ? import.meta.env.VITE_CLERK_PUBLISHABLE_KEY : null
   const clerkAppearance = useMemo(() => buildClerkAppearance(theme), [theme])
 
+  const devLogin = useCallback(async () => {
+    try {
+      const res = await fetch(`${API_BASE}/dev-auth`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: 'dev@cardsapp.local' }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        console.error('Dev auth failed:', data.error || data.message)
+        return null
+      }
+      const session = {
+        user: { id: data.email, username: data.username, email: data.email, clerkUserId: data.clerkUserId || '' },
+        csrfToken: data.csrfToken,
+        token: data.token,
+      }
+      return session
+    } catch (err) {
+      console.error('Dev auth error:', err?.message || err)
+      return null
+    }
+  }, [])
+
   useEffect(() => {
     const handler = (e) => {
       if (e.detail?.theme) {
@@ -488,8 +512,8 @@ export default function App({ clerkAvailable }) {
 
   const routes = (
     <Routes>
-      <Route path="/" element={clerkAvailable ? <ClerkLandingPage /> : <LandingPage clerkAvailable={false} />} />
-      <Route path="/home" element={clerkAvailable ? <ClerkHomePage /> : <HomePage clerkAvailable={false} />} />
+      <Route path="/" element={clerkAvailable ? <ClerkLandingPage /> : <LandingPage clerkAvailable={false} onDevLogin={!clerkAvailable ? devLogin : undefined} />} />
+      <Route path="/home" element={clerkAvailable ? <ClerkHomePage /> : <HomePage clerkAvailable={false} devLogin={devLogin} />} />
       <Route path="/account" element={<AccountPage />} />
       <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
       <Route path="/terms-of-service" element={<TermsOfServicePage />} />
@@ -524,7 +548,7 @@ function ClerkLandingPage() {
   return <LandingPage clerkAvailable={true} clerkLoaded={isLoaded} clerk={clerk} />
 }
 
-function HomePage({ clerkAvailable, clerkLoaded: clerkLoadedProp, isSignedIn: isSignedInProp, getToken: getTokenProp, clerk: clerkProp }) {
+function HomePage({ clerkAvailable, clerkLoaded: clerkLoadedProp, devLogin, isSignedIn: isSignedInProp, getToken: getTokenProp, clerk: clerkProp }) {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const [user, setUser] = useState(() => {
@@ -775,6 +799,24 @@ function HomePage({ clerkAvailable, clerkLoaded: clerkLoadedProp, isSignedIn: is
   useEffect(() => {
     if (activeTab === 'global-cards') requestAnimationFrame(() => loadGlobalCards())
   }, [activeTab, loadGlobalCards])
+
+const handleDevLogin = useCallback(async () => {
+        if (exchangingRef.current) return
+        exchangingRef.current = true
+        setUserLoading(true)
+        try {
+            const session = await devLogin()
+            if (session) {
+                localStorage.setItem('session', JSON.stringify(session))
+                setUser(session.user)
+            }
+        } catch (err) {
+            console.error('Dev login error:', err?.message || err)
+        } finally {
+            exchangingRef.current = false
+            setUserLoading(false)
+        }
+    }, [devLogin])
 
   const handleLogout = () => {
     localStorage.removeItem('session')
@@ -1053,7 +1095,7 @@ function HomePage({ clerkAvailable, clerkLoaded: clerkLoadedProp, isSignedIn: is
             {authMenuOpen && (
               <div className="dropdown">
                 {!user ? (
-          <button className="dropdown-item" onClick={() => { if (clerkAvailable && clerkLoaded && !isSignedIn && typeof clerk.openSignIn === 'function') { clerk.openSignIn() } else if (isSignedIn) { exchangeClerkToken() } else { navigate('/home') }; setAuthMenuOpen(false) }}>
+          <button className="dropdown-item" onClick={() => { if (clerkAvailable && clerkLoaded && !isSignedIn && typeof clerk.openSignIn === 'function') { clerk.openSignIn() } else if (isSignedIn) { exchangeClerkToken() } else if (!clerkAvailable) { handleDevLogin() }; setAuthMenuOpen(false) }}>
             <LogIn size={18} /> {(!clerkAvailable || !isSignedIn) ? t('menu_login') : t('guest_login_btn')}
                   </button>
                 ) : (
@@ -1092,7 +1134,7 @@ function HomePage({ clerkAvailable, clerkLoaded: clerkLoadedProp, isSignedIn: is
         {activeTab === 'my-folders' && !user && (
           <div className="empty-state">
             <p>{t('guest_message')}</p>
-            <button className="primary-btn" onClick={() => { if (clerkAvailable && clerkLoaded && !isSignedIn && typeof clerk.openSignIn === 'function') { clerk.openSignIn() } else if (isSignedIn) { exchangeClerkToken() } else { navigate('/home') } }}>{t('guest_login_btn')}</button>
+            <button className="primary-btn" onClick={() => { if (clerkAvailable && clerkLoaded && !isSignedIn && typeof clerk.openSignIn === 'function') { clerk.openSignIn() } else if (isSignedIn) { exchangeClerkToken() } else if (!clerkAvailable) { handleDevLogin() } }}>{t('guest_login_btn')}</button>
           </div>
         )}
 

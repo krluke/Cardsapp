@@ -4,6 +4,7 @@ from . import views
 urlpatterns = [
     # Auth
     path("clerk-auth", views.clerk_auth, name="clerk_auth"),
+    path("dev-auth", views.dev_auth, name="dev_auth"),
     # User
     path("user/stats", views.get_user_stats, name="user_stats"),
     # Folders

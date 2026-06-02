@@ -35,12 +35,18 @@ function t(key) {
   return translations[lang]?.[key] || key
 }
 
-export default function LandingPage({ clerkAvailable, clerkLoaded, clerk }) {
+export default function LandingPage({ clerkAvailable, clerkLoaded, clerk, onDevLogin }) {
   const navigate = useNavigate()
 
-  const handleAuth = () => {
+  const handleAuth = async () => {
     if (clerkAvailable && clerkLoaded && typeof clerk?.openSignIn === 'function') {
       clerk.openSignIn({ redirectUrl: '/home' })
+    } else if (!clerkAvailable && onDevLogin) {
+      const session = await onDevLogin()
+      if (session) {
+        localStorage.setItem('session', JSON.stringify(session))
+        navigate('/home')
+      }
     } else {
       navigate('/home')
     }
@@ -58,14 +64,14 @@ export default function LandingPage({ clerkAvailable, clerkLoaded, clerk }) {
           <span className="landing-logo-app">App</span>
         </div>
         <div className="landing-nav-actions">
-          {clerkAvailable && (
-            <button className="landing-nav-login" onClick={handleAuth}>
-              <LogIn size={16} /> {t('login')}
-            </button>
-          )}
-          <button className="landing-nav-cta" onClick={handleAuth}>
-            {clerkAvailable ? t('cta') : t('cta_guest')}
+        {(clerkAvailable || onDevLogin) && (
+          <button className="landing-nav-login" onClick={handleAuth}>
+            <LogIn size={16} /> {t('login')}
           </button>
+        )}
+        <button className="landing-nav-cta" onClick={handleAuth}>
+          {clerkAvailable ? t('cta') : onDevLogin ? t('login') : t('cta_guest')}
+        </button>
         </div>
       </div>
 
@@ -73,10 +79,10 @@ export default function LandingPage({ clerkAvailable, clerkLoaded, clerk }) {
         <h1 className="landing-headline">{t('tagline')}</h1>
         <p className="landing-description">{t('description')}</p>
         <div className="landing-actions">
-          <button className="landing-primary-cta" onClick={handleAuth}>
-            {t('cta')} <ArrowRight size={18} />
-          </button>
-          {clerkAvailable && (
+      <button className="landing-primary-cta" onClick={handleAuth}>
+        {clerkAvailable || onDevLogin ? t('cta') : t('cta_guest')} <ArrowRight size={18} />
+      </button>
+      {clerkAvailable && (
             <button className="landing-secondary-cta" onClick={handleGuest}>
               {t('cta_guest')}
             </button>
