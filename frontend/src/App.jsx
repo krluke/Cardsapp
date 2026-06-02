@@ -632,10 +632,12 @@ function HomePage({ clerkAvailable, clerkLoaded: clerkLoadedProp, devLogin, isSi
     try {
       const res = await apiFetch(`${endpoint}?${params}`)
       const data = await res.json()
-      if (data.folders !== undefined) {
-        setFolders(data.folders || [])
-        setTotalPages(data.totalPages || 1)
-      } else if (data.message) {
+        if (data.folders !== undefined) {
+          setFolders(data.folders || [])
+          const apiTotalPages = data.totalPages || 1
+          setTotalPages(apiTotalPages)
+          if (page > apiTotalPages) setPage(apiTotalPages)
+        } else if (data.message) {
         console.error('loadFolders error:', data.message)
       }
     } catch (e) {
@@ -714,15 +716,17 @@ function HomePage({ clerkAvailable, clerkLoaded: clerkLoadedProp, devLogin, isSi
     try {
       const res = await apiFetch(`/cards/public?${params}`)
       const data = await res.json()
-      if (data.cards) {
-        const filteredCards = (data.cards || []).filter(card => {
-          const frontContent = (card.front || '').replace(/[<>]/g, '').trim()
-          const backContent = (card.back || '').replace(/[<>]/g, '').trim()
-          return frontContent || backContent
-        })
-        setGlobalCards(filteredCards)
-        setTotalPages(data.totalPages || 1)
-      }
+        if (data.cards) {
+          const filteredCards = (data.cards || []).filter(card => {
+            const frontContent = (card.front || '').replace(/[<>]/g, '').trim()
+            const backContent = (card.back || '').replace(/[<>]/g, '').trim()
+            return frontContent || backContent
+          })
+          setGlobalCards(filteredCards)
+          const apiTotalPages = data.totalPages || 1
+          setTotalPages(apiTotalPages)
+          if (page > apiTotalPages) setPage(apiTotalPages)
+        }
     } catch (e) {
       console.error(e)
       if (e instanceof ApiError && e.status === 429) {
@@ -1165,9 +1169,9 @@ const handleDevLogin = useCallback(async () => {
             <button className="shadow-btn" onClick={activeTab === 'global-cards' ? loadGlobalCards : loadFolders}>{t('btn_search')}</button>
           </div>
           <div className="pagination-controls">
-            <button disabled={page === 1} onClick={() => setPage(p => p - 1)}><ChevronLeft size={16} /></button>
-            <span>{page} / {totalPages}</span>
-            <button disabled={page === totalPages} onClick={() => setPage(p => p + 1)}><ChevronRight size={16} /></button>
+          <button disabled={page === 1 || foldersLoading || globalCardsLoading} onClick={() => setPage(p => p - 1)}><ChevronLeft size={16} /></button>
+          <span>{page} / {totalPages}</span>
+          <button disabled={page === totalPages || foldersLoading || globalCardsLoading} onClick={() => setPage(p => p + 1)}><ChevronRight size={16} /></button>
           </div>
         </div>
 
