@@ -35,19 +35,11 @@ function t(key) {
   return translations[lang]?.[key] || key
 }
 
-export default function LandingPage({ clerkAvailable, clerk }) {
+export default function LandingPage({ clerkAvailable, clerkLoaded, clerk }) {
   const navigate = useNavigate()
 
-  const handleCta = () => {
-    if (clerkAvailable && typeof clerk?.openSignIn === 'function') {
-      clerk.openSignIn({ redirectUrl: '/home' })
-    } else {
-      navigate('/home')
-    }
-  }
-
-  const handleLogin = () => {
-    if (clerkAvailable && typeof clerk?.openSignIn === 'function') {
+  const handleAuth = () => {
+    if (clerkAvailable && clerkLoaded && typeof clerk?.openSignIn === 'function') {
       clerk.openSignIn({ redirectUrl: '/home' })
     } else {
       navigate('/home')
@@ -67,11 +59,11 @@ export default function LandingPage({ clerkAvailable, clerk }) {
         </div>
         <div className="landing-nav-actions">
           {clerkAvailable && (
-            <button className="landing-nav-login" onClick={handleLogin}>
+            <button className="landing-nav-login" onClick={handleAuth}>
               <LogIn size={16} /> {t('login')}
             </button>
           )}
-          <button className="landing-nav-cta" onClick={handleCta}>
+          <button className="landing-nav-cta" onClick={handleAuth}>
             {clerkAvailable ? t('cta') : t('cta_guest')}
           </button>
         </div>
@@ -81,7 +73,7 @@ export default function LandingPage({ clerkAvailable, clerk }) {
         <h1 className="landing-headline">{t('tagline')}</h1>
         <p className="landing-description">{t('description')}</p>
         <div className="landing-actions">
-          <button className="landing-primary-cta" onClick={handleCta}>
+          <button className="landing-primary-cta" onClick={handleAuth}>
             {t('cta')} <ArrowRight size={18} />
           </button>
           {clerkAvailable && (
