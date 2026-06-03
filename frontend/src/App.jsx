@@ -610,6 +610,7 @@ function HomePage({ clerkAvailable, clerkLoaded: clerkLoadedProp, devLogin, isSi
   const [foldersLoading, setFoldersLoading] = useState(true)
   const foldersLoadingRef = useRef(false)
   const foldersRetryAfterRef = useRef(0)
+  const foldersRequestGenRef = useRef(0)
 
 const loadFolders = useCallback(async () => {
     if (sessionExpiredRef.current) return
@@ -617,6 +618,7 @@ const loadFolders = useCallback(async () => {
     if (foldersLoadingRef.current) return
     if (Date.now() < foldersRetryAfterRef.current) return
     if (activeTab === 'global-cards') return
+    const gen = ++foldersRequestGenRef.current
     foldersLoadingRef.current = true
     setFoldersLoading(true)
     if (activeTab === 'my-folders' && !user) {
@@ -634,6 +636,7 @@ const loadFolders = useCallback(async () => {
     try {
       const res = await apiFetch(`${endpoint}?${params}`)
       const data = await res.json()
+      if (gen !== foldersRequestGenRef.current) return
       if (data.folders !== undefined) {
         setFolders(data.folders || [])
         const apiTotalPages = data.totalPages || 1
@@ -643,13 +646,16 @@ const loadFolders = useCallback(async () => {
         console.error('loadFolders error:', data.message)
       }
     } catch (e) {
+      if (gen !== foldersRequestGenRef.current) return
       console.error(e)
       if (e instanceof ApiError && e.status === 429) {
         foldersRetryAfterRef.current = Date.now() + 30000
       }
     } finally {
-      foldersLoadingRef.current = false
-      setFoldersLoading(false)
+      if (gen === foldersRequestGenRef.current) {
+        foldersLoadingRef.current = false
+        setFoldersLoading(false)
+      }
     }
   }, [activeTab, page, searchInput, user, userLoading])
 
@@ -704,11 +710,13 @@ const loadFolders = useCallback(async () => {
   const [globalCardsLoading, setGlobalCardsLoading] = useState(false)
   const globalCardsLoadingRef = useRef(false)
   const globalCardsRetryAfterRef = useRef(0)
+  const globalCardsRequestGenRef = useRef(0)
 
 const loadGlobalCards = useCallback(async () => {
     if (sessionExpiredRef.current) return
     if (globalCardsLoadingRef.current) return
     if (Date.now() < globalCardsRetryAfterRef.current) return
+    const gen = ++globalCardsRequestGenRef.current
     globalCardsLoadingRef.current = true
     setGlobalCardsLoading(true)
     const params = new URLSearchParams({
@@ -718,6 +726,7 @@ const loadGlobalCards = useCallback(async () => {
     try {
       const res = await apiFetch(`/cards/public?${params}`)
       const data = await res.json()
+      if (gen !== globalCardsRequestGenRef.current) return
       if (data.cards) {
         const filteredCards = (data.cards || []).filter(card => {
           const frontContent = (card.front || '').replace(/[<>]/g, '').trim()
@@ -730,13 +739,16 @@ const loadGlobalCards = useCallback(async () => {
         if (page > apiTotalPages) setPage(apiTotalPages)
       }
     } catch (e) {
+      if (gen !== globalCardsRequestGenRef.current) return
       console.error(e)
       if (e instanceof ApiError && e.status === 429) {
         globalCardsRetryAfterRef.current = Date.now() + 30000
       }
     } finally {
-      globalCardsLoadingRef.current = false
-      setGlobalCardsLoading(false)
+      if (gen === globalCardsRequestGenRef.current) {
+        globalCardsLoadingRef.current = false
+        setGlobalCardsLoading(false)
+      }
     }
   }, [page, searchInput])
 
@@ -1160,9 +1172,9 @@ const handleDevLogin = useCallback(async () => {
 
       <main className="page-container home-page-main">
         <div className="tabs-container">
-          <button className={`tab-btn ${activeTab === 'my-folders' ? 'active' : ''}`} onClick={() => { setActiveTab('my-folders'); setPage(1) }}>{t('tab_my_folders')}</button>
-          <button className={`tab-btn ${activeTab === 'global-folders' ? 'active' : ''}`} onClick={() => { setActiveTab('global-folders'); setPage(1) }}>{t('tab_global_folders')}</button>
-          <button className={`tab-btn ${activeTab === 'global-cards' ? 'active' : ''}`} onClick={() => { setActiveTab('global-cards'); setPage(1) }}>{t('tab_global_cards')}</button>
+<button className={`tab-btn ${activeTab === 'my-folders' ? 'active' : ''}`} onClick={() => { setActiveTab('my-folders'); setPage(1); setFolders([]); setFoldersLoading(true); foldersLoadingRef.current = false; foldersRequestGenRef.current++ }}>{t('tab_my_folders')}</button>
+        <button className={`tab-btn ${activeTab === 'global-folders' ? 'active' : ''}`} onClick={() => { setActiveTab('global-folders'); setPage(1); setFolders([]); setFoldersLoading(true); foldersLoadingRef.current = false; foldersRequestGenRef.current++ }}>{t('tab_global_folders')}</button>
+        <button className={`tab-btn ${activeTab === 'global-cards' ? 'active' : ''}`} onClick={() => { setActiveTab('global-cards'); setPage(1); setGlobalCards([]); setGlobalCardsLoading(true); globalCardsLoadingRef.current = false; globalCardsRequestGenRef.current++ }}>{t('tab_global_cards')}</button>
         </div>
 
         <div className="search-and-pagination-container">
