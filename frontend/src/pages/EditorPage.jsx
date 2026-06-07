@@ -780,8 +780,8 @@ export default function EditorPage() {
           dispatch({ type: 'SET_TEXT_BG_COLOR', payload: val });
           if (state.selectedElement && isTextSelected) updateElement(state.selectedElement, { backgroundColor: val });
         }}
-        fontSize={state.fontSize}
-        fontFamily={state.fontFamily}
+  fontSize={selectedEl?.fontSize ?? state.fontSize}
+  fontFamily={selectedEl?.fontFamily ?? state.fontFamily}
         textColor={selectedEl?.color ?? ''}
         backgroundColor={selectedEl?.backgroundColor ?? ''}
         t={t}
