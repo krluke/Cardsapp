@@ -202,8 +202,8 @@ function editorReducer(state, action) {
         fontStyle: 'normal',
         textDecoration: 'none',
         textAlign: 'left',
-        color: textColor || '',
-        backgroundColor: bgColor || '',
+  color: stateWithHistory.textColorAuto ? '' : (textColor || ''),
+  backgroundColor: stateWithHistory.fillColorAuto ? '' : (bgColor || ''),
         rotation: 0
       };
       const newCards = [...stateWithHistory.cards];
@@ -315,9 +315,15 @@ function editorReducer(state, action) {
       const stateWithHistory = pushHistory(state);
       const newCards = [...stateWithHistory.cards];
       newCards[stateWithHistory.currentIndex] = { ...newCards[stateWithHistory.currentIndex], tags: action.payload.tags };
-      return { ...stateWithHistory, cards: newCards };
-    }
-    default:
+  return { ...stateWithHistory, cards: newCards };
+}
+case 'SET_TEXT_COLOR_AUTO':
+  return { ...state, textColorAuto: !state.textColorAuto };
+case 'SET_FILL_COLOR_AUTO':
+  return { ...state, fillColorAuto: !state.fillColorAuto };
+case 'SET_BG_COLOR_AUTO':
+  return { ...state, bgColorAuto: !state.bgColorAuto };
+default:
       return state;
   }
 }
@@ -337,6 +343,9 @@ const initialState = {
   fontFamily: 'sans-serif',
   textColor: '',
   textBoxBgColor: '',
+  textColorAuto: true,
+  fillColorAuto: true,
+  bgColorAuto: true,
 };
 
 export default function EditorPage() {
@@ -731,9 +740,17 @@ export default function EditorPage() {
     }
   };
 
-  const updateBgColor = (color) => {
-    dispatch({ type: 'UPDATE_BG_COLOR', payload: { color } });
-  };
+const updateBgColor = (color) => {
+  dispatch({ type: 'UPDATE_BG_COLOR', payload: { color } });
+  if (color && state.bgColorAuto) dispatch({ type: 'SET_BG_COLOR_AUTO' });
+};
+
+const toggleBgColorAuto = () => {
+  dispatch({ type: 'SET_BG_COLOR_AUTO' });
+  if (!state.bgColorAuto) {
+    dispatch({ type: 'UPDATE_BG_COLOR', payload: { color: '' } });
+  }
+};
 
   const goToHome = () => { navigate('/home'); };
 
@@ -745,47 +762,65 @@ export default function EditorPage() {
   return (
     <div className="editor-container">
       <EditorToolbar
-        onGoHome={goToHome}
-        onUndo={() => dispatch({ type: 'UNDO' })}
-        onRedo={() => dispatch({ type: 'REDO' })}
-        onAddText={addText}
-        currentBg={currentBg}
-        updateBgColor={updateBgColor}
-        imageUrl={state.imageUrl}
-        setImageUrl={(val) => dispatch({ type: 'SET_IMAGE_URL', payload: val })}
-        onAddImage={addImage}
-        onUploadImage={uploadImage}
-        showTemplateMenu={state.showTemplateMenu}
-        setShowTemplateMenu={(val) => dispatch({ type: 'SET_SHOW_TEMPLATE_MENU', payload: val })}
-        applyTemplate={(key) => dispatch({ type: 'APPLY_TEMPLATE', payload: { templateKey: key } })}
-        onSave={saveCards}
-        saving={state.saving}
-        t={t}
-      />
+      onGoHome={goToHome}
+      onUndo={() => dispatch({ type: 'UNDO' })}
+      onRedo={() => dispatch({ type: 'REDO' })}
+      onAddText={addText}
+      currentBg={currentBg}
+      updateBgColor={updateBgColor}
+      bgColorAuto={state.bgColorAuto}
+      onBgColorAutoToggle={toggleBgColorAuto}
+      imageUrl={state.imageUrl}
+      setImageUrl={(val) => dispatch({ type: 'SET_IMAGE_URL', payload: val })}
+      onAddImage={addImage}
+      onUploadImage={uploadImage}
+      showTemplateMenu={state.showTemplateMenu}
+      setShowTemplateMenu={(val) => dispatch({ type: 'SET_SHOW_TEMPLATE_MENU', payload: val })}
+      applyTemplate={(key) => dispatch({ type: 'APPLY_TEMPLATE', payload: { templateKey: key } })}
+      onSave={saveCards}
+      saving={state.saving}
+      t={t}
+    />
       <FloatingTextToolbar
-        element={selectedEl}
-        isVisible={isTextSelected}
-        onMoveElement={(direction) => dispatch({ type: 'MOVE_ELEMENT', payload: { elementId: state.selectedElement, direction } })}
-        onFormatChange={applyFormat}
-        onFontSizeChange={(val) => {
-          dispatch({ type: 'SET_FONT_SIZE', payload: val });
-          if (state.selectedElement) updateElement(state.selectedElement, { fontSize: val });
-        }}
-        onFontFamilyChange={setFontFamily}
-        onTextColorChange={(val) => {
-          dispatch({ type: 'SET_TEXT_COLOR', payload: val });
-          if (state.selectedElement && isTextSelected) updateElement(state.selectedElement, { color: val });
-        }}
-        onBackgroundColorChange={(val) => {
-          dispatch({ type: 'SET_TEXT_BG_COLOR', payload: val });
-          if (state.selectedElement && isTextSelected) updateElement(state.selectedElement, { backgroundColor: val });
-        }}
-  fontSize={selectedEl?.fontSize ?? state.fontSize}
-  fontFamily={selectedEl?.fontFamily ?? state.fontFamily}
-        textColor={selectedEl?.color ?? ''}
-        backgroundColor={selectedEl?.backgroundColor ?? ''}
-        t={t}
-      />
+      element={selectedEl}
+      isVisible={isTextSelected}
+      onMoveElement={(direction) => dispatch({ type: 'MOVE_ELEMENT', payload: { elementId: state.selectedElement, direction } })}
+      onFormatChange={applyFormat}
+      onFontSizeChange={(val) => {
+        dispatch({ type: 'SET_FONT_SIZE', payload: val });
+        if (state.selectedElement) updateElement(state.selectedElement, { fontSize: val });
+      }}
+      onFontFamilyChange={setFontFamily}
+      onTextColorChange={(val) => {
+        dispatch({ type: 'SET_TEXT_COLOR', payload: val });
+        if (state.textColorAuto) dispatch({ type: 'SET_TEXT_COLOR_AUTO' });
+        if (state.selectedElement && isTextSelected) updateElement(state.selectedElement, { color: val });
+      }}
+      onBackgroundColorChange={(val) => {
+        dispatch({ type: 'SET_TEXT_BG_COLOR', payload: val });
+        if (state.fillColorAuto) dispatch({ type: 'SET_FILL_COLOR_AUTO' });
+        if (state.selectedElement && isTextSelected) updateElement(state.selectedElement, { backgroundColor: val });
+      }}
+      textColorAuto={state.textColorAuto}
+      fillColorAuto={state.fillColorAuto}
+      onTextColorAutoToggle={() => {
+        dispatch({ type: 'SET_TEXT_COLOR_AUTO' });
+        if (state.selectedElement && isTextSelected && !state.textColorAuto) {
+          updateElement(state.selectedElement, { color: '' });
+        }
+      }}
+      onFillColorAutoToggle={() => {
+        dispatch({ type: 'SET_FILL_COLOR_AUTO' });
+        if (state.selectedElement && isTextSelected && !state.fillColorAuto) {
+          updateElement(state.selectedElement, { backgroundColor: '' });
+        }
+      }}
+      fontSize={selectedEl?.fontSize ?? state.fontSize}
+      fontFamily={selectedEl?.fontFamily ?? state.fontFamily}
+      textColor={selectedEl?.color ?? ''}
+      backgroundColor={selectedEl?.backgroundColor ?? ''}
+      t={t}
+    />
       <div className="editor-main">
         <EditorSidebar
           cards={state.cards}
