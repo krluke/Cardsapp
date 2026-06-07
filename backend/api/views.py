@@ -571,9 +571,14 @@ def toggle_action(request):
         return JsonResponse({"message": "Invalid request"}, status=400)
 
     with connection.cursor() as c:
-        c.execute("SELECT 1 FROM folders WHERE id = %s", (folder_id,))
-        if not dictfetchone(c):
+        c.execute("SELECT user_email, visibility FROM folders WHERE id = %s", (folder_id,))
+        folder = dictfetchone(c)
+        if not folder:
             return JsonResponse({"message": "Folder not found"}, status=404)
+        is_owner = folder["user_email"] == user_email
+        is_public = folder["visibility"] == "public"
+        if not is_owner and not is_public:
+            return JsonResponse({"message": "Access denied"}, status=403)
 
     if action == "like":
         with connection.cursor() as c:
@@ -752,7 +757,7 @@ def import_folder(request):
 
 
 @xframe_options_exempt
-@jwt_optional
+@jwt_required
 def get_study_cards(request):
     user_email = request.user_email
     folder_id = request.GET.get("folderId")
@@ -768,16 +773,18 @@ def get_study_cards(request):
             folder = dictfetchone(c)
             if not folder:
                 return JsonResponse({"error": "Folder not found"}, status=404)
-            if folder["visibility"] != "public" and (not user_email or folder["user_email"] != user_email):
+            is_owner = folder["user_email"] == user_email
+            is_public = folder["visibility"] == "public"
+            if not is_owner and not is_public:
                 return JsonResponse({"error": "Access denied"}, status=403)
 
-            if user_email:
+            if is_owner:
                 c.execute(
                     """
                     SELECT c.id, c.front_content, c.back_content, c.front_bg, c.back_bg
                     FROM cards c
                     JOIN folders f ON c.folder_id = f.id
-                    WHERE f.id = %s AND (f.user_email = %s OR f.visibility = 'public')
+                    WHERE f.id = %s AND f.user_email = %s
                     AND (c.srs_next_review IS NULL OR c.srs_next_review <= CURRENT_TIMESTAMP)
                     AND (c.front_content IS NOT NULL AND c.front_content != '')
                     AND (c.back_content IS NOT NULL AND c.back_content != '')
@@ -1000,7 +1007,7 @@ def delete_card(request):
 
 
 @xframe_options_exempt
-@jwt_optional
+@jwt_required
 def load_cards_fixed(request, folder_id):
     user_email = request.user_email
     try:
@@ -1012,7 +1019,9 @@ def load_cards_fixed(request, folder_id):
             folder = dictfetchone(c)
             if not folder:
                 return JsonResponse({"message": "Folder not found"}, status=404)
-            if folder["visibility"] != "public" and (not user_email or folder["user_email"] != user_email):
+            is_owner = folder["user_email"] == user_email
+            is_public = folder["visibility"] == "public"
+            if not is_owner and not is_public:
                 return JsonResponse({"message": "Access denied"}, status=403)
 
             c.execute(
