@@ -13,6 +13,10 @@ export function FloatingTextToolbar({
   fontFamily,
   textColor,
   backgroundColor,
+  textColorAuto,
+  fillColorAuto,
+  onTextColorAutoToggle,
+  onFillColorAutoToggle,
 }) {
   if (!isVisible || !element) return null;
 
@@ -130,58 +134,58 @@ export function FloatingTextToolbar({
       {/* Color Controls */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Text</span>
-          <button
-            className={`toolbar-btn ${!textColor ? 'active' : ''}`}
-            onClick={() => onTextColorChange(textColor ? '' : '#000000')}
-            title={textColor ? 'Switch to Adaptive (theme)' : 'Switch to Custom color'}
-            style={{ fontSize: '10px', padding: '2px 5px', minWidth: 'auto', lineHeight: '1' }}
-          >
-            Auto
-          </button>
-          <input
-            type="color"
-            value={textColor || '#000000'}
-            onChange={(e) => onTextColorChange(e.target.value)}
-            title="Text Color"
-            disabled={!textColor}
-            style={{
-              width: '28px',
-              height: '28px',
-              padding: '0',
-              border: '1px solid var(--border-color)',
-              borderRadius: '4px',
-              cursor: textColor ? 'pointer' : 'not-allowed',
-              opacity: textColor ? 1 : 0.4
-            }}
-          />
+        <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Text</span>
+        <button
+          className={`toolbar-btn ${textColorAuto ? 'active' : ''}`}
+          onClick={() => onTextColorAutoToggle()}
+          title={textColorAuto ? 'Auto ON: uses theme color' : 'Auto OFF: use custom color'}
+          style={{ fontSize: '10px', padding: '2px 5px', minWidth: 'auto', lineHeight: '1' }}
+        >
+          Auto
+        </button>
+        <input
+          type="color"
+          value={textColor || '#000000'}
+          onChange={(e) => onTextColorChange(e.target.value)}
+          title="Text Color"
+          disabled={textColorAuto}
+          style={{
+            width: '28px',
+            height: '28px',
+            padding: '0',
+            border: '1px solid var(--border-color)',
+            borderRadius: '4px',
+            cursor: textColorAuto ? 'not-allowed' : 'pointer',
+            opacity: textColorAuto ? 0.4 : 1
+          }}
+        />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Fill</span>
-          <button
-            className={`toolbar-btn ${!backgroundColor ? 'active' : ''}`}
-            onClick={() => onBackgroundColorChange(backgroundColor ? '' : '#ffffff')}
-            title={backgroundColor ? 'Switch to Adaptive (transparent)' : 'Switch to Custom color'}
-            style={{ fontSize: '10px', padding: '2px 5px', minWidth: 'auto', lineHeight: '1' }}
-          >
-            Auto
-          </button>
-          <input
-            type="color"
-            value={backgroundColor || '#ffffff'}
-            onChange={(e) => onBackgroundColorChange(e.target.value)}
-            title="Background Color"
-            disabled={!backgroundColor}
-            style={{
-              width: '28px',
-              height: '28px',
-              padding: '0',
-              border: '1px solid var(--border-color)',
-              borderRadius: '4px',
-              cursor: backgroundColor ? 'pointer' : 'not-allowed',
-              opacity: backgroundColor ? 1 : 0.4
-            }}
-          />
+        <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Fill</span>
+        <button
+          className={`toolbar-btn ${fillColorAuto ? 'active' : ''}`}
+          onClick={() => onFillColorAutoToggle()}
+          title={fillColorAuto ? 'Auto ON: transparent' : 'Auto OFF: use custom color'}
+          style={{ fontSize: '10px', padding: '2px 5px', minWidth: 'auto', lineHeight: '1' }}
+        >
+          Auto
+        </button>
+        <input
+          type="color"
+          value={backgroundColor || '#ffffff'}
+          onChange={(e) => onBackgroundColorChange(e.target.value)}
+          title="Background Color"
+          disabled={fillColorAuto}
+          style={{
+            width: '28px',
+            height: '28px',
+            padding: '0',
+            border: '1px solid var(--border-color)',
+            borderRadius: '4px',
+            cursor: fillColorAuto ? 'not-allowed' : 'pointer',
+            opacity: fillColorAuto ? 0.4 : 1
+          }}
+        />
         </div>
       </div>
 
