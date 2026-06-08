@@ -1012,12 +1012,12 @@ localStorage.removeItem('session:v1')
   return (
     <div className="min-h-screen home-page-shell">
       <header className="navbar">
-<button
- className={`logo${logoFlipped ? ' flipped' : ''}`}
- aria-label="CardsApp"
- onClick={() => setLogoFlipped(f => !f)}
- onMouseLeave={() => setLogoFlipped(false)}
->
+        <button
+          className={`logo${logoFlipped ? ' flipped' : ''}`}
+          aria-label="CardsApp"
+          onClick={() => setLogoFlipped(f => !f)}
+          onMouseLeave={() => setLogoFlipped(false)}
+        >
           <div className="logo-scene">
             <div className="logo-flipper">
               <div className="logo-sizer" aria-hidden="true">
@@ -1226,10 +1226,10 @@ localStorage.removeItem('session:v1')
     {folders.map(folder => {
       const isOwner = activeTab === 'my-folders' || folder.username === user?.username;
       return (
-<div key={folder.id} className="folder-tile" role="button" tabIndex={0} onClick={() => {
- const canEdit = user && activeTab === 'my-folders';
- navigate(canEdit ? `/editor/${folder.id}` : `/viewer/${folder.id}`, { state: { fromTab: activeTab } });
- }} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); const canEdit = user && activeTab === 'my-folders'; navigate(canEdit ? `/editor/${folder.id}` : `/viewer/${folder.id}`, { state: { fromTab: activeTab } }); } }}>
+          <div key={folder.id} className="folder-tile" role="button" tabIndex={0} onClick={() => {
+            const canEdit = user && activeTab === 'my-folders';
+            navigate(canEdit ? `/editor/${folder.id}` : `/viewer/${folder.id}`, { state: { fromTab: activeTab } });
+          }} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); const canEdit = user && activeTab === 'my-folders'; navigate(canEdit ? `/editor/${folder.id}` : `/viewer/${folder.id}`, { state: { fromTab: activeTab } }); } }}>
                 <div className="folder-actions" onClick={e => e.stopPropagation()}>
                   {user && (
                     <button
@@ -1311,8 +1311,8 @@ localStorage.removeItem('session:v1')
              <button className="close-btn" onClick={() => setShowSettingsModal(false)} aria-label="Close"><X size={20} /></button>
              <h2 className="auth-title">{t('folder_settings_title')}</h2>
              <div className="mb-1">
-<label htmlFor="folder-name-input" style={{fontSize: '14px', fontWeight: 'bold'}}>{t('label_folder_name')}</label>
- <input id="folder-name-input" className="input-field mt-1" value={editingFolder.title} onChange={e => setEditingFolder({...editingFolder, title: e.target.value})} />
+               <label htmlFor="folder-name-input" style={{fontSize: '14px', fontWeight: 'bold'}}>{t('label_folder_name')}</label>
+               <input id="folder-name-input" className="input-field mt-1" value={editingFolder.title} onChange={e => setEditingFolder({...editingFolder, title: e.target.value})} />
              </div>
              <div className="mb-1">
                <label style={{fontSize: '14px', fontWeight: 'bold'}}>{t('label_visibility')}</label>
