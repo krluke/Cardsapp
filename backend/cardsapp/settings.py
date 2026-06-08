@@ -10,16 +10,14 @@ if not SECRET_KEY:
     _build_commands = {"collectstatic", "makemigrations", "migrate", "help", "--help"}
     if _build_commands.intersection(sys.argv):
         SECRET_KEY = "django-insecure-dev-key-for-build-time-only"
-    elif os.environ.get("DEBUG") == "True":
-        SECRET_KEY = "django-insecure-dev-key-for-debug-only"
     else:
         raise ValueError("SECRET_KEY environment variable must be set in production")
 
-DEBUG = os.environ.get("DEBUG", "False") == "True"
+DEBUG = False
 
 JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY")
 if not JWT_SECRET_KEY:
-    if DEBUG or "test" in sys.argv:
+    if "test" in sys.argv:
         JWT_SECRET_KEY = SECRET_KEY
     else:
         raise ValueError("JWT_SECRET_KEY environment variable must be set in production")
@@ -27,10 +25,7 @@ if not JWT_SECRET_KEY:
 
 ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "").split(",")
 if not ALLOWED_HOSTS or ALLOWED_HOSTS == [""]:
-    if DEBUG:
-        ALLOWED_HOSTS = ["localhost", "127.0.0.1", "backend", "frontend", "testserver"]
-    else:
-        raise ValueError("ALLOWED_HOSTS environment variable must be set in production")
+    raise ValueError("ALLOWED_HOSTS environment variable must be set in production")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -142,9 +137,4 @@ CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = [
     "https://cardapp.qzz.io",
 ]
-if DEBUG:
-    CORS_ALLOWED_ORIGINS += [
-        "http://localhost:5173",
-        "http://localhost:3000",
-    ]
 CORS_ALLOW_CREDENTIALS = True

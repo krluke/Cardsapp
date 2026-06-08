@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowRight, BookOpen, Palette, Globe, LogIn } from 'lucide-react'
 
@@ -36,7 +37,15 @@ function t(key) {
 }
 
 export default function LandingPage({ clerkAvailable, clerkLoaded, clerk, onDevLogin }) {
-  const navigate = useNavigate()
+ const navigate = useNavigate()
+ const [langMenuOpen, setLangMenuOpen] = useState(false)
+ const [lang, setLang] = useState(() => localStorage.getItem('app-lang') || 'ja')
+
+ const selectLanguage = (newLang) => {
+  setLang(newLang)
+  localStorage.setItem('app-lang', newLang)
+  setLangMenuOpen(false)
+ }
 
   const handleAuth = async () => {
     if (clerkAvailable && clerkLoaded && typeof clerk?.openSignIn === 'function') {
@@ -63,8 +72,19 @@ export default function LandingPage({ clerkAvailable, clerkLoaded, clerk, onDevL
           <span className="landing-logo-mark">Cards</span>
           <span className="landing-logo-app">App</span>
         </div>
-        <div className="landing-nav-actions">
-        {(clerkAvailable || onDevLogin) && (
+  <div className="landing-nav-actions">
+   <div className="lang-menu">
+    <button className="lang-btn" onClick={() => setLangMenuOpen(!langMenuOpen)}>
+     <Globe size={15} /> <span>{lang.toUpperCase()}</span>
+    </button>
+    {langMenuOpen && (
+     <div className="lang-dropdown">
+      <button className={`lang-option ${lang === 'ja' ? 'active' : ''}`} onClick={() => selectLanguage('ja')}>🇯🇵 日本語</button>
+      <button className={`lang-option ${lang === 'en' ? 'active' : ''}`} onClick={() => selectLanguage('en')}>🇺🇸 English</button>
+     </div>
+    )}
+   </div>
+   {(clerkAvailable || onDevLogin) && (
           <button className="landing-nav-login" onClick={handleAuth}>
             <LogIn size={16} /> {t('login')}
           </button>
