@@ -360,7 +360,7 @@ export default function EditorPage() {
 
   const user = useMemo(() => {
     try {
-      return JSON.parse(localStorage.getItem('session') || '{}').user || null;
+      return JSON.parse(localStorage.getItem('session:v1') || '{}').user || null;
     } catch { return null; }
   }, []);
 

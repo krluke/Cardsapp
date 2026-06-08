@@ -23,7 +23,7 @@ export default function ViewerPage() {
     if (Date.now() < retryAfterRef.current) return
     loadingRef.current = true
     try {
-      const session = JSON.parse(localStorage.getItem('session') || '{}')
+      const session = JSON.parse(localStorage.getItem('session:v1') || '{}')
       const jwtToken = session.token || ''
 
       const cardsRes = await apiFetch(`/cards/load-auth/${folderId}`)

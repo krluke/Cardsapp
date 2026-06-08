@@ -53,7 +53,7 @@ export default function LandingPage({ clerkAvailable, clerkLoaded, clerk, onDevL
     } else if (!clerkAvailable && onDevLogin) {
       const session = await onDevLogin()
       if (session) {
-        localStorage.setItem('session', JSON.stringify(session))
+        localStorage.setItem('session:v1', JSON.stringify(session))
         navigate('/home')
       }
     } else {
