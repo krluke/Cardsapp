@@ -80,10 +80,11 @@ export function Modal({ state, onClose, onConfirm, onSubmit }) {
           ) : (
             <>
               <button className="secondary-btn" onClick={onClose}>Cancel</button>
-              <button 
-                className="primary-btn" 
-                onClick={() => state.type === 'prompt' ? onSubmit(inputValue) : onConfirm()}
-              >
+    <button
+    type="button"
+    className="primary-btn"
+    onClick={() => state.type === 'prompt' ? onSubmit(inputValue) : onConfirm()}
+    >
                 OK
               </button>
             </>

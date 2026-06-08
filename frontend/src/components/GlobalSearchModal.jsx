@@ -42,9 +42,9 @@ export function GlobalSearchModal({ isOpen, onClose, onSelectCard }) {
         </div>
         <div className="search-results" style={{ maxHeight: '400px', overflowY: 'auto', marginTop: '20px' }}>
           {results.length === 0 && !loading && query && <p style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No results found</p>}
-          {results.map((res, idx) => (
+          {results.map((res) => (
             <div 
-              key={idx} 
+              key={res.id} 
               className="search-item" 
               onClick={() => onSelectCard(res)}
               style={{ 

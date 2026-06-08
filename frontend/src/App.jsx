@@ -521,7 +521,7 @@ export default function App({ clerkAvailable }) {
 
   const routes = (
     <Routes>
-      <Route path="/" element={clerkAvailable ? <ClerkLandingPage /> : JSON.parse(localStorage.getItem('session') || '{}').token ? <Navigate to="/home" replace /> : <LandingPage clerkAvailable={false} onDevLogin={devLogin} />} />
+      <Route path="/" element={clerkAvailable ? <ClerkLandingPage /> : JSON.parse(localStorage.getItem('session:v1') || '{}').token ? <Navigate to="/home" replace /> : <LandingPage clerkAvailable={false} onDevLogin={devLogin} />} />
       <Route path="/home" element={clerkAvailable ? <ClerkHomePage /> : <HomePage clerkAvailable={false} devLogin={devLogin} />} />
       <Route path="/account" element={<AccountPage />} />
       <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
@@ -562,7 +562,7 @@ function HomePage({ clerkAvailable, clerkLoaded: clerkLoadedProp, devLogin, isSi
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const [user, setUser] = useState(() => {
-    const session = JSON.parse(localStorage.getItem('session') || '{}')
+    const session = JSON.parse(localStorage.getItem('session:v1') || '{}')
     return session.user || null
   })
   const [activeTab, setActiveTab] = useState(() => {
@@ -752,6 +752,11 @@ const loadGlobalCards = useCallback(async () => {
     }
   }, [page, searchInput])
 
+  useEffect(() => {
+    const tab = searchParams.get('tab')
+    if (tab === 'global-cards') requestAnimationFrame(() => loadGlobalCards())
+  }, [searchParams, loadGlobalCards])
+
   const exchangeClerkToken = useCallback(async () => {
     if (exchangingRef.current) return
     exchangingRef.current = true
@@ -777,10 +782,10 @@ const loadGlobalCards = useCallback(async () => {
         csrfToken: data.csrfToken,
         token: data.token,
       }
-      localStorage.setItem('session', JSON.stringify(session))
-      setUser(session.user)
-    } catch (err) {
-      console.warn('Clerk token exchange error:', err?.message || err)
+localStorage.setItem('session:v1', JSON.stringify(session))
+		setUser(session.user)
+	} catch (err) {
+		console.warn('Clerk token exchange error:', err?.message || err)
       exchangeFailCount.current += 1
     } finally {
       exchangingRef.current = false
@@ -801,12 +806,12 @@ const loadGlobalCards = useCallback(async () => {
     if (typeof clerk?.addListener !== 'function') return
     const unsubscribe = clerk.addListener(({ event }) => {
       if (event === 'signedOut') {
-        localStorage.removeItem('session')
-        setUser(null)
-        setFolders([])
-        setGlobalCards([])
-        setActiveTab('my-folders')
-        sessionExpiredRef.current = false
+localStorage.removeItem('session:v1')
+    setUser(null)
+    setFolders([])
+    setGlobalCards([])
+    setActiveTab('my-folders')
+    sessionExpiredRef.current = false
         exchangeFailCount.current = 0
       }
     })
@@ -854,9 +859,8 @@ const loadGlobalCards = useCallback(async () => {
     return () => window.removeEventListener('focus', handleFocus)
   }, [loadFolders])
 
-  useEffect(() => {
-    if (activeTab === 'global-cards') requestAnimationFrame(() => loadGlobalCards())
-  }, [activeTab, loadGlobalCards])
+
+
 
 const handleDevLogin = useCallback(async () => {
         if (exchangingRef.current) return
@@ -865,11 +869,11 @@ const handleDevLogin = useCallback(async () => {
         try {
             const session = await devLogin()
             if (session) {
-                localStorage.setItem('session', JSON.stringify(session))
-                setUser(session.user)
-            }
-        } catch (err) {
-            console.error('Dev login error:', err?.message || err)
+localStorage.setItem('session:v1', JSON.stringify(session))
+    setUser(session.user)
+}
+} catch (err) {
+    console.error('Dev login error:', err?.message || err)
         } finally {
             exchangingRef.current = false
             setUserLoading(false)
@@ -877,12 +881,12 @@ const handleDevLogin = useCallback(async () => {
     }, [devLogin])
 
   const handleLogout = () => {
-    localStorage.removeItem('session')
-    setUser(null)
-    setFolders([])
-    setGlobalCards([])
-    setActiveTab('my-folders')
-    setAuthMenuOpen(false)
+localStorage.removeItem('session:v1')
+  setUser(null)
+  setFolders([])
+  setGlobalCards([])
+  setActiveTab('my-folders')
+  setAuthMenuOpen(false)
     if (clerkAvailable && typeof clerk.signOut === 'function') {
       clerk.signOut({ redirectUrl: window.location.origin + '/home' })
     }
@@ -1174,7 +1178,7 @@ const handleDevLogin = useCallback(async () => {
         <div className="tabs-container">
 <button className={`tab-btn ${activeTab === 'my-folders' ? 'active' : ''}`} onClick={() => { setActiveTab('my-folders'); setPage(1); setFolders([]); setFoldersLoading(true); foldersLoadingRef.current = false; foldersRequestGenRef.current++ }}>{t('tab_my_folders')}</button>
         <button className={`tab-btn ${activeTab === 'global-folders' ? 'active' : ''}`} onClick={() => { setActiveTab('global-folders'); setPage(1); setFolders([]); setFoldersLoading(true); foldersLoadingRef.current = false; foldersRequestGenRef.current++ }}>{t('tab_global_folders')}</button>
-        <button className={`tab-btn ${activeTab === 'global-cards' ? 'active' : ''}`} onClick={() => { setActiveTab('global-cards'); setPage(1); setGlobalCards([]); setGlobalCardsLoading(true); globalCardsLoadingRef.current = false; globalCardsRequestGenRef.current++ }}>{t('tab_global_cards')}</button>
+        <button className={`tab-btn ${activeTab === 'global-cards' ? 'active' : ''}`} onClick={() => { setActiveTab('global-cards'); setPage(1); setGlobalCards([]); setGlobalCardsLoading(true); globalCardsLoadingRef.current = false; globalCardsRequestGenRef.current++; requestAnimationFrame(() => loadGlobalCards()) }}>{t('tab_global_cards')}</button>
         </div>
 
         <div className="search-and-pagination-container">

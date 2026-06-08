@@ -25,7 +25,7 @@ export default function StudyPage() {
 
   const user = useMemo(() => {
     try {
-      return JSON.parse(localStorage.getItem('session') || '{}').user || null;
+      return JSON.parse(localStorage.getItem('session:v1') || '{}').user || null;
     } catch { return null; }
   }, []);
   const loadingRef = useRef(false);

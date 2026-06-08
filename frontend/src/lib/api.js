@@ -9,7 +9,7 @@ export class ApiError extends Error {
 
 function getSession() {
   try {
-    return JSON.parse(localStorage.getItem('session') || '{}')
+    return JSON.parse(localStorage.getItem('session:v1') || '{}')
   } catch {
     return {}
   }
@@ -40,7 +40,7 @@ export async function apiFetch(endpoint, options = {}) {
   let res = await fetch(`${API_BASE}${endpoint}`, { ...options, headers })
 
   if (res.status === 401 && jwtToken) {
-    localStorage.removeItem('session')
+    localStorage.removeItem('session:v1')
     window.dispatchEvent(new CustomEvent('session-expired'))
   }
 

@@ -18,11 +18,12 @@ export function EditorToolbar({
         <button className="toolbar-btn" onClick={onRedo}><Redo size={18} /></button>
       </div>
       
-      <button 
-        className="toolbar-btn" 
-        onClick={() => onAddText(30, 40)}
-        title={t('btn_add_text')}
-      >
+<button
+  type="button"
+  className="toolbar-btn"
+  onClick={() => onAddText(30, 40)}
+  title={t('btn_add_text')}
+>
         <Type size={18} />
         <span>{t('btn_add_text')}</span>
       </button>
