@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="googlebot" content="noindex, nofollow, unavailable_after: 21-Jun-2026">
+  <title>メンテナンス中 | Under Maintenance — CardsApp</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-canvas: #F4F0EB;
+      --bg-surface: #FFFFFF;
+      --bg-surface-hover: #FAF8F5;
+      --text-main: #3D3935;
+      --text-muted: #8A847C;
+      --border-color: #E2DCD0;
+      --accent-color: #D97757;
+      --accent-hover: #C06040;
+      --accent-light: rgba(217, 119, 87, 0.1);
+      --shadow-sm: 0 2px 8px rgba(61, 57, 53, 0.04);
+      --shadow-md: 0 8px 24px rgba(61, 57, 53, 0.08);
+      --shadow-lg: 0 16px 40px rgba(61, 57, 53, 0.12);
+      --radius-sm: 6px;
+      --radius-md: 12px;
+      --radius-lg: 24px;
+      --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+      background-color: var(--bg-canvas);
+      color: var(--text-main);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-canvas);
+    }
+
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 1.5rem;
+    }
+
+    .logo {
+      display: flex;
+      align-items: baseline;
+      gap: 0.1em;
+    }
+
+    .logo-mark {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(1.3rem, 3.5vw, 1.8rem);
+      color: var(--accent-color);
+      letter-spacing: -0.02em;
+    }
+
+    .logo-app {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(1.3rem, 3.5vw, 1.8rem);
+      color: var(--text-main);
+      letter-spacing: -0.02em;
+    }
+
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2rem 1.5rem 4rem;
+      gap: 1.2rem;
+      animation: fadeIn 0.8s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .icon-wrapper {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 72px;
+      height: 72px;
+      border-radius: 20px;
+      background: var(--accent-light);
+      color: var(--accent-color);
+      margin-bottom: 0.4rem;
+    }
+
+    .icon-wrapper svg {
+      animation: slowSpin 8s linear infinite;
+    }
+
+    @keyframes slowSpin {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .icon-wrapper svg { animation: none; }
+      .main { animation: none; }
+    }
+
+    .title-ja {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(1.8rem, 5vw, 2.8rem);
+      line-height: 1.15;
+      color: var(--text-main);
+      margin: 0;
+    }
+
+    .title-en {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(1.2rem, 3vw, 1.6rem);
+      line-height: 1.15;
+      color: var(--text-muted);
+      margin: 0;
+    }
+
+    .description {
+      font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+      color: var(--text-muted);
+      max-width: 520px;
+      line-height: 1.8;
+      margin: 0;
+    }
+
+    .status-card {
+      display: inline-flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      padding: 1.2rem 2rem;
+      border-radius: var(--radius-md);
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-md);
+      text-align: left;
+      margin-top: 0.5rem;
+    }
+
+    .status-row {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.95rem;
+      color: var(--text-main);
+      font-weight: 500;
+    }
+
+    .status-row svg {
+      flex-shrink: 0;
+      color: var(--accent-color);
+    }
+
+    .status-label {
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    .apology {
+      font-size: clamp(0.85rem, 2vw, 0.95rem);
+      color: var(--text-muted);
+      max-width: 480px;
+      line-height: 1.7;
+      margin: 0;
+    }
+
+    .footer {
+      text-align: center;
+      padding: 1rem 1.5rem;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.8rem;
+    }
+
+    .footer a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: var(--transition);
+    }
+
+    .footer a:hover {
+      color: var(--accent-color);
+    }
+
+    @media (min-width: 640px) {
+      .nav { padding: 1rem 2rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <nav class="nav">
+      <div class="logo">
+        <span class="logo-mark">Cards</span>
+        <span class="logo-app">App</span>
+      </div>
+    </nav>
+
+    <main class="main">
+      <div class="icon-wrapper">
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+        </svg>
+      </div>
+
+      <h1 class="title-ja">メンテナンス中</h1>
+      <h2 class="title-en">Under Maintenance</h2>
+
+      <p class="description">
+        サーバー移動作業のため、約2週間ほどサービスを一時停止しております。<br>
+        We are temporarily unavailable due to server migration.<br>
+        The service is expected to resume in approximately 2 weeks.
+      </p>
+
+      <div class="status-card">
+        <div class="status-row">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 20h9"/><path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838.838-2.872a2 2 0 0 1 .506-.855z"/>
+          </svg>
+          <span class="status-label">Status:</span>
+          Migrating
+        </div>
+        <div class="status-row">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+          <span class="status-label">ETA:</span>
+          ~2 Weeks
+        </div>
+      </div>
+
+      <p class="apology">
+        ご不便をおかけし、申し訳ございません。<br>
+        We apologize for the inconvenience and appreciate your patience.
+      </p>
+    </main>
+
+    <footer class="footer">
+      <span>&copy; 2024-2025 CardsApp</span>
+      <a href="https://github.com/anomalyco/opencode" target="_blank" rel="noopener noreferrer">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
+        </svg>
+        GitHub
+      </a>
+    </footer>
+  </div>
+</body>
+</html>
