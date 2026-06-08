@@ -30,14 +30,14 @@ export function EditorToolbar({
       
       
       
-      <div className="color-picker-group"><label>{t('label_bg_color')}</label><button className={`toolbar-btn ${bgColorAuto ? 'active' : ''}`} onClick={() => onBgColorAutoToggle()} title={bgColorAuto ? 'Auto ON: uses theme color' : 'Auto OFF: use custom color'} style={{ fontSize: '10px', padding: '2px 5px', minWidth: 'auto', lineHeight: '1' }}>Auto</button><input type="color" value={currentBg || '#ffffff'} onChange={(e) => updateBgColor(e.target.value)} disabled={bgColorAuto} style={{ opacity: bgColorAuto ? 0.4 : 1, cursor: bgColorAuto ? 'not-allowed' : 'pointer' }} /></div>
+<div className="color-picker-group"><label>{t('label_bg_color')}</label><button className={`toolbar-btn ${bgColorAuto ? 'active' : ''}`} onClick={() => onBgColorAutoToggle()} title={bgColorAuto ? 'Auto ON: uses theme color' : 'Auto OFF: use custom color'} style={{ fontSize: '10px', padding: '2px 5px', minWidth: 'auto', lineHeight: '1' }}>Auto</button><input type="color" aria-label={t('label_bg_color')} value={currentBg || '#ffffff'} onChange={(e) => updateBgColor(e.target.value)} disabled={bgColorAuto} style={{ opacity: bgColorAuto ? 0.4 : 1, cursor: bgColorAuto ? 'not-allowed' : 'pointer' }} /></div>
       
       <div className="image-input-group" style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
         <label className="toolbar-btn" style={{ cursor: 'pointer', padding: '8px' }}>
           <Upload size={18} />
           <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => onUploadImage(e.target.files[0])} />
         </label>
-        <input type="text" placeholder="Image URL" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && onAddImage()} />
+        <input type="text" placeholder="Image URL" aria-label="Image URL" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && onAddImage()} />
       </div>
       
       <div className="template-dropdown">

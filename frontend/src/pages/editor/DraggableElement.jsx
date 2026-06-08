@@ -291,9 +291,11 @@ const handleContentFocus = (e) => {
         }}
         onMouseDown={handleEdgeMouseDown}
         title="Move"
+        role="button"
+        tabIndex={0}
       >
-            <Move size={14} color="white" />
-          </div>
+        <Move size={14} color="white" />
+      </div>
 
       {/* Rotate handle - Bottom Left */}
       <div
@@ -306,9 +308,11 @@ const handleContentFocus = (e) => {
         }}
         onMouseDown={handleRotateStart}
         title="Rotate"
+        role="button"
+        tabIndex={0}
       >
-            <RotateCw size={14} color="white" />
-          </div>
+        <RotateCw size={14} color="white" />
+      </div>
 
       {/* Delete handle - Top Right */}
       <div
@@ -321,6 +325,9 @@ const handleContentFocus = (e) => {
         }}
         onClick={(e) => { e.stopPropagation(); exitEditing(); onDelete(element.id); }}
         title="Delete"
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); exitEditing(); onDelete(element.id); } }}
       >
             <Trash2 size={14} color="white" />
           </div>
@@ -335,9 +342,11 @@ const handleContentFocus = (e) => {
           cursor: 'se-resize',
           zIndex: 101
         }}
-        onMouseDown={handleResizeStart}
-        title="Resize"
-      >
+ onMouseDown={handleResizeStart}
+ title="Resize"
+ role="button"
+ tabIndex={0}
+ >
         <Maximize2 size={14} color="white" />
       </div>
 
@@ -352,11 +361,13 @@ const handleContentFocus = (e) => {
       )}
 
       {/* Text Content */}
-      <div
-        ref={contentRef}
-        contentEditable
-        suppressContentEditableWarning
-        style={{
+ <div
+ ref={contentRef}
+ contentEditable
+ suppressContentEditableWarning
+ role="textbox"
+ aria-multiline={true}
+ style={{
           ...contentStyle,
           backgroundColor: element.backgroundColor || 'transparent'
         }}
@@ -442,12 +453,14 @@ return { width: rect.width, height: rect.height };
         border: isSelected ? '2px solid #D97757' : '2px solid transparent'
       }}
       onMouseDown={handleMouseDown}
+        role="button"
+        tabIndex={0}
     >
       <img src={element.src} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', pointerEvents: 'none' }} />
       {isSelected && (
         <>
           <button className="delete-element-btn" onClick={(e) => { e.stopPropagation(); onDelete(element.id) }}><Trash2 size={14} /></button>
-          <div className="resize-handle" onMouseDown={handleResizeStart} />
+          <div className="resize-handle" onMouseDown={handleResizeStart} role="button" tabIndex={0} />
         </>
       )}
     </div>

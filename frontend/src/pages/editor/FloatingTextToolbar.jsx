@@ -136,17 +136,19 @@ export function FloatingTextToolbar({
       {/* Color Controls */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-        <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Text</span>
+      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Text</span>
         <button
           className={`toolbar-btn ${textColorAuto ? 'active' : ''}`}
           onClick={() => onTextColorAutoToggle()}
           title={textColorAuto ? 'Auto ON: uses theme color' : 'Auto OFF: use custom color'}
+          aria-label="Toggle auto text color"
           style={{ fontSize: '10px', padding: '2px 5px', minWidth: 'auto', lineHeight: '1' }}
         >
           Auto
         </button>
         <input
           type="color"
+          aria-label="Text color"
           value={textColor || '#000000'}
           onChange={(e) => onTextColorChange(e.target.value)}
           title="Text Color"
@@ -161,19 +163,21 @@ export function FloatingTextToolbar({
             opacity: textColorAuto ? 0.4 : 1
           }}
         />
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
         <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Fill</span>
         <button
           className={`toolbar-btn ${fillColorAuto ? 'active' : ''}`}
           onClick={() => onFillColorAutoToggle()}
           title={fillColorAuto ? 'Auto ON: transparent' : 'Auto OFF: use custom color'}
+          aria-label="Toggle auto fill color"
           style={{ fontSize: '10px', padding: '2px 5px', minWidth: 'auto', lineHeight: '1' }}
         >
           Auto
         </button>
         <input
           type="color"
+          aria-label="Fill color"
           value={backgroundColor || '#ffffff'}
           onChange={(e) => onBackgroundColorChange(e.target.value)}
           title="Background Color"

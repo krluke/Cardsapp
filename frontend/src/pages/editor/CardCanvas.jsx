@@ -11,12 +11,14 @@ onSelect(null);
 };
 
 return (
-<div
-ref={canvasRef}
-className="card-canvas"
-style={{ backgroundColor: bgColor }}
-onClick={handleCanvasClick}
->
+ <div
+ ref={canvasRef}
+ className="card-canvas"
+ style={{ backgroundColor: bgColor }}
+ onClick={handleCanvasClick}
+ role="application"
+ tabIndex={0}
+ >
 {elements.map(el => {
 if (el.type === 'text') return <DraggableText key={el.id} element={el} isSelected={isSelected === el.id} onSelect={onSelect} onUpdate={onUpdate} onDelete={onDelete} t={t} canvasRef={canvasRef} />;
 if (el.type === 'image') return <DraggableImage key={el.id} element={el} isSelected={isSelected === el.id} onSelect={onSelect} onUpdate={onUpdate} onDelete={onDelete} canvasRef={canvasRef} />;

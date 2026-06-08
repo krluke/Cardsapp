@@ -866,8 +866,9 @@ const toggleBgColorAuto = () => {
           </div>
           <div className="editor-meta-row">
             <div className="tags-input-container">
-              <label>Tags:</label>
+              <label htmlFor="tags-input">Tags:</label>
               <input
+                id="tags-input"
                 type="text"
                 className="toolbar-select"
                 placeholder="Comma separated tags..."
