@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowRight, BookOpen, Palette, Globe, LogIn } from 'lucide-react'
 
@@ -31,8 +31,8 @@ const translations = {
   },
 }
 
-function t(key) {
-  const lang = localStorage.getItem('app-lang') || 'ja'
+function _t(key, langOverride) {
+  const lang = langOverride ?? localStorage.getItem('app-lang') ?? 'ja'
   return translations[lang]?.[key] || key
 }
 
@@ -40,6 +40,7 @@ export default function LandingPage({ clerkAvailable, clerkLoaded, clerk, onDevL
  const navigate = useNavigate()
  const [langMenuOpen, setLangMenuOpen] = useState(false)
  const [lang, setLang] = useState(() => localStorage.getItem('app-lang') || 'ja')
+  const t = useMemo(() => (key) => _t(key, lang), [lang])
 
  const selectLanguage = (newLang) => {
   setLang(newLang)

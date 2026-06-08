@@ -126,7 +126,7 @@ export default function StudyPage() {
     }
 
     if (currentIndex < cards.length - 1) {
-      setCurrentIndex(currentIndex + 1);
+      setCurrentIndex(prev => prev + 1);
       setIsFlipped(false);
     } else {
       setFinished(true);
@@ -146,12 +146,12 @@ export default function StudyPage() {
         if (e.key === '3') handleRate(3);
         if (e.key === '4') handleRate(5);
       }
-      if (e.key === 'ArrowRight' && currentIndex < cards.length - 1) {
-        setCurrentIndex(currentIndex + 1);
+if (e.key === 'ArrowRight' && currentIndex < cards.length - 1) {
+      setCurrentIndex(prev => prev + 1);
         setIsFlipped(false);
       }
-      if (e.key === 'ArrowLeft' && currentIndex > 0) {
-        setCurrentIndex(currentIndex - 1);
+if (e.key === 'ArrowLeft' && currentIndex > 0) {
+      setCurrentIndex(prev => prev - 1);
         setIsFlipped(false);
       }
     };
