@@ -311,8 +311,8 @@ function buildClerkAppearance(theme) {
   }
 }
 
-function t(key) {
-  const lang = localStorage.getItem('app-lang') || 'ja'
+function _t(key, langOverride) {
+  const lang = langOverride ?? localStorage.getItem('app-lang') ?? 'ja'
   const translations = {
     ja: {
       btn_create_folder: "新規作成",
@@ -484,6 +484,7 @@ export default function App({ clerkAvailable }) {
   const [theme, setTheme] = useState(() => localStorage.getItem('app-theme') || 'light')
   const clerkKey = clerkAvailable ? import.meta.env.VITE_CLERK_PUBLISHABLE_KEY : null
   const clerkAppearance = useMemo(() => buildClerkAppearance(theme), [theme])
+  const cachedSession = useMemo(() => JSON.parse(localStorage.getItem('session') || '{}'), [])
 
   const devLogin = useCallback(async () => {
     try {
@@ -521,7 +522,7 @@ export default function App({ clerkAvailable }) {
 
   const routes = (
     <Routes>
-      <Route path="/" element={clerkAvailable ? <ClerkLandingPage /> : JSON.parse(localStorage.getItem('session') || '{}').token ? <Navigate to="/home" replace /> : <LandingPage clerkAvailable={false} onDevLogin={devLogin} />} />
+      <Route path="/" element={clerkAvailable ? <ClerkLandingPage /> : cachedSession.token ? <Navigate to="/home" replace /> : <LandingPage clerkAvailable={false} onDevLogin={devLogin} />} />
       <Route path="/home" element={clerkAvailable ? <ClerkHomePage /> : <HomePage clerkAvailable={false} devLogin={devLogin} />} />
       <Route path="/account" element={<AccountPage />} />
       <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
@@ -591,12 +592,13 @@ function HomePage({ clerkAvailable, clerkLoaded: clerkLoadedProp, devLogin, isSi
   const [theme, setTheme] = useState(() => localStorage.getItem('app-theme') || 'light')
   const [lang, setLang] = useState(() => localStorage.getItem('app-lang') || 'ja')
   const [showSettingsModal, setShowSettingsModal] = useState(false)
+  const t = useMemo(() => (key) => _t(key, lang), [lang])
   const [editingFolder, setEditingFolder] = useState(null)
   const [showSearchModal, setShowSearchModal] = useState(false)
   const [showAddToFolderModal, setShowAddToFolderModal] = useState(false)
   const [selectedCard, setSelectedCard] = useState(null)
   const [flippedCards, setFlippedCards] = useState({})
-  const [userLoading, setUserLoading] = useState(false)
+  const userLoadingRef = useRef(false)
   const [logoFlipped, setLogoFlipped] = useState(false)
   const { modalState, showAlert, showConfirm, showPrompt, closeModal, handleConfirm, handlePromptSubmit } = useModal()
 
@@ -614,7 +616,7 @@ function HomePage({ clerkAvailable, clerkLoaded: clerkLoadedProp, devLogin, isSi
 
 const loadFolders = useCallback(async () => {
     if (sessionExpiredRef.current) return
-    if (userLoading) return
+    if (userLoadingRef.current) return
     if (foldersLoadingRef.current) return
     if (Date.now() < foldersRetryAfterRef.current) return
     if (activeTab === 'global-cards') return
@@ -633,10 +635,10 @@ const loadFolders = useCallback(async () => {
       q: searchInput,
       tab: activeTab,
     })
-    try {
-      const res = await apiFetch(`${endpoint}?${params}`)
-      const data = await res.json()
-      if (gen !== foldersRequestGenRef.current) return
+try {
+  const res = await apiFetch(`${endpoint}?${params}`)
+  if (gen !== foldersRequestGenRef.current) return
+  const data = await res.json()
       if (data.folders !== undefined) {
         setFolders(data.folders || [])
         const apiTotalPages = data.totalPages || 1
@@ -657,7 +659,7 @@ const loadFolders = useCallback(async () => {
         setFoldersLoading(false)
       }
     }
-  }, [activeTab, page, searchInput, user, userLoading])
+  }, [activeTab, page, searchInput, user])
 
   const toggleFavorite = async (folderId) => {
     if (!user) return
@@ -723,10 +725,10 @@ const loadGlobalCards = useCallback(async () => {
       page,
       search: searchInput,
     })
-    try {
-      const res = await apiFetch(`/cards/public?${params}`)
-      const data = await res.json()
-      if (gen !== globalCardsRequestGenRef.current) return
+try {
+  const res = await apiFetch(`/cards/public?${params}`)
+  if (gen !== globalCardsRequestGenRef.current) return
+  const data = await res.json()
       if (data.cards) {
         const filteredCards = (data.cards || []).filter(card => {
           const frontContent = (card.front || '').replace(/[<>]/g, '').trim()
@@ -755,9 +757,9 @@ const loadGlobalCards = useCallback(async () => {
   const exchangeClerkToken = useCallback(async () => {
     if (exchangingRef.current) return
     exchangingRef.current = true
-    setUserLoading(true)
-    try {
-      const clerkToken = await getToken()
+userLoadingRef.current = true
+  try {
+    const clerkToken = await getToken()
       if (!clerkToken) return
       const res = await fetch(`${API_BASE}/clerk-auth`, {
         method: 'POST',
@@ -784,18 +786,18 @@ const loadGlobalCards = useCallback(async () => {
       exchangeFailCount.current += 1
     } finally {
       exchangingRef.current = false
-      setUserLoading(false)
+      userLoadingRef.current = false
     }
   }, [getToken])
 
   useEffect(() => {
-    if (isSignedIn && !user && !userLoading && exchangeFailCount.current < 3) {
+    if (isSignedIn && !user && !userLoadingRef.current && exchangeFailCount.current < 3) {
       exchangeClerkToken()
     }
     if (!isSignedIn) {
       exchangeFailCount.current = 0
     }
-  }, [isSignedIn, user, userLoading, exchangeClerkToken])
+  }, [isSignedIn, user, exchangeClerkToken])
 
   useEffect(() => {
     if (typeof clerk?.addListener !== 'function') return
@@ -813,19 +815,19 @@ const loadGlobalCards = useCallback(async () => {
     return () => { if (typeof unsubscribe === 'function') unsubscribe() }
   }, [clerk])
 
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', localStorage.getItem('app-theme') || 'light')
-  }, [])
+useEffect(() => {
+  document.documentElement.setAttribute('data-theme', theme)
+}, [theme])
 
   useEffect(() => {
     const handleSessionExpired = async () => {
       if (sessionExpiredRef.current) return
       sessionExpiredRef.current = true
-      if (isSignedIn && exchangeFailCount.current < 3) {
-        exchangeFailCount.current = 0
-        await exchangeClerkToken()
-        if (!sessionExpiredRef.current) return
-      }
+if (isSignedIn && exchangeFailCount.current < 3) {
+      exchangeFailCount.current = 0
+      if (!sessionExpiredRef.current) return
+      await exchangeClerkToken()
+    }
       setUser(null)
       setFolders([])
       setGlobalCards([])
@@ -836,8 +838,8 @@ const loadGlobalCards = useCallback(async () => {
   }, [isSignedIn, exchangeClerkToken])
 
   useEffect(() => {
-    if (activeTab !== 'global-cards' && !userLoading) requestAnimationFrame(() => loadFolders())
-  }, [loadFolders, userLoading, activeTab])
+    if (activeTab !== 'global-cards' && !userLoadingRef.current) requestAnimationFrame(() => loadFolders())
+  }, [loadFolders, activeTab])
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -860,8 +862,8 @@ const loadGlobalCards = useCallback(async () => {
 
 const handleDevLogin = useCallback(async () => {
         if (exchangingRef.current) return
-        exchangingRef.current = true
-        setUserLoading(true)
+exchangingRef.current = true
+  userLoadingRef.current = true
         try {
             const session = await devLogin()
             if (session) {
@@ -872,7 +874,7 @@ const handleDevLogin = useCallback(async () => {
             console.error('Dev login error:', err?.message || err)
         } finally {
             exchangingRef.current = false
-            setUserLoading(false)
+            userLoadingRef.current = false
         }
     }, [devLogin])
 

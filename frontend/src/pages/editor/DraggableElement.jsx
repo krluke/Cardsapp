@@ -5,8 +5,8 @@ export function DraggableText({ element, isSelected, onSelect, onUpdate, onDelet
 const elementRef = useRef(null);
 const contentRef = useRef(null);
 const [isDragging, setIsDragging] = useState(false);
-const [isResizing, setIsResizing] = useState(false);
-const [isRotating, setIsRotating] = useState(false);
+const isResizingRef = useRef(false);
+const isRotatingRef = useRef(false);
 const [isEditing, setIsEditing] = useState(false);
 const dragStartRef = useRef({ x: 0, y: 0, left: 0, top: 0, width: 0, height: 0, rotation: 0, startAngle: 0 });
 
@@ -65,11 +65,11 @@ return { width: rect.width, height: rect.height };
   const handleResizeStart = (e) => {
     e.stopPropagation();
     e.preventDefault();
-    exitEditing();
-    onSelect(element.id);
-    setIsResizing(true);
-    const dims = getCanvasDimensions();
-    const currentWidth = element.width || 40;
+exitEditing();
+  onSelect(element.id);
+  isResizingRef.current = true;
+  const dims = getCanvasDimensions();
+  const currentWidth = element.width || 40;
     const currentHeight = typeof element.height === 'number' ? element.height : 20;
     dragStartRef.current = {
       x: e.clientX,
@@ -85,10 +85,10 @@ return { width: rect.width, height: rect.height };
   const handleRotateStart = (e) => {
     e.stopPropagation();
     e.preventDefault();
-    exitEditing();
-    onSelect(element.id);
-    setIsRotating(true);
-    const startAngle = getAngle(e.clientX, e.clientY);
+exitEditing();
+  onSelect(element.id);
+  isRotatingRef.current = true;
+  const startAngle = getAngle(e.clientX, e.clientY);
     dragStartRef.current = {
       startAngle,
       rotation: element.rotation || 0
@@ -141,7 +141,7 @@ const handleContentFocus = (e) => {
   }, [isSelected, element.id, element.content]);
 
   useEffect(() => {
-  if (!isDragging && !isResizing && !isRotating) return;
+  if (!isDragging && !isResizingRef.current && !isRotatingRef.current) return;
 
   const handleMouseMove = (e) => {
     if (isDragging) {
@@ -152,7 +152,7 @@ const handleContentFocus = (e) => {
       const newLeft = Math.max(0, Math.min(90, dragStartRef.current.left + percentX));
       const newTop = Math.max(0, Math.min(90, dragStartRef.current.top + percentY));
       onUpdate(element.id, { left: newLeft, top: newTop });
-    } else if (isResizing) {
+    } else if (isResizingRef.current) {
       const dx = e.clientX - dragStartRef.current.x;
       const dy = e.clientY - dragStartRef.current.y;
       const percentX = (dx / dragStartRef.current.canvasWidth) * 100;
@@ -161,7 +161,7 @@ const handleContentFocus = (e) => {
       const newWidth = Math.max(10, Math.min(90, dragStartRef.current.width + avgPercent));
       const newHeight = Math.max(10, Math.min(80, dragStartRef.current.height + avgPercent));
       onUpdate(element.id, { width: newWidth, height: newHeight });
-    } else if (isRotating) {
+    } else if (isRotatingRef.current) {
       const currentAngle = getAngle(e.clientX, e.clientY);
       const deltaAngle = currentAngle - dragStartRef.current.startAngle;
       const newRotation = dragStartRef.current.rotation + deltaAngle;
@@ -169,19 +169,18 @@ const handleContentFocus = (e) => {
     }
   };
 
-  const handleMouseUp = () => {
+const handleMouseUp = () => {
     setIsDragging(false);
-    setIsResizing(false);
-    setIsRotating(false);
+    isResizingRef.current = false;
+    isRotatingRef.current = false;
   };
-
   window.addEventListener('mousemove', handleMouseMove);
   window.addEventListener('mouseup', handleMouseUp);
   return () => {
     window.removeEventListener('mousemove', handleMouseMove);
     window.removeEventListener('mouseup', handleMouseUp);
   };
-  }, [isDragging, isResizing, isRotating, element.id, onUpdate, getAngle]);
+}, [isDragging, element.id, onUpdate, getAngle]);
 
   const handleContentClick = (e) => {
     e.stopPropagation();
@@ -386,7 +385,7 @@ onKeyDown={handleContentKeyDown}
 
 export function DraggableImage({ element, isSelected, onSelect, onUpdate, onDelete, canvasRef }) {
 const [isDragging, setIsDragging] = useState(false);
-const [isResizing, setIsResizing] = useState(false);
+  const isResizingRef = useRef(false);
 const dragStartRef = useRef({ x: 0, y: 0, left: 0, top: 0, width: 0, height: 0, canvasWidth: 640, canvasHeight: 427, aspect: 1.67 });
 
 const getCanvasDimensions = () => {
@@ -408,13 +407,13 @@ return { width: rect.width, height: rect.height };
   const handleResizeStart = (e) => {
     e.stopPropagation();
     onSelect(element.id);
-    setIsResizing(true);
-    const dims = getCanvasDimensions();
-    dragStartRef.current = { x: e.clientX, width: element.width || 50, aspect: (element.width || 50) / (element.height || 30), canvasWidth: dims.width };
+isResizingRef.current = true;
+	const dims = getCanvasDimensions();
+	dragStartRef.current = { x: e.clientX, width: element.width || 50, aspect: (element.width || 50) / (element.height || 30), canvasWidth: dims.width };
   };
 
   useEffect(() => {
-    if (!isDragging && !isResizing) return;
+    if (!isDragging && !isResizingRef.current) return;
     const handleMouseMove = (e) => {
       if (isDragging) {
         const dx = e.clientX - dragStartRef.current.x;
@@ -425,21 +424,21 @@ return { width: rect.width, height: rect.height };
           left: Math.max(0, Math.min(90, dragStartRef.current.left + percentX)),
           top: Math.max(0, Math.min(90, dragStartRef.current.top + percentY))
         });
-      } else if (isResizing) {
+} else if (isResizingRef.current) {
         const dx = e.clientX - dragStartRef.current.x;
         const percentX = (dx / dragStartRef.current.canvasWidth) * 100;
         const newWidth = Math.max(10, Math.min(90, dragStartRef.current.width + percentX));
         onUpdate(element.id, { width: newWidth, height: newWidth / dragStartRef.current.aspect });
       }
     };
-    const handleMouseUp = () => { setIsDragging(false); setIsResizing(false); };
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [isDragging, isResizing, element.id, onUpdate]);
+const handleMouseUp = () => { setIsDragging(false); isResizingRef.current = false; };
+  window.addEventListener('mousemove', handleMouseMove);
+  window.addEventListener('mouseup', handleMouseUp);
+  return () => {
+    window.removeEventListener('mousemove', handleMouseMove);
+    window.removeEventListener('mouseup', handleMouseUp);
+  };
+}, [isDragging, element.id, onUpdate]);
 
   return (
     <div
