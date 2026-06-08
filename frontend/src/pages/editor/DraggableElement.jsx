@@ -65,11 +65,11 @@ return { width: rect.width, height: rect.height };
   const handleResizeStart = (e) => {
     e.stopPropagation();
     e.preventDefault();
-exitEditing();
-  onSelect(element.id);
-  isResizingRef.current = true;
-  const dims = getCanvasDimensions();
-  const currentWidth = element.width || 40;
+    exitEditing();
+    onSelect(element.id);
+    isResizingRef.current = true;
+    const dims = getCanvasDimensions();
+    const currentWidth = element.width || 40;
     const currentHeight = typeof element.height === 'number' ? element.height : 20;
     dragStartRef.current = {
       x: e.clientX,
@@ -85,10 +85,10 @@ exitEditing();
   const handleRotateStart = (e) => {
     e.stopPropagation();
     e.preventDefault();
-exitEditing();
-  onSelect(element.id);
-  isRotatingRef.current = true;
-  const startAngle = getAngle(e.clientX, e.clientY);
+    exitEditing();
+    onSelect(element.id);
+    isRotatingRef.current = true;
+    const startAngle = getAngle(e.clientX, e.clientY);
     dragStartRef.current = {
       startAngle,
       rotation: element.rotation || 0
@@ -169,7 +169,7 @@ const handleContentFocus = (e) => {
     }
   };
 
-const handleMouseUp = () => {
+  const handleMouseUp = () => {
     setIsDragging(false);
     isResizingRef.current = false;
     isRotatingRef.current = false;
@@ -180,7 +180,7 @@ const handleMouseUp = () => {
     window.removeEventListener('mousemove', handleMouseMove);
     window.removeEventListener('mouseup', handleMouseUp);
   };
-}, [isDragging, element.id, onUpdate, getAngle]);
+  }, [isDragging, element.id, onUpdate, getAngle]);
 
   const handleContentClick = (e) => {
     e.stopPropagation();
@@ -385,7 +385,7 @@ onKeyDown={handleContentKeyDown}
 
 export function DraggableImage({ element, isSelected, onSelect, onUpdate, onDelete, canvasRef }) {
 const [isDragging, setIsDragging] = useState(false);
-  const isResizingRef = useRef(false);
+const isResizingRef = useRef(false);
 const dragStartRef = useRef({ x: 0, y: 0, left: 0, top: 0, width: 0, height: 0, canvasWidth: 640, canvasHeight: 427, aspect: 1.67 });
 
 const getCanvasDimensions = () => {
@@ -406,10 +406,10 @@ return { width: rect.width, height: rect.height };
 
   const handleResizeStart = (e) => {
     e.stopPropagation();
-    onSelect(element.id);
-isResizingRef.current = true;
-	const dims = getCanvasDimensions();
-	dragStartRef.current = { x: e.clientX, width: element.width || 50, aspect: (element.width || 50) / (element.height || 30), canvasWidth: dims.width };
+  onSelect(element.id);
+    isResizingRef.current = true;
+    const dims = getCanvasDimensions();
+    dragStartRef.current = { x: e.clientX, width: element.width || 50, aspect: (element.width || 50) / (element.height || 30), canvasWidth: dims.width };
   };
 
   useEffect(() => {
@@ -424,21 +424,21 @@ isResizingRef.current = true;
           left: Math.max(0, Math.min(90, dragStartRef.current.left + percentX)),
           top: Math.max(0, Math.min(90, dragStartRef.current.top + percentY))
         });
-} else if (isResizingRef.current) {
+      } else if (isResizingRef.current) {
         const dx = e.clientX - dragStartRef.current.x;
         const percentX = (dx / dragStartRef.current.canvasWidth) * 100;
         const newWidth = Math.max(10, Math.min(90, dragStartRef.current.width + percentX));
         onUpdate(element.id, { width: newWidth, height: newWidth / dragStartRef.current.aspect });
       }
     };
-const handleMouseUp = () => { setIsDragging(false); isResizingRef.current = false; };
-  window.addEventListener('mousemove', handleMouseMove);
+    const handleMouseUp = () => { setIsDragging(false); isResizingRef.current = false; };
+    window.addEventListener('mousemove', handleMouseMove);
   window.addEventListener('mouseup', handleMouseUp);
   return () => {
     window.removeEventListener('mousemove', handleMouseMove);
     window.removeEventListener('mouseup', handleMouseUp);
-  };
-}, [isDragging, element.id, onUpdate]);
+    };
+  }, [isDragging, element.id, onUpdate]);
 
   return (
     <div

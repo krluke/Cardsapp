@@ -635,10 +635,10 @@ const loadFolders = useCallback(async () => {
       q: searchInput,
       tab: activeTab,
     })
-try {
-  const res = await apiFetch(`${endpoint}?${params}`)
-  if (gen !== foldersRequestGenRef.current) return
-  const data = await res.json()
+    try {
+      const res = await apiFetch(`${endpoint}?${params}`)
+      if (gen !== foldersRequestGenRef.current) return
+      const data = await res.json()
       if (data.folders !== undefined) {
         setFolders(data.folders || [])
         const apiTotalPages = data.totalPages || 1
@@ -725,10 +725,10 @@ const loadGlobalCards = useCallback(async () => {
       page,
       search: searchInput,
     })
-try {
-  const res = await apiFetch(`/cards/public?${params}`)
-  if (gen !== globalCardsRequestGenRef.current) return
-  const data = await res.json()
+    try {
+      const res = await apiFetch(`/cards/public?${params}`)
+      if (gen !== globalCardsRequestGenRef.current) return
+      const data = await res.json()
       if (data.cards) {
         const filteredCards = (data.cards || []).filter(card => {
           const frontContent = (card.front || '').replace(/[<>]/g, '').trim()
@@ -757,9 +757,9 @@ try {
   const exchangeClerkToken = useCallback(async () => {
     if (exchangingRef.current) return
     exchangingRef.current = true
-userLoadingRef.current = true
-  try {
-    const clerkToken = await getToken()
+    userLoadingRef.current = true
+    try {
+      const clerkToken = await getToken()
       if (!clerkToken) return
       const res = await fetch(`${API_BASE}/clerk-auth`, {
         method: 'POST',
@@ -815,19 +815,19 @@ userLoadingRef.current = true
     return () => { if (typeof unsubscribe === 'function') unsubscribe() }
   }, [clerk])
 
-useEffect(() => {
-  document.documentElement.setAttribute('data-theme', theme)
-}, [theme])
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+  }, [theme])
 
   useEffect(() => {
     const handleSessionExpired = async () => {
       if (sessionExpiredRef.current) return
       sessionExpiredRef.current = true
-if (isSignedIn && exchangeFailCount.current < 3) {
-      exchangeFailCount.current = 0
-      if (!sessionExpiredRef.current) return
-      await exchangeClerkToken()
-    }
+      if (isSignedIn && exchangeFailCount.current < 3) {
+        exchangeFailCount.current = 0
+        await exchangeClerkToken()
+        if (!sessionExpiredRef.current) return
+      }
       setUser(null)
       setFolders([])
       setGlobalCards([])
@@ -862,8 +862,8 @@ if (isSignedIn && exchangeFailCount.current < 3) {
 
 const handleDevLogin = useCallback(async () => {
         if (exchangingRef.current) return
-exchangingRef.current = true
-  userLoadingRef.current = true
+        exchangingRef.current = true
+        userLoadingRef.current = true
         try {
             const session = await devLogin()
             if (session) {
