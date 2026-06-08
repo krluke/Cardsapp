@@ -339,6 +339,176 @@ const initialState = {
   textBoxBgColor: '',
 };
 
+const parseElements = (html) => {
+  if (!html) return [];
+  const elements = [];
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+
+  const hasPxFormat = html.includes('left:') && html.includes('px') && !html.includes('position:absolute');
+
+  if (hasPxFormat) {
+    doc.querySelectorAll('.draggable-text, [data-name]').forEach((el, idx) => {
+      const style = el.getAttribute('style') || '';
+      const textEl = el.querySelector('.text-content');
+      const content = textEl ? textEl.textContent : el.textContent;
+
+      if (!content || content.trim() === '') return;
+
+      const leftMatch = style.match(/left:\s*(\d+)px/);
+      const topMatch = style.match(/top:\s*(\d+)px/);
+      const widthMatch = style.match(/width:\s*(\d+)px/);
+      const fontSizeMatch = style.match(/font-size:\s*(\d+)px/);
+
+      elements.push({
+        id: `text-${Date.now()}-${idx}`,
+        type: 'text',
+        content: content.trim(),
+        left: leftMatch ? Math.round((parseInt(leftMatch[1]) / 800) * 100) : 10,
+        top: topMatch ? Math.round((parseInt(topMatch[1]) / 600) * 100) : 20,
+        width: widthMatch ? Math.round((parseInt(widthMatch[1]) / 800) * 100) : 40,
+        fontSize: parseInt(fontSizeMatch?.[1] || '16'),
+        fontFamily: 'sans-serif',
+        fontWeight: 'normal',
+        color: '',
+      });
+    });
+
+    doc.querySelectorAll('.draggable-image').forEach((el, idx) => {
+      const img = el.querySelector('img');
+      if (!img) return;
+
+      const style = el.getAttribute('style') || '';
+      const leftMatch = style.match(/left:\s*(\d+)px/);
+      const topMatch = style.match(/top:\s*(\d+)px/);
+      const widthMatch = style.match(/width:\s*(\d+)px/);
+      const heightMatch = style.match(/height:\s*(\d+)px/);
+
+      elements.push({
+        id: `img-${Date.now()}-${idx}`,
+        type: 'image',
+        src: img.src,
+        left: leftMatch ? Math.round((parseInt(leftMatch[1]) / 800) * 100) : 20,
+        top: topMatch ? Math.round((parseInt(topMatch[1]) / 600) * 100) : 20,
+        width: widthMatch ? Math.round((parseInt(widthMatch[1]) / 800) * 100) : 50,
+        height: heightMatch ? Math.round((parseInt(heightMatch[1]) / 600) * 100) : 30
+      });
+    });
+  } else {
+    try {
+      const textElements = doc.querySelectorAll('[style*="position"]');
+      textElements.forEach((el) => {
+        const style = el.getAttribute('style') || '';
+        const isTextElement = !el.querySelector('img') && el.innerHTML && !el.querySelector('img');
+
+        if (isTextElement && el.textContent && el.textContent.trim()) {
+          const img = el.querySelector('img');
+          if (img) return;
+
+          const textContent = el.textContent;
+          const rotationMatch = style.match(/transform:\s*rotate\((\d+)deg\)/);
+
+          const leftMatch = style.match(/left:\s*(\d+(?:\.\d+)?)%/);
+          const topMatch = style.match(/top:\s*(\d+(?:\.\d+)?)%/);
+          const widthMatch = style.match(/width:\s*(\d+(?:\.\d+)?)%/);
+          const heightMatch = style.match(/height:\s*(\d+(?:\.\d+)?)%/);
+          const fontSizeMatch = style.match(/font-size:\s*(\d+)px/);
+          const fontFamilyMatch = style.match(/font-family:\s*"?([^";]+)"?/);
+          const fontWeightMatch = style.match(/font-weight:\s*(\w+)/);
+          const fontStyleMatch = style.match(/font-style:\s*(\w+)/);
+          const textDecorationMatch = style.match(/text-decoration:\s*(\w+)/);
+          const textAlignMatch = style.match(/text-align:\s*(\w+)/);
+          const colorMatch = style.match(/(?:^|;\s*)color:\s*(#[0-9a-fA-F]+|rgb\([^)]+\))/);
+          const bgColorMatch = style.match(/background-color:\s*(#[0-9a-fA-F]+|rgb\([^)]+\))/);
+
+          elements.push({
+            id: `text-${Date.now()}-${elements.length}`,
+            type: 'text',
+            content: textContent.trim(),
+            left: leftMatch ? parseFloat(leftMatch[1]) : 10,
+            top: topMatch ? parseFloat(topMatch[1]) : 20,
+            width: widthMatch ? parseFloat(widthMatch[1]) : 40,
+            height: heightMatch ? parseFloat(heightMatch[1]) : 'auto',
+            fontSize: fontSizeMatch ? parseInt(fontSizeMatch[1]) : 16,
+            fontFamily: fontFamilyMatch ? fontFamilyMatch[1].trim() : 'sans-serif',
+            fontWeight: fontWeightMatch ? fontWeightMatch[1] : 'normal',
+            fontStyle: fontStyleMatch ? fontStyleMatch[1] : 'normal',
+            textDecoration: textDecorationMatch ? textDecorationMatch[1] : 'none',
+            textAlign: textAlignMatch ? textAlignMatch[1] : 'left',
+            color: colorMatch ? colorMatch[1] : '',
+            backgroundColor: bgColorMatch ? bgColorMatch[1].trim() : '',
+            rotation: rotationMatch ? parseInt(rotationMatch[1]) : 0
+          });
+        }
+      });
+
+      doc.querySelectorAll('img').forEach((img) => {
+        const parent = img.closest('[style*="position"]') || img.parentElement;
+        if (!parent) return;
+
+        const style = parent.getAttribute('style') || '';
+        const leftMatch = style.match(/left:\s*(\d+(?:\.\d+)?)%/);
+        const topMatch = style.match(/top:\s*(\d+(?:\.\d+)?)%/);
+        const widthMatch = style.match(/width:\s*(\d+(?:\.\d+)?)%/);
+        const heightMatch = style.match(/height:\s*(\d+(?:\.\d+)?)%/);
+
+        elements.push({
+          id: `img-${Date.now()}-${elements.length}`,
+          type: 'image',
+          src: img.src,
+          left: leftMatch ? parseFloat(leftMatch[1]) : 20,
+          top: topMatch ? parseFloat(topMatch[1]) : 20,
+          width: widthMatch ? parseFloat(widthMatch[1]) : 50,
+          height: heightMatch ? parseFloat(heightMatch[1]) : 30
+        });
+      });
+    } catch (e) {
+      console.error('Error parsing elements:', e);
+      const textEl = doc.body.querySelector('*');
+      if (textEl && textEl.textContent && textEl.textContent.trim()) {
+        elements.push({
+          id: `text-${Date.now()}-0`,
+          type: 'text',
+          content: textEl.textContent.trim(),
+          left: 10,
+          top: 20,
+          width: 80,
+          fontSize: 16
+        });
+      }
+    }
+  }
+  return elements;
+};
+
+const serializeElements = (elements) => {
+  return elements.map(el => {
+    if (el.type === 'text') {
+      const sanitizedContent = el.content
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+      const h = typeof el.height === 'number' ? el.height + '%' : (el.height || 'auto');
+      const ff = el.fontFamily || 'sans-serif';
+      const fw = el.fontWeight || 'normal';
+      const fs = el.fontStyle || 'normal';
+      const td = el.textDecoration || 'none';
+      const ta = el.textAlign || 'left';
+      const c = el.color && el.color !== '#000000' ? el.color : '';
+      const bg = el.backgroundColor && el.backgroundColor !== 'transparent' ? el.backgroundColor : '';
+      const r = el.rotation || 0;
+      const colorStyle = c ? `color:${c};` : '';
+      const bgStyle = bg ? `background-color:${bg};` : '';
+      return `<div class="draggable-text" style="position:absolute;left:${el.left}%;top:${el.top}%;width:${el.width}%;height:${h};font-size:${el.fontSize}px;font-family:"${ff}";font-weight:${fw};font-style:${fs};text-decoration:${td};text-align:${ta};${colorStyle}${bgStyle}transform:rotate(${r}deg)">${sanitizedContent}</div>`;
+    }
+    if (el.type === 'image') {
+      const safeSrc = el.src.replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      return `<div class="draggable-image" style="position:absolute;left:${el.left}%;top:${el.top}%;width:${el.width}%;height:${el.height}%;"><img src="${safeSrc}" style="width:100%;height:100%;object-fit:contain;" /></div>`;
+    }
+    return '';
+  }).join('');
+};
+
 export default function EditorPage() {
   const { folderId } = useParams();
   const navigate = useNavigate();
@@ -354,176 +524,6 @@ export default function EditorPage() {
       return JSON.parse(localStorage.getItem('session') || '{}').user || null;
     } catch { return null; }
   }, []);
-
-  const parseElements = (html) => {
-    if (!html) return [];
-    const elements = [];
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
-
-    const hasPxFormat = html.includes('left:') && html.includes('px') && !html.includes('position:absolute');
-
-    if (hasPxFormat) {
-      doc.querySelectorAll('.draggable-text, [data-name]').forEach((el, idx) => {
-        const style = el.getAttribute('style') || '';
-        const textEl = el.querySelector('.text-content');
-        const content = textEl ? textEl.textContent : el.textContent;
-
-        if (!content || content.trim() === '') return;
-
-        const leftMatch = style.match(/left:\s*(\d+)px/);
-        const topMatch = style.match(/top:\s*(\d+)px/);
-        const widthMatch = style.match(/width:\s*(\d+)px/);
-        const fontSizeMatch = style.match(/font-size:\s*(\d+)px/);
-
-        elements.push({
-          id: `text-${Date.now()}-${idx}`,
-          type: 'text',
-          content: content.trim(),
-          left: leftMatch ? Math.round((parseInt(leftMatch[1]) / 800) * 100) : 10,
-          top: topMatch ? Math.round((parseInt(topMatch[1]) / 600) * 100) : 20,
-          width: widthMatch ? Math.round((parseInt(widthMatch[1]) / 800) * 100) : 40,
-          fontSize: parseInt(fontSizeMatch?.[1] || '16'),
-          fontFamily: 'sans-serif',
-          fontWeight: 'normal',
-          color: '',
-        });
-      });
-
-      doc.querySelectorAll('.draggable-image').forEach((el, idx) => {
-        const img = el.querySelector('img');
-        if (!img) return;
-
-        const style = el.getAttribute('style') || '';
-        const leftMatch = style.match(/left:\s*(\d+)px/);
-        const topMatch = style.match(/top:\s*(\d+)px/);
-        const widthMatch = style.match(/width:\s*(\d+)px/);
-        const heightMatch = style.match(/height:\s*(\d+)px/);
-
-        elements.push({
-          id: `img-${Date.now()}-${idx}`,
-          type: 'image',
-          src: img.src,
-          left: leftMatch ? Math.round((parseInt(leftMatch[1]) / 800) * 100) : 20,
-          top: topMatch ? Math.round((parseInt(topMatch[1]) / 600) * 100) : 20,
-          width: widthMatch ? Math.round((parseInt(widthMatch[1]) / 800) * 100) : 50,
-          height: heightMatch ? Math.round((parseInt(heightMatch[1]) / 600) * 100) : 30
-        });
-      });
-    } else {
-      try {
-        const textElements = doc.querySelectorAll('[style*="position"]');
-        textElements.forEach((el) => {
-          const style = el.getAttribute('style') || '';
-          const isTextElement = !el.querySelector('img') && el.innerHTML && !el.querySelector('img');
-
-          if (isTextElement && el.textContent && el.textContent.trim()) {
-            const img = el.querySelector('img');
-            if (img) return;
-
-            const textContent = el.textContent;
-            const rotationMatch = style.match(/transform:\s*rotate\((\d+)deg\)/);
-
-            const leftMatch = style.match(/left:\s*(\d+(?:\.\d+)?)%/);
-            const topMatch = style.match(/top:\s*(\d+(?:\.\d+)?)%/);
-            const widthMatch = style.match(/width:\s*(\d+(?:\.\d+)?)%/);
-            const heightMatch = style.match(/height:\s*(\d+(?:\.\d+)?)%/);
-            const fontSizeMatch = style.match(/font-size:\s*(\d+)px/);
-            const fontFamilyMatch = style.match(/font-family:\s*"?([^";]+)"?/);
-            const fontWeightMatch = style.match(/font-weight:\s*(\w+)/);
-            const fontStyleMatch = style.match(/font-style:\s*(\w+)/);
-            const textDecorationMatch = style.match(/text-decoration:\s*(\w+)/);
-            const textAlignMatch = style.match(/text-align:\s*(\w+)/);
-            const colorMatch = style.match(/(?:^|;\s*)color:\s*(#[0-9a-fA-F]+|rgb\([^)]+\))/);
-            const bgColorMatch = style.match(/background-color:\s*(#[0-9a-fA-F]+|rgb\([^)]+\))/);
-
-            elements.push({
-              id: `text-${Date.now()}-${elements.length}`,
-              type: 'text',
-              content: textContent.trim(),
-              left: leftMatch ? parseFloat(leftMatch[1]) : 10,
-              top: topMatch ? parseFloat(topMatch[1]) : 20,
-              width: widthMatch ? parseFloat(widthMatch[1]) : 40,
-              height: heightMatch ? parseFloat(heightMatch[1]) : 'auto',
-              fontSize: fontSizeMatch ? parseInt(fontSizeMatch[1]) : 16,
-              fontFamily: fontFamilyMatch ? fontFamilyMatch[1].trim() : 'sans-serif',
-              fontWeight: fontWeightMatch ? fontWeightMatch[1] : 'normal',
-              fontStyle: fontStyleMatch ? fontStyleMatch[1] : 'normal',
-              textDecoration: textDecorationMatch ? textDecorationMatch[1] : 'none',
-              textAlign: textAlignMatch ? textAlignMatch[1] : 'left',
-              color: colorMatch ? colorMatch[1] : '',
-              backgroundColor: bgColorMatch ? bgColorMatch[1].trim() : '',
-              rotation: rotationMatch ? parseInt(rotationMatch[1]) : 0
-            });
-          }
-        });
-
-        doc.querySelectorAll('img').forEach((img) => {
-          const parent = img.closest('[style*="position"]') || img.parentElement;
-          if (!parent) return;
-
-          const style = parent.getAttribute('style') || '';
-          const leftMatch = style.match(/left:\s*(\d+(?:\.\d+)?)%/);
-          const topMatch = style.match(/top:\s*(\d+(?:\.\d+)?)%/);
-          const widthMatch = style.match(/width:\s*(\d+(?:\.\d+)?)%/);
-          const heightMatch = style.match(/height:\s*(\d+(?:\.\d+)?)%/);
-
-          elements.push({
-            id: `img-${Date.now()}-${elements.length}`,
-            type: 'image',
-            src: img.src,
-            left: leftMatch ? parseFloat(leftMatch[1]) : 20,
-            top: topMatch ? parseFloat(topMatch[1]) : 20,
-            width: widthMatch ? parseFloat(widthMatch[1]) : 50,
-            height: heightMatch ? parseFloat(heightMatch[1]) : 30
-          });
-        });
-      } catch (e) {
-        console.error('Error parsing elements:', e);
-        const textEl = doc.body.querySelector('*');
-        if (textEl && textEl.textContent && textEl.textContent.trim()) {
-          elements.push({
-            id: `text-${Date.now()}-0`,
-            type: 'text',
-            content: textEl.textContent.trim(),
-            left: 10,
-            top: 20,
-            width: 80,
-            fontSize: 16
-          });
-        }
-      }
-    }
-    return elements;
-  };
-
-  const serializeElements = (elements) => {
-    return elements.map(el => {
-      if (el.type === 'text') {
-        const sanitizedContent = el.content
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;');
-        const h = typeof el.height === 'number' ? el.height + '%' : (el.height || 'auto');
-        const ff = el.fontFamily || 'sans-serif';
-        const fw = el.fontWeight || 'normal';
-        const fs = el.fontStyle || 'normal';
-        const td = el.textDecoration || 'none';
-        const ta = el.textAlign || 'left';
-        const c = el.color && el.color !== '#000000' ? el.color : '';
-        const bg = el.backgroundColor && el.backgroundColor !== 'transparent' ? el.backgroundColor : '';
-        const r = el.rotation || 0;
-        const colorStyle = c ? `color:${c};` : '';
-        const bgStyle = bg ? `background-color:${bg};` : '';
-        return `<div class="draggable-text" style="position:absolute;left:${el.left}%;top:${el.top}%;width:${el.width}%;height:${h};font-size:${el.fontSize}px;font-family:"${ff}";font-weight:${fw};font-style:${fs};text-decoration:${td};text-align:${ta};${colorStyle}${bgStyle}transform:rotate(${r}deg)">${sanitizedContent}</div>`;
-      }
-      if (el.type === 'image') {
-        const safeSrc = el.src.replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        return `<div class="draggable-image" style="position:absolute;left:${el.left}%;top:${el.top}%;width:${el.width}%;height:${el.height}%;"><img src="${safeSrc}" style="width:100%;height:100%;object-fit:contain;" /></div>`;
-      }
-      return '';
-    }).join('');
-  };
 
   const loadData = useCallback(async () => {
     if (loadingRef.current) return

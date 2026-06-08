@@ -1,5 +1,22 @@
 import { Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, Layers } from 'lucide-react';
 
+const TOOLBAR_CONTAINER_STYLE = {
+  position: 'fixed',
+  top: '60px',
+  left: '50%',
+  transform: 'translateX(-50%)',
+  background: 'var(--bg-surface)',
+  border: '1px solid var(--border-color)',
+  borderRadius: '8px',
+  padding: '8px 12px',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '8px',
+  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+  zIndex: 1000,
+  flexWrap: 'wrap'
+};
+
 export function FloatingTextToolbar({
   element,
   isVisible,
@@ -25,22 +42,7 @@ export function FloatingTextToolbar({
 
   return (
     <div
-      style={{
-        position: 'fixed',
-        top: '60px',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        background: 'var(--bg-surface)',
-        border: '1px solid var(--border-color)',
-        borderRadius: '8px',
-        padding: '8px 12px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '8px',
-        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-        zIndex: 1000,
-        flexWrap: 'wrap'
-      }}
+      style={TOOLBAR_CONTAINER_STYLE}
     >
       {/* Style Controls */}
       <div style={{ display: 'flex', gap: '4px', borderRight: '1px solid var(--border-color)', paddingRight: '8px' }}>

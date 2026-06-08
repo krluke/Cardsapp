@@ -10,6 +10,51 @@ function getNextReviewText(quality, currentInterval) {
   return intervals[quality] || '';
 }
 
+function speak(e, content) {
+  e.stopPropagation();
+  const tempEl = document.createElement('div');
+  tempEl.innerHTML = content;
+  const text = (tempEl.textContent || tempEl.innerText || '').trim();
+  if (!text) return;
+
+  window.speechSynthesis?.cancel();
+
+  const utterance = new SpeechSynthesisUtterance(text);
+
+  const hasHiraganaKatakana = /[\u3040-\u309f\u30a0-\u30ff]/.test(text);
+  const hasCJK = /[\u4e00-\u9fff]/.test(text);
+  const hasKorean = /[\uac00-\ud7af\u1100-\u11ff]/.test(text);
+
+  let lang = 'en-US';
+  if (hasHiraganaKatakana) lang = 'ja-JP';
+  else if (hasCJK) lang = 'zh-CN';
+  else if (hasKorean) lang = 'ko-KR';
+  else if (/[àâäéèêëïîôùûüÿœæç]/.test(text)) lang = 'fr-FR';
+  else if (/[äöüß]/.test(text)) lang = 'de-DE';
+  else if (/[áéíóúñ¿¡]/.test(text)) lang = 'es-ES';
+  else if (/[а-яё]/.test(text)) lang = 'ru-RU';
+
+  utterance.lang = lang;
+  utterance.rate = 0.9;
+  utterance.pitch = 1;
+
+  const setVoiceAndSpeak = (voiceList) => {
+    const bestVoice = voiceList.find(v => v.lang.startsWith(lang.split('-')[0])) || voiceList[0];
+    if (bestVoice) utterance.voice = bestVoice;
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const voices = window.speechSynthesis?.getVoices() || [];
+  if (voices.length > 0) {
+    setVoiceAndSpeak(voices);
+  } else {
+    window.speechSynthesis?.addEventListener('voiceschanged', () => {
+      const updatedVoices = window.speechSynthesis?.getVoices() || [];
+      setVoiceAndSpeak(updatedVoices);
+    }, { once: true });
+  }
+}
+
 export default function StudyPage() {
   const { folderId } = useParams();
   const navigate = useNavigate();
@@ -158,51 +203,6 @@ export default function StudyPage() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isFlipped, finished, loading, currentIndex, cards.length, handleRate]);
-
-  const speak = (e, content) => {
-    e.stopPropagation();
-    const tempEl = document.createElement('div');
-    tempEl.innerHTML = content;
-    const text = (tempEl.textContent || tempEl.innerText || '').trim();
-    if (!text) return;
-
-    window.speechSynthesis?.cancel();
-
-    const utterance = new SpeechSynthesisUtterance(text);
-
-    const hasHiraganaKatakana = /[\u3040-\u309f\u30a0-\u30ff]/.test(text);
-    const hasCJK = /[\u4e00-\u9fff]/.test(text);
-    const hasKorean = /[\uac00-\ud7af\u1100-\u11ff]/.test(text);
-
-    let lang = 'en-US';
-    if (hasHiraganaKatakana) lang = 'ja-JP';
-    else if (hasCJK) lang = 'zh-CN';
-    else if (hasKorean) lang = 'ko-KR';
-    else if (/[àâäéèêëïîôùûüÿœæç]/.test(text)) lang = 'fr-FR';
-    else if (/[äöüß]/.test(text)) lang = 'de-DE';
-    else if (/[áéíóúñ¿¡]/.test(text)) lang = 'es-ES';
-    else if (/[а-яё]/.test(text)) lang = 'ru-RU';
-
-    utterance.lang = lang;
-    utterance.rate = 0.9;
-    utterance.pitch = 1;
-
-    const setVoiceAndSpeak = (voiceList) => {
-      const bestVoice = voiceList.find(v => v.lang.startsWith(lang.split('-')[0])) || voiceList[0];
-      if (bestVoice) utterance.voice = bestVoice;
-      window.speechSynthesis.speak(utterance);
-    };
-
-    const voices = window.speechSynthesis?.getVoices() || [];
-    if (voices.length > 0) {
-      setVoiceAndSpeak(voices);
-    } else {
-      window.speechSynthesis?.addEventListener('voiceschanged', () => {
-        const updatedVoices = window.speechSynthesis?.getVoices() || [];
-        setVoiceAndSpeak(updatedVoices);
-      }, { once: true });
-    }
-  };
 
   if (loading) return <div className="study-container">Loading...</div>;
   if (cards.length === 0) return (

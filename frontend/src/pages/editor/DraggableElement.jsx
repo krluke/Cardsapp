@@ -1,6 +1,41 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Trash2, Move, RotateCw, Volume2, Maximize2 } from 'lucide-react';
 
+const HANDLE_BASE_STYLE = {
+  position: 'absolute',
+  width: '24px',
+  height: '24px',
+  borderRadius: '50%',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  zIndex: 102,
+  boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+};
+
+const TTS_BUTTON_STYLE = {
+  position: 'absolute',
+  top: '-28px',
+  left: '50%',
+  transform: 'translateX(-50%)',
+  background: '#3b82f6',
+  color: 'white',
+  padding: '4px 8px',
+  borderRadius: '4px',
+  border: 'none',
+  cursor: 'pointer',
+  fontSize: '12px',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '4px',
+  zIndex: 101
+};
+
+const IMAGE_CONTAINER_BASE_STYLE = {
+  position: 'absolute',
+  borderRadius: '4px'
+};
+
 export function DraggableText({ element, isSelected, onSelect, onUpdate, onDelete, t, canvasRef }) {
 const elementRef = useRef(null);
 const contentRef = useRef(null);
@@ -245,91 +280,60 @@ const handleContentFocus = (e) => {
       {/* Corner Handles */}
       {isSelected && (
         <>
-          {/* Move handle - Top Left */}
-          <div
-            style={{
-              position: 'absolute',
-              top: '-12px',
-              left: '-12px',
-              width: '24px',
-              height: '24px',
-              background: '#3b82f6',
-              borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'move',
-              zIndex: 102,
-              boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-            }}
-            onMouseDown={handleEdgeMouseDown}
-            title="Move"
-          >
+      {/* Move handle - Top Left */}
+      <div
+        style={{
+          ...HANDLE_BASE_STYLE,
+          top: '-12px',
+          left: '-12px',
+          background: '#3b82f6',
+          cursor: 'move'
+        }}
+        onMouseDown={handleEdgeMouseDown}
+        title="Move"
+      >
             <Move size={14} color="white" />
           </div>
 
-          {/* Rotate handle - Bottom Left */}
-          <div
-            style={{
-              position: 'absolute',
-              bottom: '-12px',
-              left: '-12px',
-              width: '24px',
-              height: '24px',
-              background: '#10b981',
-              borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'grab',
-              zIndex: 102,
-              boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-            }}
-            onMouseDown={handleRotateStart}
-            title="Rotate"
-          >
+      {/* Rotate handle - Bottom Left */}
+      <div
+        style={{
+          ...HANDLE_BASE_STYLE,
+          bottom: '-12px',
+          left: '-12px',
+          background: '#10b981',
+          cursor: 'grab'
+        }}
+        onMouseDown={handleRotateStart}
+        title="Rotate"
+      >
             <RotateCw size={14} color="white" />
           </div>
 
-          {/* Delete handle - Top Right */}
-          <div
-            style={{
-              position: 'absolute',
-              top: '-12px',
-              right: '-12px',
-              width: '24px',
-              height: '24px',
-              background: '#ef4444',
-              borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              zIndex: 102,
-              boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-            }}
-            onClick={(e) => { e.stopPropagation(); exitEditing(); onDelete(element.id); }}
-            title="Delete"
-          >
+      {/* Delete handle - Top Right */}
+      <div
+        style={{
+          ...HANDLE_BASE_STYLE,
+          top: '-12px',
+          right: '-12px',
+          background: '#ef4444',
+          cursor: 'pointer'
+        }}
+        onClick={(e) => { e.stopPropagation(); exitEditing(); onDelete(element.id); }}
+        title="Delete"
+      >
             <Trash2 size={14} color="white" />
           </div>
 
       {/* Combined resize handle - Bottom right corner */}
       <div
         style={{
-          position: 'absolute',
+          ...HANDLE_BASE_STYLE,
           bottom: '-12px',
           right: '-12px',
-          width: '24px',
-          height: '24px',
           background: '#D97757',
-          borderRadius: '50%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
           cursor: 'se-resize',
-          zIndex: 101,
-          boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+          zIndex: 101
         }}
         onMouseDown={handleResizeStart}
         title="Resize"
@@ -337,27 +341,11 @@ const handleContentFocus = (e) => {
         <Maximize2 size={14} color="white" />
       </div>
 
-          {/* TTS button */}
-          <button
-            style={{
-              position: 'absolute',
-              top: '-28px',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              background: '#3b82f6',
-              color: 'white',
-              padding: '4px 8px',
-              borderRadius: '4px',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '12px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              zIndex: 101
-            }}
-            onClick={speak}
-          >
+      {/* TTS button */}
+      <button
+        style={TTS_BUTTON_STYLE}
+        onClick={speak}
+      >
             <Volume2 size={14} />
           </button>
         </>
@@ -445,14 +433,13 @@ return { width: rect.width, height: rect.height };
     <div
       className={`draggable-image-element ${isSelected ? 'selected' : ''}`}
       style={{
-        position: 'absolute',
+        ...IMAGE_CONTAINER_BASE_STYLE,
         left: `${element.left}%`,
         top: `${element.top}%`,
         width: `${element.width || 50}%`,
         height: element.height ? `${element.height}%` : 'auto',
         cursor: isDragging ? 'grabbing' : 'move',
-        border: isSelected ? '2px solid #D97757' : '2px solid transparent',
-        borderRadius: '4px'
+        border: isSelected ? '2px solid #D97757' : '2px solid transparent'
       }}
       onMouseDown={handleMouseDown}
     >
