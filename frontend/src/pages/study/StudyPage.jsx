@@ -255,7 +255,7 @@ export default function StudyPage() {
       </div>
 
       <div className="study-area">
-        <div className={`study-card ${isFlipped ? 'flipped' : ''}`} onClick={() => setIsFlipped(!isFlipped)}>
+        <div className={`study-card ${isFlipped ? 'flipped' : ''}`} onClick={() => setIsFlipped(!isFlipped)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setIsFlipped(!isFlipped); } }}>
           <div className="study-card-inner">
             <div className="study-card-front" style={{ backgroundColor: currentCard.front_bg || 'var(--bg-surface)' }}>
               <div className="study-content" dangerouslySetInnerHTML={{ __html: sanitizeHtmlForDisplay(currentCard.front_content) }} />

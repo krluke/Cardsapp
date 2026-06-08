@@ -12,12 +12,15 @@ export function EditorSidebar({ cards, currentIndex, onSelectCard, onAddCard }) 
     <aside className="thumbnail-sidebar">
       <div className="thumbnail-scroll">
         {cards.map((card, idx) => (
-          <div
-            key={idx}
-            ref={currentIndex === idx ? activeThumbRef : null}
-            className={`thumbnail ${currentIndex === idx ? 'active' : ''}`}
-            onClick={() => onSelectCard(idx)}
-          >
+ <div
+ key={idx}
+ ref={currentIndex === idx ? activeThumbRef : null}
+ className={`thumbnail ${currentIndex === idx ? 'active' : ''}`}
+ onClick={() => onSelectCard(idx)}
+ role="button"
+ tabIndex={0}
+ onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelectCard(idx); } }}
+ >
             <span>{idx + 1}</span>
           </div>
         ))}

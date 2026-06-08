@@ -29,10 +29,11 @@ export function GlobalSearchModal({ isOpen, onClose, onSelectCard }) {
         <button className="close-btn" onClick={onClose}><X size={20} /></button>
         <h2 className="auth-title">Global Search</h2>
         <div className="input-with-btn mb-1">
-          <input 
-            className="input-field" 
-            placeholder="Search cards or folders..." 
-            value={query} 
+ <input
+ className="input-field"
+ placeholder="Search cards or folders..."
+ aria-label="Search cards or folders"
+ value={query}
             onChange={e => setQuery(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleSearch()}
           />
@@ -42,12 +43,15 @@ export function GlobalSearchModal({ isOpen, onClose, onSelectCard }) {
         </div>
         <div className="search-results" style={{ maxHeight: '400px', overflowY: 'auto', marginTop: '20px' }}>
           {results.length === 0 && !loading && query && <p style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No results found</p>}
-          {results.map((res) => (
-            <div 
-              key={res.id} 
-              className="search-item" 
-              onClick={() => onSelectCard(res)}
-              style={{ 
+      {results.map((res, idx) => (
+        <div
+          key={idx}
+          className="search-item"
+          onClick={() => onSelectCard(res)}
+          role="option"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelectCard(res); } }}
+          style={{
                 padding: '12px', 
                 borderBottom: '1px solid var(--border-color)', 
                 cursor: 'pointer',

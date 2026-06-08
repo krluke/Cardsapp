@@ -95,7 +95,7 @@ export default function ViewerPage() {
       </header>
 
       <main className="viewer-main">
-        <div className="flashcard-container" onClick={() => setFlipped(!flipped)}>
+        <div className="flashcard-container" onClick={() => setFlipped(!flipped)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setFlipped(!flipped); } }}>
           <div className={`flashcard ${flipped ? 'flipped' : ''}`}>
             <div className="flashcard-front" style={{ backgroundColor: currentCard.frontBg || 'var(--bg-surface)' }}>
               <div className="flashcard-content" dangerouslySetInnerHTML={{ __html: sanitizeHtmlForDisplay(currentCard.front) || '<p>Empty</p>' }} />

@@ -866,10 +866,11 @@ const toggleBgColorAuto = () => {
           </div>
           <div className="editor-meta-row">
             <div className="tags-input-container">
-              <label>Tags:</label>
-              <input
-                type="text"
-                className="toolbar-select"
+<label htmlFor="tags-input">Tags:</label>
+ <input
+ id="tags-input"
+ type="text"
+ className="toolbar-select"
                 placeholder="Comma separated tags..."
                 value={currentTags}
                 onChange={(e) => updateTags(e.target.value)}

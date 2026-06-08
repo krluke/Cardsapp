@@ -56,7 +56,7 @@ export function Modal({ state, onClose, onConfirm, onSubmit }) {
       <div className="modal-box" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
           <h3>{state.title}</h3>
-          <button className="modal-close" onClick={onClose}><X size={20} /></button>
+          <button className="modal-close" onClick={onClose} aria-label="Close"><X size={20} /></button>
         </div>
         
         <div className="modal-content">

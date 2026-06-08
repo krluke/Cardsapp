@@ -1012,15 +1012,12 @@ localStorage.removeItem('session:v1')
   return (
     <div className="min-h-screen home-page-shell">
       <header className="navbar">
-        <div
-          className={`logo${logoFlipped ? ' flipped' : ''}`}
-          role="button"
-          tabIndex={0}
-          aria-label="CardsApp"
-          onClick={() => setLogoFlipped(f => !f)}
-          onMouseLeave={() => setLogoFlipped(false)}
-          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setLogoFlipped(f => !f) } }}
-        >
+<button
+ className={`logo${logoFlipped ? ' flipped' : ''}`}
+ aria-label="CardsApp"
+ onClick={() => setLogoFlipped(f => !f)}
+ onMouseLeave={() => setLogoFlipped(false)}
+>
           <div className="logo-scene">
             <div className="logo-flipper">
               <div className="logo-sizer" aria-hidden="true">
@@ -1035,8 +1032,8 @@ localStorage.removeItem('session:v1')
               </div>
             </div>
           </div>
-          <span className="logo-app">App</span>
-        </div>
+ <span className="logo-app">App</span>
+ </button>
         
         <div className="nav-actions">
           {user && (
@@ -1183,7 +1180,7 @@ localStorage.removeItem('session:v1')
 
         <div className="search-and-pagination-container">
           <div className="search-bar-wrapper">
-            <input type="text" id="search-input" placeholder={activeTab === 'global-cards' ? t('search_placeholder_cards') : t('search_placeholder')} value={searchInput} onChange={(e) => setSearchInput(e.target.value)} />
+            <input type="text" id="search-input" aria-label={t('search_placeholder')} placeholder={activeTab === 'global-cards' ? t('search_placeholder_cards') : t('search_placeholder')} value={searchInput} onChange={(e) => setSearchInput(e.target.value)} />
             <button className="shadow-btn" onClick={activeTab === 'global-cards' ? loadGlobalCards : loadFolders}>{t('btn_search')}</button>
           </div>
           <div className="pagination-controls">
@@ -1229,10 +1226,10 @@ localStorage.removeItem('session:v1')
     {folders.map(folder => {
       const isOwner = activeTab === 'my-folders' || folder.username === user?.username;
       return (
-        <div key={folder.id} className="folder-tile" onClick={() => {
-          const canEdit = user && activeTab === 'my-folders';
-          navigate(canEdit ? `/editor/${folder.id}` : `/viewer/${folder.id}`, { state: { fromTab: activeTab } });
-        }}>
+<div key={folder.id} className="folder-tile" role="button" tabIndex={0} onClick={() => {
+ const canEdit = user && activeTab === 'my-folders';
+ navigate(canEdit ? `/editor/${folder.id}` : `/viewer/${folder.id}`, { state: { fromTab: activeTab } });
+ }} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); const canEdit = user && activeTab === 'my-folders'; navigate(canEdit ? `/editor/${folder.id}` : `/viewer/${folder.id}`, { state: { fromTab: activeTab } }); } }}>
                 <div className="folder-actions" onClick={e => e.stopPropagation()}>
                   {user && (
                     <button
@@ -1277,7 +1274,7 @@ localStorage.removeItem('session:v1')
 {activeTab === 'global-cards' && globalCards.length > 0 && (
   <div className="global-cards-grid">
     {globalCards.map(card => (
-      <div key={card.id} className="global-card-tile" onClick={() => setFlippedCards(prev => ({...prev, [card.id]: !prev[card.id]}))}>
+      <div key={card.id} className="global-card-tile" role="button" tabIndex={0} onClick={() => setFlippedCards(prev => ({...prev, [card.id]: !prev[card.id]}))} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setFlippedCards(prev => ({...prev, [card.id]: !prev[card.id]})); } }}>
         <div className={`global-card-inner ${flippedCards[card.id] ? 'flipped' : ''}`}>
           <div className="global-card-front" style={{ backgroundColor: card.frontBg || 'var(--bg-surface)' }}>
             <CardPreview html={card.front} />
@@ -1311,11 +1308,11 @@ localStorage.removeItem('session:v1')
        {showSettingsModal && editingFolder && (
          <div className="modal" onClick={() => setShowSettingsModal(false)}>
            <div className="auth-box" onClick={e => e.stopPropagation()}>
-             <button className="close-btn" onClick={() => setShowSettingsModal(false)}><X size={20} /></button>
+             <button className="close-btn" onClick={() => setShowSettingsModal(false)} aria-label="Close"><X size={20} /></button>
              <h2 className="auth-title">{t('folder_settings_title')}</h2>
              <div className="mb-1">
-               <label style={{fontSize: '14px', fontWeight: 'bold'}}>{t('label_folder_name')}</label>
-               <input className="input-field mt-1" value={editingFolder.title} onChange={e => setEditingFolder({...editingFolder, title: e.target.value})} />
+<label htmlFor="folder-name-input" style={{fontSize: '14px', fontWeight: 'bold'}}>{t('label_folder_name')}</label>
+ <input id="folder-name-input" className="input-field mt-1" value={editingFolder.title} onChange={e => setEditingFolder({...editingFolder, title: e.target.value})} />
              </div>
              <div className="mb-1">
                <label style={{fontSize: '14px', fontWeight: 'bold'}}>{t('label_visibility')}</label>
